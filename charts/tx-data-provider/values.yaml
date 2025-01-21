@@ -25,7 +25,7 @@ configuration:
 
 nameOverride: ""
 fullnameOverride: ""
-seedTestdata: false  # Toggle seeding of testdata. Can be enabled when the edc should be seeded with testdata on startup.
+seedTestdata: true  # Toggle seeding of testdata. Can be disabled when e.g. only edc is used as consumer. Default true.
 testdataConfigMap: ""  # Provide a custom configmap for post-install-job-upload-testdata.yaml.
 backendUrl: ""  # Override the backend service url
 registryUrl: ""  # Override the digital twin registry url
@@ -33,7 +33,7 @@ controlplanePublicUrl: ""  # Override the edc controlplane protocol url
 controlplaneManagementUrl: ""  # Override the edc controlplane management url
 dataplaneUrl: ""  # Override the edc dataplane public url
 secrets:
-  edc-wallet-secret: changeme
+  edc-miw-keycloak-secret: changeme
 
 tractusx-connector:
   enabled: true
@@ -42,24 +42,18 @@ tractusx-connector:
     vault: false
   participant:
     id: changeme
-  iatp:
-    id: changeme
-    trustedIssuers:
-      - changeme
-    sts:
-      dim:
+  controlplane:
+    ssi:
+      miw:
         url: http://example.org
+        authorityId: changeme
       oauth:
-        token_url: http://example.org
+        tokenurl: http://example.org
         client:
           id: changeme
-          secret_alias: client-secret
-  controlplane:
+          secretAlias: client-secret
     ingresses:
       - enabled: false
-    bdrs:
-      server:
-        url: http://example.org
     endpoints:
       management:
         authKey: *edcKey
@@ -69,19 +63,16 @@ tractusx-connector:
   dataplane:
     ingresses:
       - enabled: false
-    token:
-      signer:
-        privatekey_alias: changeme
-      verifier:
-        publickey_alias: changeme
 
+  backendService:
+    httpProxyTokenReceiverUrl: "https://submodelserver.test/data/endpoint-data-reference-provider1"
   vault:
     hashicorp:
       url: http://{{ .Release.Name }}-edc-provider-vault:8200
       token: "root"
     secretNames:
-      transferProxyTokenSignerPrivateKey: changeme
-      transferProxyTokenSignerPublicKey: changeme
+      transferProxyTokenSignerPrivateKey:
+      transferProxyTokenSignerPublicKey:
       transferProxyTokenEncryptionAesKey: aesKey
 
   postgresql:

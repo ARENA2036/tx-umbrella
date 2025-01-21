@@ -66,22 +66,14 @@
       },
       {
         "id": "4c19f2aa-f9b9-473e-ba5c-46c2f4e52c8b",
-        "name": "default-roles-cx-central",
+        "name": "default-roles-catena-x realm",
         "description": "${role_default-roles}",
         "composite": true,
         "composites": {
-          "realm": [
-            "offline_access",
-            "uma_authorization"
-          ],
+          "realm": ["offline_access", "uma_authorization"],
           "client": {
-            "Cl23-CX-Policy-Hub": [
-              "view_policy_hub"
-            ],
-            "account": [
-              "manage-account",
-              "view-profile"
-            ]
+            "Cl23-CX-Policy-Hub": ["view_policy_hub"],
+            "account": ["manage-account", "view-profile"]
           }
         },
         "clientRole": false,
@@ -99,9 +91,81 @@
       }
     ],
     "client": {
+      "sa-cl2-02": [],
+      "sa-cl2-01": [],
+      "sa-cl2-04": [],
       "sa-cl3-cx-1": [],
       "security-admin-console": [],
+      "sa-cl2-03": [],
+      "sa-cl2-05": [],
       "sa-cl24-01": [],
+      "account-console": [],
+      "sa-cl22-01": [],
+      "Cl24-CX-SSI-CredentialIssuer": [
+        {
+          "id": "04b4162f-ab97-49aa-9331-cb73a60b845f",
+          "name": "view_certificates",
+          "description": "",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "e3ef0979-896b-4455-87e7-647f19119c7b",
+          "attributes": {}
+        },
+        {
+          "id": "3dcd410b-0984-48b4-88d5-060eb744dd76",
+          "name": "revoke_credentials_issuer",
+          "description": "",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "e3ef0979-896b-4455-87e7-647f19119c7b",
+          "attributes": {}
+        },
+        {
+          "id": "1f8ee654-161a-42e4-a2aa-64b4cd91f27e",
+          "name": "view_credential_requests",
+          "description": "",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "e3ef0979-896b-4455-87e7-647f19119c7b",
+          "attributes": {}
+        },
+        {
+          "id": "3459d174-ef82-41d1-8d4d-35a16dd5665a",
+          "name": "view_use_case_participation",
+          "description": "",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "e3ef0979-896b-4455-87e7-647f19119c7b",
+          "attributes": {}
+        },
+        {
+          "id": "72c2c701-f352-44b2-b95e-2d8125b6cdbc",
+          "name": "request_ssicredential",
+          "description": "",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "e3ef0979-896b-4455-87e7-647f19119c7b",
+          "attributes": {}
+        },
+        {
+          "id": "c5e784b2-4cd1-4aae-965d-5ca0d54ad293",
+          "name": "decision_ssicredential",
+          "description": "",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "e3ef0979-896b-4455-87e7-647f19119c7b",
+          "attributes": {}
+        },
+        {
+          "id": "3f8bbef4-5d29-4ca3-9b67-7e102663f725",
+          "name": "revoke_credential",
+          "description": "",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "e3ef0979-896b-4455-87e7-647f19119c7b",
+          "attributes": {}
+        }
+      ],
       "Cl2-CX-Portal": [
         {
           "id": "39ff444c-888a-4bf6-b8e1-343b66f8a067",
@@ -152,19 +216,10 @@
           "composite": true,
           "composites": {
             "client": {
-              "Cl5-CX-Custodian": [
-                "view_wallet"
-              ],
-              "technical_roles_management": [
-                "BPDM Pool Consumer"
-              ],
-              "Cl1-CX-Registration": [
-                "delete_documents",
-                "view_registration"
-              ],
-              "Cl24-CX-SSI-CredentialIssuer": [
-                "view_credential_requests"
-              ],
+              "Cl5-CX-Custodian": ["view_wallet"],
+              "technical_roles_management": ["BPDM Pool Consumer"],
+              "Cl1-CX-Registration": ["delete_documents", "view_registration"],
+              "Cl24-CX-SSI-CredentialIssuer": ["view_credential_requests"],
               "Cl2-CX-Portal": [
                 "view_license_types",
                 "delete_connectors",
@@ -176,9 +231,9 @@
                 "view_service_offering",
                 "view_autosetup_status",
                 "add_connectors",
-                "service_management",
                 "view_own_user_account",
                 "view_use_cases",
+                "service_management",
                 "view_idp",
                 "add_tech_user_management",
                 "view_membership",
@@ -293,18 +348,10 @@
           "composite": true,
           "composites": {
             "client": {
-              "Cl5-CX-Custodian": [
-                "view_wallet"
-              ],
-              "technical_roles_management": [
-                "BPDM Pool Consumer"
-              ],
-              "Cl1-CX-Registration": [
-                "view_registration"
-              ],
-              "Cl24-CX-SSI-CredentialIssuer": [
-                "view_credential_requests"
-              ],
+              "Cl5-CX-Custodian": ["view_wallet"],
+              "technical_roles_management": ["BPDM Pool Consumer"],
+              "Cl1-CX-Registration": ["view_registration"],
+              "Cl24-CX-SSI-CredentialIssuer": ["view_credential_requests"],
               "Cl2-CX-Portal": [
                 "view_license_types",
                 "view_technical_setup",
@@ -331,20 +378,13 @@
           "composite": true,
           "composites": {
             "client": {
-              "Cl5-CX-Custodian": [
-                "view_wallet"
-              ],
-              "technical_roles_management": [
-                "BPDM Pool Consumer"
-              ],
-              "Cl1-CX-Registration": [
-                "view_registration"
-              ],
+              "Cl5-CX-Custodian": ["view_wallet"],
+              "technical_roles_management": ["BPDM Pool Consumer"],
+              "Cl1-CX-Registration": ["view_registration"],
               "Cl24-CX-SSI-CredentialIssuer": [
                 "view_credential_requests",
                 "view_certificates",
                 "view_use_case_participation",
-                "request_ssicredential",
                 "revoke_credential"
               ],
               "Cl2-CX-Portal": [
@@ -360,7 +400,6 @@
                 "upload_certificates",
                 "view_own_user_account",
                 "view_user_management",
-                "view_idp",
                 "subscribe_apps",
                 "view_membership",
                 "update_own_user_account",
@@ -369,7 +408,6 @@
                 "view_certificates",
                 "delete_certificates",
                 "view_client_roles",
-                "subscribe_service",
                 "delete_own_user_account",
                 "request_ssicredential",
                 "unsubscribe_services",
@@ -463,6 +501,15 @@
           "attributes": {}
         },
         {
+          "id": "66f4b417-25d4-47d7-b3d2-e6eb80bcba5e",
+          "name": "create_partner_registration",
+          "description": "",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "e0806293-f9b3-44f1-a6d0-4e4406787f80",
+          "attributes": {}
+        },
+        {
           "id": "0d41349d-30a8-42c1-9e1c-2b67d69fba30",
           "name": "update_own_user_account",
           "composite": false,
@@ -509,15 +556,6 @@
         {
           "id": "0de2c803-1130-4ebf-9dfb-5016aadb9ca2",
           "name": "setup_idp",
-          "composite": false,
-          "clientRole": true,
-          "containerId": "e0806293-f9b3-44f1-a6d0-4e4406787f80",
-          "attributes": {}
-        },
-        {
-          "id": "1fed993a-3793-4507-b862-c931f8619451",
-          "name": "create_ssi_notifications",
-          "description": "User can create notifications for ssi credentials",
           "composite": false,
           "clientRole": true,
           "containerId": "e0806293-f9b3-44f1-a6d0-4e4406787f80",
@@ -670,19 +708,12 @@
           "composite": true,
           "composites": {
             "client": {
-              "Cl5-CX-Custodian": [
-                "view_wallet"
-              ],
-              "technical_roles_management": [
-                "BPDM Pool Consumer"
-              ],
-              "Cl1-CX-Registration": [
-                "view_registration"
-              ],
+              "Cl5-CX-Custodian": ["view_wallet"],
+              "technical_roles_management": ["BPDM Pool Consumer"],
+              "Cl1-CX-Registration": ["view_registration"],
               "Cl24-CX-SSI-CredentialIssuer": [
                 "view_credential_requests",
                 "view_use_case_participation",
-                "request_ssicredential",
                 "revoke_credential",
                 "view_certificates"
               ],
@@ -729,9 +760,7 @@
                 "view_connectors",
                 "view_partner_network"
               ],
-              "Cl3-CX-Semantic": [
-                "view_semantic_model"
-              ]
+              "Cl3-CX-Semantic": ["view_semantic_model"]
             }
           },
           "clientRole": true,
@@ -744,18 +773,10 @@
           "composite": true,
           "composites": {
             "client": {
-              "Cl5-CX-Custodian": [
-                "view_wallet"
-              ],
-              "technical_roles_management": [
-                "BPDM Pool Consumer"
-              ],
-              "Cl1-CX-Registration": [
-                "view_registration"
-              ],
-              "Cl24-CX-SSI-CredentialIssuer": [
-                "view_credential_requests"
-              ],
+              "Cl5-CX-Custodian": ["view_wallet"],
+              "technical_roles_management": ["BPDM Pool Consumer"],
+              "Cl1-CX-Registration": ["view_registration"],
+              "Cl24-CX-SSI-CredentialIssuer": ["view_credential_requests"],
               "Cl2-CX-Portal": [
                 "view_app_subscription",
                 "view_service_subscriptions",
@@ -827,19 +848,17 @@
           "composite": true,
           "composites": {
             "client": {
-              "Cl5-CX-Custodian": [
-                "view_wallet"
+              "Cl7-CX-BPDM": [
+                "read_partner_member",
+                "read_metadata",
+                "read_changelog_member"
               ],
-              "technical_roles_management": [
-                "BPDM Pool Consumer"
-              ],
-              "Cl1-CX-Registration": [
-                "view_registration"
-              ],
+              "Cl5-CX-Custodian": ["view_wallet"],
+              "technical_roles_management": ["BPDM Pool Consumer"],
+              "Cl1-CX-Registration": ["view_registration"],
               "Cl24-CX-SSI-CredentialIssuer": [
                 "view_credential_requests",
                 "view_use_case_participation",
-                "request_ssicredential",
                 "revoke_credential",
                 "view_certificates"
               ],
@@ -914,18 +933,10 @@
           "composite": true,
           "composites": {
             "client": {
-              "Cl5-CX-Custodian": [
-                "view_wallet"
-              ],
-              "technical_roles_management": [
-                "BPDM Pool Consumer"
-              ],
-              "Cl1-CX-Registration": [
-                "view_registration"
-              ],
-              "Cl24-CX-SSI-CredentialIssuer": [
-                "view_credential_requests"
-              ],
+              "Cl5-CX-Custodian": ["view_wallet"],
+              "technical_roles_management": ["BPDM Pool Consumer"],
+              "Cl1-CX-Registration": ["view_registration"],
+              "Cl24-CX-SSI-CredentialIssuer": ["view_credential_requests"],
               "Cl2-CX-Portal": [
                 "view_documents",
                 "view_membership",
@@ -944,9 +955,7 @@
                 "delete_notifications",
                 "view_partner_network"
               ],
-              "Cl3-CX-Semantic": [
-                "view_semantic_model"
-              ]
+              "Cl3-CX-Semantic": ["view_semantic_model"]
             }
           },
           "clientRole": true,
@@ -994,28 +1003,18 @@
           "composite": true,
           "composites": {
             "client": {
-              "Cl5-CX-Custodian": [
-                "view_wallet"
-              ],
-              "technical_roles_management": [
-                "BPDM Pool Consumer"
-              ],
-              "Cl1-CX-Registration": [
-                "view_registration"
-              ],
-              "Cl24-CX-SSI-CredentialIssuer": [
-                "view_credential_requests"
-              ],
+              "Cl5-CX-Custodian": ["view_wallet"],
+              "technical_roles_management": ["BPDM Pool Consumer"],
+              "Cl1-CX-Registration": ["view_registration"],
+              "Cl24-CX-SSI-CredentialIssuer": ["view_credential_requests"],
               "Cl2-CX-Portal": [
                 "add_apps",
-                "add_tech_user_management",
                 "view_license_types",
                 "view_app_subscription",
                 "view_service_subscriptions",
                 "activate_subscription",
                 "delete_apps",
                 "view_certificates",
-                "delete_tech_user_management",
                 "CX User",
                 "view_autosetup_status",
                 "App Developer",
@@ -1128,18 +1127,10 @@
           "composite": true,
           "composites": {
             "client": {
-              "Cl5-CX-Custodian": [
-                "view_wallet"
-              ],
-              "technical_roles_management": [
-                "BPDM Pool Consumer"
-              ],
-              "Cl1-CX-Registration": [
-                "view_registration"
-              ],
-              "Cl24-CX-SSI-CredentialIssuer": [
-                "view_credential_requests"
-              ],
+              "Cl5-CX-Custodian": ["view_wallet"],
+              "technical_roles_management": ["BPDM Pool Consumer"],
+              "Cl1-CX-Registration": ["view_registration"],
+              "Cl24-CX-SSI-CredentialIssuer": ["view_credential_requests"],
               "Cl2-CX-Portal": [
                 "view_app_subscription",
                 "view_service_subscriptions",
@@ -1183,6 +1174,7 @@
             "client": {
               "Cl16-CX-BPDMGate": [
                 "read_stats",
+                "write_output_partner",
                 "read_output_changelog",
                 "write_sharing_state",
                 "read_input_partner",
@@ -1206,18 +1198,12 @@
                 "update_wallet",
                 "delete_wallet"
               ],
-              "technical_roles_management": [
-                "BPDM Pool Consumer"
-              ],
-              "Cl1-CX-Registration": [
-                "view_registration"
-              ],
+              "technical_roles_management": ["BPDM Pool Consumer"],
+              "Cl1-CX-Registration": ["view_registration"],
               "Cl24-CX-SSI-CredentialIssuer": [
-                "decision_ssicredential",
                 "revoke_credential",
                 "view_credential_requests",
                 "view_use_case_participation",
-                "request_ssicredential",
                 "revoke_credentials_issuer",
                 "view_certificates"
               ],
@@ -1230,7 +1216,6 @@
                 "view_company_data",
                 "approve_app_release",
                 "view_autosetup_status",
-                "configure_partner_registration",
                 "view_own_user_account",
                 "view_idp",
                 "add_apps",
@@ -1256,6 +1241,7 @@
                 "add_service_offering",
                 "view_notifications",
                 "view_certificates",
+                "create_notifications",
                 "unsubscribe_services",
                 "modify_connectors",
                 "view_use_case_participation",
@@ -1274,7 +1260,6 @@
                 "view_user_account",
                 "view_service_subscriptions",
                 "activate_subscription",
-                "create_ssi_notifications",
                 "view_client_roles",
                 "subscribe_service",
                 "delete_user_account",
@@ -1336,19 +1321,25 @@
           "composite": true,
           "composites": {
             "client": {
-              "technical_roles_management": [
-                "BPDM Sharing Output Consumer",
-                "BPDM Sharing Input Manager",
-                "BPDM Pool Consumer"
+              "Cl7-CX-BPDM": [
+                "read_changelog_member",
+                "read_metadata",
+                "read_partner_member"
               ],
-              "Cl24-CX-SSI-CredentialIssuer": [
-                "view_credential_requests"
-              ],
-              "Cl2-CX-Portal": [
-                "CX User"
-              ]
+              "technical_roles_management": ["BPDM Pool Consumer"],
+              "Cl24-CX-SSI-CredentialIssuer": ["view_credential_requests"],
+              "Cl2-CX-Portal": ["CX User"]
             }
           },
+          "clientRole": true,
+          "containerId": "e0806293-f9b3-44f1-a6d0-4e4406787f80",
+          "attributes": {}
+        },
+        {
+          "id": "22b05ced-cd8e-4769-a368-b8266bf967ef",
+          "name": "create_notifications",
+          "description": "User can create notifications (ONLY FOR TEST REASONS)",
+          "composite": false,
           "clientRole": true,
           "containerId": "e0806293-f9b3-44f1-a6d0-4e4406787f80",
           "attributes": {}
@@ -1412,6 +1403,32 @@
           "composite": false,
           "clientRole": true,
           "containerId": "e0806293-f9b3-44f1-a6d0-4e4406787f80",
+          "attributes": {}
+        }
+      ],
+      "Cl22-CX-BPND": [
+        {
+          "id": "798bcaf7-fec5-414f-91ef-352967bfd72a",
+          "name": "add_bpn_discovery",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "48fc6e9e-a736-4b0b-9fea-59ad847b02e0",
+          "attributes": {}
+        },
+        {
+          "id": "07c35188-e159-4f5b-b05e-a393c5b8c115",
+          "name": "delete_bpn_discovery",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "48fc6e9e-a736-4b0b-9fea-59ad847b02e0",
+          "attributes": {}
+        },
+        {
+          "id": "05bc014a-ce02-4965-bdea-34d5b206e0e5",
+          "name": "view_bpn_discovery",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "48fc6e9e-a736-4b0b-9fea-59ad847b02e0",
           "attributes": {}
         }
       ],
@@ -1510,6 +1527,246 @@
           "attributes": {}
         }
       ],
+      "technical_roles_management": [
+        {
+          "id": "94f74d64-272b-497d-b280-e2007bf4adb4",
+          "name": "BPDM Pool Sharing Consumer",
+          "description": "",
+          "composite": true,
+          "composites": {
+            "client": {
+              "Cl7-CX-BPDM": [
+                "read_changelog_member",
+                "read_metadata",
+                "read_partner_member",
+                "read_changelog"
+              ]
+            }
+          },
+          "clientRole": true,
+          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
+          "attributes": {}
+        },
+        {
+          "id": "4776c000-7232-4804-a133-aff0c01966ba",
+          "name": "Semantic Model Management",
+          "description": "",
+          "composite": true,
+          "composites": {
+            "client": {
+              "Cl3-CX-Semantic": ["view_semantic_model"]
+            }
+          },
+          "clientRole": true,
+          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
+          "attributes": {}
+        },
+        {
+          "id": "dee6cf7a-fb6b-451c-9ef7-87459893e48f",
+          "name": "Registration External",
+          "composite": true,
+          "composites": {
+            "client": {
+              "Cl2-CX-Portal": [
+                "create_partner_registration",
+                "configure_partner_registration"
+              ]
+            }
+          },
+          "clientRole": true,
+          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
+          "attributes": {}
+        },
+        {
+          "id": "80d0af88-3cad-47d2-b2b5-3992941573b8",
+          "name": "BPDM Sharing Input Manager",
+          "description": "",
+          "composite": true,
+          "composites": {
+            "client": {
+              "Cl16-CX-BPDMGate": [
+                "read_input_changelog",
+                "read_sharing_state",
+                "write_sharing_state",
+                "read_input_partner",
+                "write_input_partner",
+                "read_stats"
+              ]
+            }
+          },
+          "clientRole": true,
+          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
+          "attributes": {}
+        },
+        {
+          "id": "8ce375c0-bab3-4df7-939f-a61cd0fa0ab1",
+          "name": "Offer Management",
+          "description": "",
+          "composite": true,
+          "composites": {
+            "client": {
+              "Cl2-CX-Portal": [
+                "view_tech_user_management",
+                "add_service_offering",
+                "add_connectors",
+                "app_management",
+                "activate_subscription"
+              ]
+            }
+          },
+          "clientRole": true,
+          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
+          "attributes": {}
+        },
+        {
+          "id": "e2f27c6d-b183-4a3a-abfa-332edaa09bf5",
+          "name": "BPDM Sharing Admin",
+          "description": "",
+          "composite": true,
+          "composites": {
+            "client": {
+              "Cl16-CX-BPDMGate": [
+                "read_input_changelog",
+                "read_sharing_state",
+                "read_output_changelog",
+                "read_output_partner",
+                "write_sharing_state",
+                "read_input_partner",
+                "write_input_partner",
+                "write_output_partner",
+                "read_stats"
+              ]
+            }
+          },
+          "clientRole": true,
+          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
+          "attributes": {}
+        },
+        {
+          "id": "d26cf5c3-665c-4522-bbc4-fb28f6c62d11",
+          "name": "BPDM Pool Admin",
+          "description": "",
+          "composite": true,
+          "composites": {
+            "client": {
+              "Cl7-CX-BPDM": [
+                "read_changelog_member",
+                "read_partner",
+                "read_metadata",
+                "read_partner_member",
+                "write_metadata",
+                "read_changelog",
+                "write_partner"
+              ]
+            }
+          },
+          "clientRole": true,
+          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
+          "attributes": {}
+        },
+        {
+          "id": "d5781775-3fbd-4f46-84ea-b19164393205",
+          "name": "Dataspace Discovery",
+          "composite": true,
+          "composites": {
+            "client": {
+              "Cl22-CX-BPND": [
+                "add_bpn_discovery",
+                "delete_bpn_discovery",
+                "view_bpn_discovery"
+              ],
+              "Cl21-CX-DF": ["view_discovery_endpoint"],
+              "Cl2-CX-Portal": ["view_connectors"]
+            }
+          },
+          "clientRole": true,
+          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
+          "attributes": {}
+        },
+        {
+          "id": "bf0d0e2e-a58a-4f2e-ae40-a4f9754b55e1",
+          "name": "BPDM Sharing Output Consumer",
+          "description": "",
+          "composite": true,
+          "composites": {
+            "client": {
+              "Cl16-CX-BPDMGate": [
+                "read_sharing_state",
+                "read_output_changelog",
+                "read_output_partner",
+                "read_stats"
+              ]
+            }
+          },
+          "clientRole": true,
+          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
+          "attributes": {}
+        },
+        {
+          "id": "0324b0ed-43c0-4493-ad4b-4f202e288df0",
+          "name": "CX Membership Info",
+          "description": "",
+          "composite": true,
+          "composites": {
+            "client": {
+              "Cl2-CX-Portal": ["view_membership"]
+            }
+          },
+          "clientRole": true,
+          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
+          "attributes": {}
+        },
+        {
+          "id": "6f153999-e1a9-4cc7-b9c0-f53e7c5f7a42",
+          "name": "Identity Wallet Management",
+          "composite": true,
+          "composites": {
+            "client": {
+              "Cl5-CX-Custodian": ["view_wallet", "update_wallet"]
+            }
+          },
+          "clientRole": true,
+          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
+          "attributes": {}
+        },
+        {
+          "id": "3ffec12b-e9da-46d2-ae71-d9b0a196d030",
+          "name": "BPDM Pool Consumer",
+          "description": "",
+          "composite": true,
+          "composites": {
+            "client": {
+              "Cl7-CX-BPDM": [
+                "read_changelog_member",
+                "read_metadata",
+                "read_changelog"
+              ]
+            }
+          },
+          "clientRole": true,
+          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
+          "attributes": {}
+        },
+        {
+          "id": "4348abf6-499f-41cd-91a5-c22afee81629",
+          "name": "BPDM Sharing Input Consumer",
+          "description": "",
+          "composite": true,
+          "composites": {
+            "client": {
+              "Cl16-CX-BPDMGate": [
+                "read_input_changelog",
+                "read_sharing_state",
+                "read_input_partner",
+                "read_stats"
+              ]
+            }
+          },
+          "clientRole": true,
+          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
+          "attributes": {}
+        }
+      ],
       "satest14": [],
       "admin-cli": [],
       "satest13": [],
@@ -1561,10 +1818,7 @@
           "composite": true,
           "composites": {
             "client": {
-              "realm-management": [
-                "query-users",
-                "query-groups"
-              ]
+              "realm-management": ["query-users", "query-groups"]
             }
           },
           "clientRole": true,
@@ -1683,9 +1937,7 @@
           "composite": true,
           "composites": {
             "client": {
-              "realm-management": [
-                "query-clients"
-              ]
+              "realm-management": ["query-clients"]
             }
           },
           "clientRole": true,
@@ -1801,541 +2053,14 @@
           "clientRole": true,
           "containerId": "52f90723-b4c1-44c3-bef2-fd8ebe59ae6c",
           "attributes": {}
-        }
-      ],
-      "Cl25-CX-BPDM-Orchestrator": [
-        {
-          "id": "291b25b4-9e19-4408-885c-541b0460e927",
-          "name": "create_reservation_clean",
-          "description": "Allowed to create reservations for golden record tasks inside the 'Clean' queue.",
-          "composite": false,
-          "clientRole": true,
-          "containerId": "955a5759-5d35-46d9-b92a-684d873a7a28",
-          "attributes": {}
         },
         {
-          "id": "c690e363-ef07-437d-a836-c03a3c12cbfd",
-          "name": "create_result_cleanAndSync",
-          "description": "Allowed to create results for reserved golden record tasks in the 'CleanAndSync' queue.",
-          "composite": false,
-          "clientRole": true,
-          "containerId": "955a5759-5d35-46d9-b92a-684d873a7a28",
-          "attributes": {}
-        },
-        {
-          "id": "5ac5428c-2c16-4b12-929c-f9a177baf539",
-          "name": "create_reservation_cleanAndSync",
-          "description": "Allowed to create reservations for golden record tasks in the 'CleanAndSync' queue",
-          "composite": false,
-          "clientRole": true,
-          "containerId": "955a5759-5d35-46d9-b92a-684d873a7a28",
-          "attributes": {}
-        },
-        {
-          "id": "6a5c44c8-38ea-4ae6-a36b-4dd8c1c59202",
-          "name": "create_reservation_poolSync",
-          "description": "Allowed to create reservations for golden record tasks in the 'PoolSync' queue.",
-          "composite": false,
-          "clientRole": true,
-          "containerId": "955a5759-5d35-46d9-b92a-684d873a7a28",
-          "attributes": {}
-        },
-        {
-          "id": "76018adc-4b18-4eab-bf5d-c32eba107c16",
-          "name": "create_task",
-          "description": "Allowed to create new golden record tasks",
-          "composite": false,
-          "clientRole": true,
-          "containerId": "955a5759-5d35-46d9-b92a-684d873a7a28",
-          "attributes": {}
-        },
-        {
-          "id": "b60d6204-7b12-408e-aa42-c41fc1f7e49f",
-          "name": "create_result_clean",
-          "description": "Allowed to create results for reserved golden record tasks in the 'Clean' queue.",
-          "composite": false,
-          "clientRole": true,
-          "containerId": "955a5759-5d35-46d9-b92a-684d873a7a28",
-          "attributes": {}
-        },
-        {
-          "id": "961c8fc7-c9fc-4569-9139-674984695b7e",
-          "name": "read_task",
-          "description": "Allowed to read the processing state and result of golden record tasks.",
-          "composite": false,
-          "clientRole": true,
-          "containerId": "955a5759-5d35-46d9-b92a-684d873a7a28",
-          "attributes": {}
-        },
-        {
-          "id": "f84abe4f-a41e-45f2-8649-d97509239ba1",
-          "name": "create_result_poolSync",
-          "description": "Allowed to create results for reserved golden record tasks in the 'PoolSync' queue.",
-          "composite": false,
-          "clientRole": true,
-          "containerId": "955a5759-5d35-46d9-b92a-684d873a7a28",
-          "attributes": {}
-        }
-      ],
-      "sa-cl7-cx-1": [],
-      "sa-cl21-01": [],
-      "sa-cl7-cx-5": [],
-      "sa-cl7-cx-7": [],
-      "sa-cl5-custodian-2": [],
-      "sa-cl25-cx-3": [],
-      "sa-cl25-cx-2": [],
-      "sa-cl25-cx-1": [],
-      "sa-cl2-02": [],
-      "sa-cl2-01": [],
-      "sa-cl2-04": [],
-      "sa-cl2-03": [],
-      "sa-cl2-05": [],
-      "account-console": [],
-      "sa-cl22-01": [],
-      "Cl24-CX-SSI-CredentialIssuer": [
-        {
-          "id": "04b4162f-ab97-49aa-9331-cb73a60b845f",
-          "name": "view_certificates",
+          "id": "7e7ac79f-1661-4137-a665-54836b06e5b7",
+          "name": "write_output_partner",
           "description": "",
           "composite": false,
           "clientRole": true,
-          "containerId": "e3ef0979-896b-4455-87e7-647f19119c7b",
-          "attributes": {}
-        },
-        {
-          "id": "3dcd410b-0984-48b4-88d5-060eb744dd76",
-          "name": "revoke_credentials_issuer",
-          "description": "",
-          "composite": false,
-          "clientRole": true,
-          "containerId": "e3ef0979-896b-4455-87e7-647f19119c7b",
-          "attributes": {}
-        },
-        {
-          "id": "1f8ee654-161a-42e4-a2aa-64b4cd91f27e",
-          "name": "view_credential_requests",
-          "description": "",
-          "composite": false,
-          "clientRole": true,
-          "containerId": "e3ef0979-896b-4455-87e7-647f19119c7b",
-          "attributes": {}
-        },
-        {
-          "id": "3459d174-ef82-41d1-8d4d-35a16dd5665a",
-          "name": "view_use_case_participation",
-          "description": "",
-          "composite": false,
-          "clientRole": true,
-          "containerId": "e3ef0979-896b-4455-87e7-647f19119c7b",
-          "attributes": {}
-        },
-        {
-          "id": "72c2c701-f352-44b2-b95e-2d8125b6cdbc",
-          "name": "request_ssicredential",
-          "description": "",
-          "composite": false,
-          "clientRole": true,
-          "containerId": "e3ef0979-896b-4455-87e7-647f19119c7b",
-          "attributes": {}
-        },
-        {
-          "id": "c5e784b2-4cd1-4aae-965d-5ca0d54ad293",
-          "name": "decision_ssicredential",
-          "description": "",
-          "composite": false,
-          "clientRole": true,
-          "containerId": "e3ef0979-896b-4455-87e7-647f19119c7b",
-          "attributes": {}
-        },
-        {
-          "id": "3f8bbef4-5d29-4ca3-9b67-7e102663f725",
-          "name": "revoke_credential",
-          "description": "",
-          "composite": false,
-          "clientRole": true,
-          "containerId": "e3ef0979-896b-4455-87e7-647f19119c7b",
-          "attributes": {}
-        }
-      ],
-      "Cl22-CX-BPND": [
-        {
-          "id": "798bcaf7-fec5-414f-91ef-352967bfd72a",
-          "name": "add_bpn_discovery",
-          "composite": false,
-          "clientRole": true,
-          "containerId": "48fc6e9e-a736-4b0b-9fea-59ad847b02e0",
-          "attributes": {}
-        },
-        {
-          "id": "07c35188-e159-4f5b-b05e-a393c5b8c115",
-          "name": "delete_bpn_discovery",
-          "composite": false,
-          "clientRole": true,
-          "containerId": "48fc6e9e-a736-4b0b-9fea-59ad847b02e0",
-          "attributes": {}
-        },
-        {
-          "id": "05bc014a-ce02-4965-bdea-34d5b206e0e5",
-          "name": "view_bpn_discovery",
-          "composite": false,
-          "clientRole": true,
-          "containerId": "48fc6e9e-a736-4b0b-9fea-59ad847b02e0",
-          "attributes": {}
-        }
-      ],
-      "technical_roles_management": [
-        {
-          "id": "0c4ec53e-08f4-4593-a68d-eb31c8b433c9",
-          "name": "BPDM Orchestrator Processor Clean",
-          "description": "Allowed to process golden record tasks in the 'Clean' queue",
-          "composite": true,
-          "composites": {
-            "client": {
-              "Cl25-CX-BPDM-Orchestrator": [
-                "create_reservation_clean",
-                "create_result_clean"
-              ]
-            }
-          },
-          "clientRole": true,
-          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
-          "attributes": {}
-        },
-        {
-          "id": "94f74d64-272b-497d-b280-e2007bf4adb4",
-          "name": "BPDM Pool Sharing Consumer",
-          "description": "",
-          "composite": true,
-          "composites": {
-            "client": {
-              "Cl7-CX-BPDM": [
-                "read_partner",
-                "read_metadata",
-                "read_changelog"
-              ]
-            }
-          },
-          "clientRole": true,
-          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
-          "attributes": {}
-        },
-        {
-          "id": "ba2feddc-77d7-40c4-8b10-859903bcafb8",
-          "name": "Registration Internal",
-          "description": "Technical user enabling the invitation API to integrate 3rd party software.",
-          "composite": true,
-          "composites": {
-            "client": {
-              "Cl2-CX-Portal": [
-                "view_submitted_applications",
-                "invite_new_partner"
-              ]
-            }
-          },
-          "clientRole": true,
-          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
-          "attributes": {}
-        },
-        {
-          "id": "4776c000-7232-4804-a133-aff0c01966ba",
-          "name": "Semantic Model Management",
-          "description": "",
-          "composite": true,
-          "composites": {
-            "client": {
-              "Cl3-CX-Semantic": [
-                "view_semantic_model"
-              ]
-            }
-          },
-          "clientRole": true,
-          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
-          "attributes": {}
-        },
-        {
-          "id": "f21efc81-8506-4821-9a75-2b97d0a9cd7b",
-          "name": "BPDM Orchestrator Processor CleanAndSync",
-          "description": "Allowed to process golden record tasks in the 'CleanAndSync' queue",
-          "composite": true,
-          "composites": {
-            "client": {
-              "Cl25-CX-BPDM-Orchestrator": [
-                "create_result_cleanAndSync",
-                "create_reservation_cleanAndSync"
-              ]
-            }
-          },
-          "clientRole": true,
-          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
-          "attributes": {}
-        },
-        {
-          "id": "dee6cf7a-fb6b-451c-9ef7-87459893e48f",
-          "name": "Registration External",
-          "composite": true,
-          "composites": {
-            "client": {
-              "Cl2-CX-Portal": [
-                "configure_partner_registration"
-              ]
-            }
-          },
-          "clientRole": true,
-          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
-          "attributes": {}
-        },
-        {
-          "id": "80d0af88-3cad-47d2-b2b5-3992941573b8",
-          "name": "BPDM Sharing Input Manager",
-          "description": "",
-          "composite": true,
-          "composites": {
-            "client": {
-              "Cl16-CX-BPDMGate": [
-                "read_input_changelog",
-                "read_sharing_state",
-                "write_sharing_state",
-                "read_input_partner",
-                "read_stats",
-                "write_input_partner"
-              ]
-            }
-          },
-          "clientRole": true,
-          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
-          "attributes": {}
-        },
-        {
-          "id": "8ce375c0-bab3-4df7-939f-a61cd0fa0ab1",
-          "name": "Offer Management",
-          "description": "",
-          "composite": true,
-          "composites": {
-            "client": {
-              "Cl2-CX-Portal": [
-                "view_tech_user_management",
-                "add_service_offering",
-                "add_connectors",
-                "app_management",
-                "activate_subscription"
-              ]
-            }
-          },
-          "clientRole": true,
-          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
-          "attributes": {}
-        },
-        {
-          "id": "fedb5137-e15f-489c-8dd7-7be5721e6d43",
-          "name": "BPDM Orchestrator Processor PoolSync",
-          "description": "Allowed to process golden record tasks in the 'PoolSync' queue",
-          "composite": true,
-          "composites": {
-            "client": {
-              "Cl25-CX-BPDM-Orchestrator": [
-                "create_reservation_poolSync",
-                "create_result_poolSync"
-              ]
-            }
-          },
-          "clientRole": true,
-          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
-          "attributes": {}
-        },
-        {
-          "id": "e2f27c6d-b183-4a3a-abfa-332edaa09bf5",
-          "name": "BPDM Sharing Admin",
-          "description": "",
-          "composite": true,
-          "composites": {
-            "client": {
-              "Cl16-CX-BPDMGate": [
-                "read_input_changelog",
-                "read_sharing_state",
-                "read_output_changelog",
-                "read_output_partner",
-                "write_sharing_state",
-                "read_input_partner",
-                "read_stats",
-                "write_input_partner"
-              ]
-            }
-          },
-          "clientRole": true,
-          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
-          "attributes": {}
-        },
-        {
-          "id": "d33ab271-7fea-44c3-a9bc-8760ed8725f6",
-          "name": "BPDM Orchestrator Task Creator",
-          "description": "Allowed to create new golden record tasks, monitor the processing state and result.",
-          "composite": true,
-          "composites": {
-            "client": {
-              "Cl25-CX-BPDM-Orchestrator": [
-                "create_task",
-                "read_task"
-              ]
-            }
-          },
-          "clientRole": true,
-          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
-          "attributes": {}
-        },
-        {
-          "id": "d26cf5c3-665c-4522-bbc4-fb28f6c62d11",
-          "name": "BPDM Pool Admin",
-          "description": "",
-          "composite": true,
-          "composites": {
-            "client": {
-              "Cl7-CX-BPDM": [
-                "read_changelog_member",
-                "read_partner",
-                "read_metadata",
-                "read_partner_member",
-                "write_metadata",
-                "read_changelog",
-                "write_partner"
-              ]
-            }
-          },
-          "clientRole": true,
-          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
-          "attributes": {}
-        },
-        {
-          "id": "d5781775-3fbd-4f46-84ea-b19164393205",
-          "name": "Dataspace Discovery",
-          "composite": true,
-          "composites": {
-            "client": {
-              "Cl22-CX-BPND": [
-                "add_bpn_discovery",
-                "delete_bpn_discovery",
-                "view_bpn_discovery"
-              ],
-              "Cl21-CX-DF": [
-                "view_discovery_endpoint"
-              ],
-              "Cl2-CX-Portal": [
-                "view_connectors"
-              ]
-            }
-          },
-          "clientRole": true,
-          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
-          "attributes": {}
-        },
-        {
-          "id": "bf0d0e2e-a58a-4f2e-ae40-a4f9754b55e1",
-          "name": "BPDM Sharing Output Consumer",
-          "description": "",
-          "composite": true,
-          "composites": {
-            "client": {
-              "Cl16-CX-BPDMGate": [
-                "read_sharing_state",
-                "read_output_changelog",
-                "read_output_partner",
-                "read_stats"
-              ]
-            }
-          },
-          "clientRole": true,
-          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
-          "attributes": {}
-        },
-        {
-          "id": "0324b0ed-43c0-4493-ad4b-4f202e288df0",
-          "name": "CX Membership Info",
-          "description": "",
-          "composite": true,
-          "composites": {
-            "client": {
-              "Cl2-CX-Portal": [
-                "view_membership"
-              ]
-            }
-          },
-          "clientRole": true,
-          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
-          "attributes": {}
-        },
-        {
-          "id": "6f153999-e1a9-4cc7-b9c0-f53e7c5f7a42",
-          "name": "Identity Wallet Management",
-          "composite": true,
-          "composites": {
-            "client": {
-              "Cl5-CX-Custodian": [
-                "view_wallet",
-                "update_wallet"
-              ]
-            }
-          },
-          "clientRole": true,
-          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
-          "attributes": {}
-        },
-        {
-          "id": "3ffec12b-e9da-46d2-ae71-d9b0a196d030",
-          "name": "BPDM Pool Consumer",
-          "description": "",
-          "composite": true,
-          "composites": {
-            "client": {
-              "Cl7-CX-BPDM": [
-                "read_changelog_member",
-                "read_metadata",
-                "read_partner_member"
-              ]
-            }
-          },
-          "clientRole": true,
-          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
-          "attributes": {}
-        },
-        {
-          "id": "4348abf6-499f-41cd-91a5-c22afee81629",
-          "name": "BPDM Sharing Input Consumer",
-          "description": "",
-          "composite": true,
-          "composites": {
-            "client": {
-              "Cl16-CX-BPDMGate": [
-                "read_input_changelog",
-                "read_sharing_state",
-                "read_input_partner",
-                "read_stats"
-              ]
-            }
-          },
-          "clientRole": true,
-          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
-          "attributes": {}
-        },
-        {
-          "id": "25ff9c62-f81a-4a56-a63e-9ddc08294ffb",
-          "name": "BPDM Orchestrator Admin",
-          "description": "Full read and write access to the BPDM Orchestrator component",
-          "composite": true,
-          "composites": {
-            "client": {
-              "Cl25-CX-BPDM-Orchestrator": [
-                "create_reservation_clean",
-                "create_result_cleanAndSync",
-                "create_reservation_cleanAndSync",
-                "create_reservation_poolSync",
-                "create_task",
-                "read_task",
-                "create_result_clean",
-                "create_result_poolSync"
-              ]
-            }
-          },
-          "clientRole": true,
-          "containerId": "6df310ed-500e-43d5-b510-fa4668e939ee",
+          "containerId": "52f90723-b4c1-44c3-bef2-fd8ebe59ae6c",
           "attributes": {}
         }
       ],
@@ -2590,6 +2315,8 @@
           "attributes": {}
         }
       ],
+      "sa-cl21-01": [],
+      "sa-cl7-cx-5": [],
       "broker": [
         {
           "id": "d1330d07-b783-43ad-b545-85a230060023",
@@ -2642,6 +2369,7 @@
       "sa-cl1-reg-2": [],
       "satest09": [],
       "satest08": [],
+      "sa-cl5-custodian-2": [],
       "satest03": [],
       "satest02": [],
       "satest01": [],
@@ -2655,9 +2383,7 @@
           "composite": true,
           "composites": {
             "client": {
-              "account": [
-                "view-consent"
-              ]
+              "account": ["view-consent"]
             }
           },
           "clientRole": true,
@@ -2680,9 +2406,7 @@
           "composite": true,
           "composites": {
             "client": {
-              "account": [
-                "manage-account-links"
-              ]
+              "account": ["manage-account-links"]
             }
           },
           "clientRole": true,
@@ -2753,15 +2477,13 @@
   "groups": [],
   "defaultRole": {
     "id": "4c19f2aa-f9b9-473e-ba5c-46c2f4e52c8b",
-    "name": "default-roles-cx-central",
+    "name": "default-roles-catena-x realm",
     "description": "${role_default-roles}",
     "composite": true,
     "clientRole": false,
     "containerId": "CX-Central"
   },
-  "requiredCredentials": [
-    "password"
-  ],
+  "requiredCredentials": ["password"],
   "otpPolicyType": "totp",
   "otpPolicyAlgorithm": "HmacSHA1",
   "otpPolicyInitialCounter": 0,
@@ -2770,15 +2492,12 @@
   "otpPolicyPeriod": 30,
   "otpPolicyCodeReusable": false,
   "otpSupportedApplications": [
-    "totpAppFreeOTPName",
+    "totpAppMicrosoftAuthenticatorName",
     "totpAppGoogleName",
-    "totpAppMicrosoftAuthenticatorName"
+    "totpAppFreeOTPName"
   ],
-  "localizationTexts": {},
   "webAuthnPolicyRpEntityName": "keycloak",
-  "webAuthnPolicySignatureAlgorithms": [
-    "ES256"
-  ],
+  "webAuthnPolicySignatureAlgorithms": ["ES256"],
   "webAuthnPolicyRpId": "",
   "webAuthnPolicyAttestationConveyancePreference": "not specified",
   "webAuthnPolicyAuthenticatorAttachment": "not specified",
@@ -2787,11 +2506,8 @@
   "webAuthnPolicyCreateTimeout": 0,
   "webAuthnPolicyAvoidSameAuthenticatorRegister": false,
   "webAuthnPolicyAcceptableAaguids": [],
-  "webAuthnPolicyExtraOrigins": [],
   "webAuthnPolicyPasswordlessRpEntityName": "keycloak",
-  "webAuthnPolicyPasswordlessSignatureAlgorithms": [
-    "ES256"
-  ],
+  "webAuthnPolicyPasswordlessSignatureAlgorithms": ["ES256"],
   "webAuthnPolicyPasswordlessRpId": "",
   "webAuthnPolicyPasswordlessAttestationConveyancePreference": "not specified",
   "webAuthnPolicyPasswordlessAuthenticatorAttachment": "not specified",
@@ -2800,8 +2516,38 @@
   "webAuthnPolicyPasswordlessCreateTimeout": 0,
   "webAuthnPolicyPasswordlessAvoidSameAuthenticatorRegister": false,
   "webAuthnPolicyPasswordlessAcceptableAaguids": [],
-  "webAuthnPolicyPasswordlessExtraOrigins": [],
   "users": [
+    {
+      "id": "502dabcf-01c7-47d9-a88e-0be4279097b5",
+      "createdTimestamp": 1652788086549,
+      "username": "ac1cf001-7fbc-1f2f-817f-bce058020006",
+      "enabled": true,
+      "totp": false,
+      "emailVerified": false,
+      "firstName": "Operator",
+      "lastName": "CX Admin",
+      "email": "tobeadded@tx.test",
+      "attributes": {
+        "bpn": ["BPNL00000003CRHK"],
+        "organisation": ["CX-Operator"]
+      },
+      "credentials": [],
+      "disableableCredentialTypes": [],
+      "requiredActions": [],
+      "federatedIdentities": [
+        {
+          "identityProvider": "CX-Operator",
+          "userId": "656e8a94-188b-4a3e-9eec-b45d8efd8347",
+          "userName": "cx-operator@tx.test"
+        }
+      ],
+      "realmRoles": ["default-roles-catena-x realm"],
+      "clientRoles": {
+        "Cl2-CX-Portal": ["CX Admin"]
+      },
+      "notBefore": 0,
+      "groups": []
+    },
     {
       "id": "e69c1397-eee8-434a-b83b-dc7944bb9bdd",
       "createdTimestamp": 1651730911692,
@@ -2811,15 +2557,11 @@
       "emailVerified": false,
       "serviceAccountClientId": "sa-cl1-reg-2",
       "attributes": {
-        "bpn": [
-          "BPNL00000003CRHK"
-        ]
+        "bpn": ["BPNL00000003CRHK"]
       },
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
+      "realmRoles": ["default-roles-catena-x realm"],
       "clientRoles": {
         "realm-management": [
           "manage-users",
@@ -2839,19 +2581,13 @@
       "emailVerified": false,
       "serviceAccountClientId": "sa-cl2-01",
       "attributes": {
-        "bpn": [
-          "BPNL00000003CRHK"
-        ]
+        "bpn": ["BPNL00000003CRHK"]
       },
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
+      "realmRoles": ["default-roles-catena-x realm"],
       "clientRoles": {
-        "Cl2-CX-Portal": [
-          "update_application_checklist_value"
-        ]
+        "Cl2-CX-Portal": ["update_application_checklist_value"]
       },
       "notBefore": 0,
       "groups": []
@@ -2865,15 +2601,11 @@
       "emailVerified": false,
       "serviceAccountClientId": "sa-cl2-02",
       "attributes": {
-        "bpn": [
-          "BPNL00000003CRHK"
-        ]
+        "bpn": ["BPNL00000003CRHK"]
       },
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
+      "realmRoles": ["default-roles-catena-x realm"],
       "clientRoles": {
         "Cl2-CX-Portal": [
           "submit_connector_sd",
@@ -2892,15 +2624,11 @@
       "emailVerified": false,
       "serviceAccountClientId": "sa-cl2-03",
       "attributes": {
-        "bpn": [
-          "BPNL00000003CRHK"
-        ]
+        "bpn": ["BPNL00000003CRHK"]
       },
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
+      "realmRoles": ["default-roles-catena-x realm"],
       "notBefore": 0,
       "groups": []
     },
@@ -2913,15 +2641,11 @@
       "emailVerified": false,
       "serviceAccountClientId": "sa-cl2-04",
       "attributes": {
-        "bpn": [
-          "BPNL00000003CRHK"
-        ]
+        "bpn": ["BPNL00000003CRHK"]
       },
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
+      "realmRoles": ["default-roles-catena-x realm"],
       "clientRoles": {
         "Cl24-CX-SSI-CredentialIssuer": [
           "view_certificates",
@@ -2944,20 +2668,13 @@
       "emailVerified": false,
       "serviceAccountClientId": "sa-cl2-05",
       "attributes": {
-        "bpn": [
-          "BPNL00000003CRHK"
-        ]
+        "bpn": ["BPNL00000003CRHK"]
       },
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
+      "realmRoles": ["default-roles-catena-x realm"],
       "clientRoles": {
-        "Cl2-CX-Portal": [
-          "store_didDocument",
-          "technical_roles_management"
-        ]
+        "Cl2-CX-Portal": ["store_didDocument"]
       },
       "notBefore": 0,
       "groups": []
@@ -2971,15 +2688,11 @@
       "emailVerified": false,
       "serviceAccountClientId": "sa-cl21-01",
       "attributes": {
-        "bpn": [
-          "BPNL00000003CRHK"
-        ]
+        "bpn": ["BPNL00000003CRHK"]
       },
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
+      "realmRoles": ["default-roles-catena-x realm"],
       "clientRoles": {
         "Cl21-CX-DF": [
           "view_discovery_endpoint",
@@ -2999,15 +2712,11 @@
       "emailVerified": false,
       "serviceAccountClientId": "sa-cl22-01",
       "attributes": {
-        "bpn": [
-          "BPNL00000003CRHK"
-        ]
+        "bpn": ["BPNL00000003CRHK"]
       },
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
+      "realmRoles": ["default-roles-catena-x realm"],
       "clientRoles": {
         "Cl22-CX-BPND": [
           "add_bpn_discovery",
@@ -3027,99 +2736,17 @@
       "emailVerified": false,
       "serviceAccountClientId": "sa-cl24-01",
       "attributes": {
-        "bpn": [
-          "BPNL00000003CRHK"
-        ]
+        "bpn": ["BPNL00000003CRHK"]
       },
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
+      "realmRoles": ["default-roles-catena-x realm"],
       "clientRoles": {
         "Cl2-CX-Portal": [
           "send_mail",
           "update_application_bpn_credential",
-          "update_application_membership_credential"
-        ]
-      },
-      "notBefore": 0,
-      "groups": []
-    },
-    {
-      "id": "bbb919dd-b3aa-4ec3-8786-582787886276",
-      "createdTimestamp": 1722276592957,
-      "username": "service-account-sa-cl25-cx-1",
-      "enabled": true,
-      "totp": false,
-      "emailVerified": false,
-      "serviceAccountClientId": "sa-cl25-cx-1",
-      "attributes": {
-        "bpn": [
-          "BPNL00000003CRHK"
-        ]
-      },
-      "disableableCredentialTypes": [],
-      "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
-      "clientRoles": {
-        "technical_roles_management": [
-          "BPDM Orchestrator Processor Clean",
-          "BPDM Orchestrator Processor CleanAndSync"
-        ]
-      },
-      "notBefore": 0,
-      "groups": []
-    },
-    {
-      "id": "e24da044-7290-45f4-a2ea-cb8165393f0a",
-      "createdTimestamp": 1722276592957,
-      "username": "service-account-sa-cl25-cx-2",
-      "enabled": true,
-      "totp": false,
-      "emailVerified": false,
-      "serviceAccountClientId": "sa-cl25-cx-2",
-      "attributes": {
-        "bpn": [
-          "BPNL00000003CRHK"
-        ]
-      },
-      "disableableCredentialTypes": [],
-      "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
-      "clientRoles": {
-        "technical_roles_management": [
-          "BPDM Orchestrator Processor PoolSync"
-        ]
-      },
-      "notBefore": 0,
-      "groups": []
-    },
-    {
-      "id": "72351810-a1b4-42e6-9686-8abe6b0d5cb0",
-      "createdTimestamp": 1722276592957,
-      "username": "service-account-sa-cl25-cx-3",
-      "enabled": true,
-      "totp": false,
-      "emailVerified": false,
-      "serviceAccountClientId": "sa-cl25-cx-3",
-      "attributes": {
-        "bpn": [
-          "BPNL00000003CRHK"
-        ]
-      },
-      "disableableCredentialTypes": [],
-      "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
-      "clientRoles": {
-        "technical_roles_management": [
-          "BPDM Orchestrator Task Creator"
+          "update_application_membership_credential",
+          "create_notifications"
         ]
       },
       "notBefore": 0,
@@ -3136,19 +2763,13 @@
       "lastName": "",
       "serviceAccountClientId": "sa-cl3-cx-1",
       "attributes": {
-        "bpn": [
-          "BPNL00000003CRHK"
-        ]
+        "bpn": ["BPNL00000003CRHK"]
       },
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
+      "realmRoles": ["default-roles-catena-x realm"],
       "clientRoles": {
-        "technical_roles_management": [
-          "Semantic Model Management"
-        ],
+        "technical_roles_management": ["Semantic Model Management"],
         "Cl3-CX-Semantic": [
           "delete_semantic_model",
           "add_semantic_model",
@@ -3167,15 +2788,11 @@
       "emailVerified": false,
       "serviceAccountClientId": "sa-cl5-custodian-2",
       "attributes": {
-        "bpn": [
-          "BPNL00000003CRHK"
-        ]
+        "bpn": ["BPNL00000003CRHK"]
       },
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
+      "realmRoles": ["default-roles-catena-x realm"],
       "clientRoles": {
         "Cl5-CX-Custodian": [
           "delete_wallet",
@@ -3192,32 +2809,6 @@
       "groups": []
     },
     {
-      "id": "95796de5-c9c6-46fc-a3f7-7af782ea9024",
-      "createdTimestamp": 1722276592957,
-      "username": "service-account-sa-cl7-cx-1",
-      "enabled": true,
-      "totp": false,
-      "emailVerified": false,
-      "serviceAccountClientId": "sa-cl7-cx-1",
-      "attributes": {
-        "bpn": [
-          "BPNL00000003CRHK"
-        ]
-      },
-      "disableableCredentialTypes": [],
-      "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
-      "clientRoles": {
-        "technical_roles_management": [
-          "BPDM Pool Sharing Consumer"
-        ]
-      },
-      "notBefore": 0,
-      "groups": []
-    },
-    {
       "id": "f014ed5d-9e05-4f29-a5c0-227c7e7b479e",
       "createdTimestamp": 1670157703230,
       "username": "service-account-sa-cl7-cx-5",
@@ -3226,49 +2817,13 @@
       "emailVerified": false,
       "serviceAccountClientId": "sa-cl7-cx-5",
       "attributes": {
-        "bpn": [
-          "BPNL00000003CRHK"
-        ]
+        "bpn": ["BPNL00000003CRHK"]
       },
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
+      "realmRoles": ["default-roles-catena-x realm"],
       "clientRoles": {
-        "technical_roles_management": [
-          "BPDM Sharing Admin",
-          "BPDM Orchestrator Admin",
-          "BPDM Pool Admin"
-        ]
-      },
-      "notBefore": 0,
-      "groups": []
-    },
-    {
-      "id": "3f9fc7e8-d312-4912-a9a1-4db8849ce8f7",
-      "createdTimestamp": 1722276592957,
-      "username": "service-account-sa-cl7-cx-7",
-      "enabled": true,
-      "totp": false,
-      "emailVerified": false,
-      "serviceAccountClientId": "sa-cl7-cx-7",
-      "attributes": {
-        "bpn": [
-          "BPNL00000003CRHK"
-        ]
-      },
-      "disableableCredentialTypes": [],
-      "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
-      "clientRoles": {
-        "technical_roles_management": [
-          "BPDM Sharing Admin",
-          "BPDM Orchestrator Admin",
-          "BPDM Pool Admin"
-        ]
+        "technical_roles_management": ["BPDM Sharing Admin", "BPDM Pool Admin"]
       },
       "notBefore": 0,
       "groups": []
@@ -3282,19 +2837,13 @@
       "emailVerified": false,
       "serviceAccountClientId": "sa-cl8-cx-1",
       "attributes": {
-        "bpn": [
-          "BPNL00000003CRHK"
-        ]
+        "bpn": ["BPNL00000003CRHK"]
       },
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
+      "realmRoles": ["default-roles-catena-x realm"],
       "clientRoles": {
-        "Cl2-CX-Portal": [
-          "add_self_descriptions"
-        ]
+        "Cl2-CX-Portal": ["add_self_descriptions"]
       },
       "notBefore": 0,
       "groups": []
@@ -3310,19 +2859,13 @@
       "lastName": "",
       "serviceAccountClientId": "satest01",
       "attributes": {
-        "bpn": [
-          "BPNL00000003AZQP"
-        ]
+        "bpn": ["BPNL00000003AZQP"]
       },
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
+      "realmRoles": ["default-roles-catena-x realm"],
       "clientRoles": {
-        "technical_roles_management": [
-          "Identity Wallet Management"
-        ]
+        "technical_roles_management": ["Identity Wallet Management"]
       },
       "notBefore": 0,
       "groups": []
@@ -3338,19 +2881,13 @@
       "lastName": "",
       "serviceAccountClientId": "satest02",
       "attributes": {
-        "bpn": [
-          "BPNL00000003AYRE"
-        ]
+        "bpn": ["BPNL00000003AYRE"]
       },
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
+      "realmRoles": ["default-roles-catena-x realm"],
       "clientRoles": {
-        "technical_roles_management": [
-          "Identity Wallet Management"
-        ]
+        "technical_roles_management": ["Identity Wallet Management"]
       },
       "notBefore": 0,
       "groups": []
@@ -3366,19 +2903,13 @@
       "lastName": "",
       "serviceAccountClientId": "satest03",
       "attributes": {
-        "bpn": [
-          "BPNL00000003AVTH"
-        ]
+        "bpn": ["BPNL00000003AVTH"]
       },
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
+      "realmRoles": ["default-roles-catena-x realm"],
       "clientRoles": {
-        "technical_roles_management": [
-          "Identity Wallet Management"
-        ]
+        "technical_roles_management": ["Identity Wallet Management"]
       },
       "notBefore": 0,
       "groups": []
@@ -3394,19 +2925,13 @@
       "lastName": "",
       "serviceAccountClientId": "satest04",
       "attributes": {
-        "bpn": [
-          "BPNL00000003AWSS"
-        ]
+        "bpn": ["BPNL00000003AWSS"]
       },
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
+      "realmRoles": ["default-roles-catena-x realm"],
       "clientRoles": {
-        "technical_roles_management": [
-          "Identity Wallet Management"
-        ]
+        "technical_roles_management": ["Identity Wallet Management"]
       },
       "notBefore": 0,
       "groups": []
@@ -3422,19 +2947,13 @@
       "lastName": "",
       "serviceAccountClientId": "satest05",
       "attributes": {
-        "bpn": [
-          "BPNL00000003B0Q0"
-        ]
+        "bpn": ["BPNL00000003B0Q0"]
       },
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
+      "realmRoles": ["default-roles-catena-x realm"],
       "clientRoles": {
-        "technical_roles_management": [
-          "Identity Wallet Management"
-        ]
+        "technical_roles_management": ["Identity Wallet Management"]
       },
       "notBefore": 0,
       "groups": []
@@ -3450,19 +2969,13 @@
       "lastName": "",
       "serviceAccountClientId": "satest06",
       "attributes": {
-        "bpn": [
-          "BPNS0000000008ZZ"
-        ]
+        "bpn": ["BPNS0000000008ZZ"]
       },
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
+      "realmRoles": ["default-roles-catena-x realm"],
       "clientRoles": {
-        "technical_roles_management": [
-          "Identity Wallet Management"
-        ]
+        "technical_roles_management": ["Identity Wallet Management"]
       },
       "notBefore": 0,
       "groups": []
@@ -3478,19 +2991,13 @@
       "lastName": "",
       "serviceAccountClientId": "satest07",
       "attributes": {
-        "bpn": [
-          "BPNL00000003CNKC"
-        ]
+        "bpn": ["BPNL00000003CNKC"]
       },
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
+      "realmRoles": ["default-roles-catena-x realm"],
       "clientRoles": {
-        "technical_roles_management": [
-          "Identity Wallet Management"
-        ]
+        "technical_roles_management": ["Identity Wallet Management"]
       },
       "notBefore": 0,
       "groups": []
@@ -3506,19 +3013,13 @@
       "lastName": "",
       "serviceAccountClientId": "satest08",
       "attributes": {
-        "bpn": [
-          "BPNL00000003B6LU"
-        ]
+        "bpn": ["BPNL00000003B6LU"]
       },
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
+      "realmRoles": ["default-roles-catena-x realm"],
       "clientRoles": {
-        "technical_roles_management": [
-          "Identity Wallet Management"
-        ]
+        "technical_roles_management": ["Identity Wallet Management"]
       },
       "notBefore": 0,
       "groups": []
@@ -3534,19 +3035,13 @@
       "lastName": "",
       "serviceAccountClientId": "satest09",
       "attributes": {
-        "bpn": [
-          "BPNL00000003CML1"
-        ]
+        "bpn": ["BPNL00000003CML1"]
       },
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
+      "realmRoles": ["default-roles-catena-x realm"],
       "clientRoles": {
-        "technical_roles_management": [
-          "Identity Wallet Management"
-        ]
+        "technical_roles_management": ["Identity Wallet Management"]
       },
       "notBefore": 0,
       "groups": []
@@ -3562,19 +3057,13 @@
       "lastName": "",
       "serviceAccountClientId": "satest10",
       "attributes": {
-        "bpn": [
-          "BPNS00000008BDFH"
-        ]
+        "bpn": ["BPNS00000008BDFH"]
       },
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
+      "realmRoles": ["default-roles-catena-x realm"],
       "clientRoles": {
-        "technical_roles_management": [
-          "Identity Wallet Management"
-        ]
+        "technical_roles_management": ["Identity Wallet Management"]
       },
       "notBefore": 0,
       "groups": []
@@ -3590,19 +3079,13 @@
       "lastName": "",
       "serviceAccountClientId": "satest11",
       "attributes": {
-        "bpn": [
-          "BPNL00000003B2OM"
-        ]
+        "bpn": ["BPNL00000003B2OM"]
       },
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
+      "realmRoles": ["default-roles-catena-x realm"],
       "clientRoles": {
-        "technical_roles_management": [
-          "Identity Wallet Management"
-        ]
+        "technical_roles_management": ["Identity Wallet Management"]
       },
       "notBefore": 0,
       "groups": []
@@ -3618,19 +3101,13 @@
       "lastName": "",
       "serviceAccountClientId": "satest12",
       "attributes": {
-        "bpn": [
-          "BPNL00000003CSGV"
-        ]
+        "bpn": ["BPNL00000003CSGV"]
       },
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
+      "realmRoles": ["default-roles-catena-x realm"],
       "clientRoles": {
-        "technical_roles_management": [
-          "Identity Wallet Management"
-        ]
+        "technical_roles_management": ["Identity Wallet Management"]
       },
       "notBefore": 0,
       "groups": []
@@ -3646,19 +3123,13 @@
       "lastName": "",
       "serviceAccountClientId": "satest13",
       "attributes": {
-        "bpn": [
-          "BPNL00000003B5MJ"
-        ]
+        "bpn": ["BPNL00000003B5MJ"]
       },
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
+      "realmRoles": ["default-roles-catena-x realm"],
       "clientRoles": {
-        "technical_roles_management": [
-          "Identity Wallet Management"
-        ]
+        "technical_roles_management": ["Identity Wallet Management"]
       },
       "notBefore": 0,
       "groups": []
@@ -3674,19 +3145,13 @@
       "lastName": "",
       "serviceAccountClientId": "satest14",
       "attributes": {
-        "bpn": [
-          "BPNL00000003AXS3"
-        ]
+        "bpn": ["BPNL00000003AXS3"]
       },
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
+      "realmRoles": ["default-roles-catena-x realm"],
       "clientRoles": {
-        "technical_roles_management": [
-          "Identity Wallet Management"
-        ]
+        "technical_roles_management": ["Identity Wallet Management"]
       },
       "notBefore": 0,
       "groups": []
@@ -3702,19 +3167,13 @@
       "lastName": "",
       "serviceAccountClientId": "satest15",
       "attributes": {
-        "bpn": [
-          "BPNL00000003B3NX"
-        ]
+        "bpn": ["BPNL00000003B3NX"]
       },
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
+      "realmRoles": ["default-roles-catena-x realm"],
       "clientRoles": {
-        "technical_roles_management": [
-          "Identity Wallet Management"
-        ]
+        "technical_roles_management": ["Identity Wallet Management"]
       },
       "notBefore": 0,
       "groups": []
@@ -3730,19 +3189,13 @@
       "lastName": "",
       "serviceAccountClientId": "satest16",
       "attributes": {
-        "bpn": [
-          "BPNL00000000BJTL"
-        ]
+        "bpn": ["BPNL00000000BJTL"]
       },
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": [
-        "default-roles-cx-central"
-      ],
+      "realmRoles": ["default-roles-catena-x realm"],
       "clientRoles": {
-        "technical_roles_management": [
-          "Identity Wallet Management"
-        ]
+        "technical_roles_management": ["Identity Wallet Management"]
       },
       "notBefore": 0,
       "groups": []
@@ -3751,9 +3204,7 @@
   "scopeMappings": [
     {
       "clientScope": "offline_access",
-      "roles": [
-        "offline_access"
-      ]
+      "roles": ["offline_access"]
     }
   ],
   "clientScopeMappings": {
@@ -3770,11 +3221,7 @@
     "realm-management": [
       {
         "client": "sa-cl1-reg-2",
-        "roles": [
-          "manage-identity-providers",
-          "manage-users",
-          "manage-clients"
-        ]
+        "roles": ["manage-identity-providers", "manage-users", "manage-clients"]
       }
     ],
     "Cl21-CX-DF": [
@@ -3789,25 +3236,6 @@
     ],
     "technical_roles_management": [
       {
-        "client": "sa-cl25-cx-1",
-        "roles": [
-          "BPDM Orchestrator Processor CleanAndSync",
-          "BPDM Orchestrator Processor Clean"
-        ]
-      },
-      {
-        "client": "sa-cl25-cx-2",
-        "roles": [
-          "BPDM Orchestrator Processor PoolSync"
-        ]
-      },
-      {
-        "client": "sa-cl25-cx-3",
-        "roles": [
-          "BPDM Orchestrator Task Creator"
-        ]
-      },
-      {
         "client": "sa-cl3-cx-1",
         "roles": [
           "Dataspace Discovery",
@@ -3816,26 +3244,8 @@
         ]
       },
       {
-        "client": "sa-cl7-cx-1",
-        "roles": [
-          "BPDM Pool Sharing Consumer"
-        ]
-      },
-      {
         "client": "sa-cl7-cx-5",
-        "roles": [
-          "BPDM Pool Admin",
-          "BPDM Orchestrator Admin",
-          "BPDM Sharing Admin"
-        ]
-      },
-      {
-        "client": "sa-cl7-cx-7",
-        "roles": [
-          "BPDM Pool Admin",
-          "BPDM Orchestrator Admin",
-          "BPDM Sharing Admin"
-        ]
+        "roles": ["BPDM Pool Admin", "BPDM Sharing Admin"]
       }
     ],
     "Cl5-CX-Custodian": [
@@ -3869,46 +3279,34 @@
     "account": [
       {
         "client": "account-console",
-        "roles": [
-          "manage-account",
-          "view-groups"
-        ]
+        "roles": ["manage-account", "view-groups"]
       }
     ],
     "Cl2-CX-Portal": [
       {
         "client": "sa-cl2-01",
-        "roles": [
-          "update_application_checklist_value"
-        ]
+        "roles": ["update_application_checklist_value"]
       },
       {
         "client": "sa-cl2-02",
-        "roles": [
-          "submit_connector_sd",
-          "update_application_checklist_value"
-        ]
+        "roles": ["submit_connector_sd", "update_application_checklist_value"]
       },
       {
         "client": "sa-cl2-05",
-        "roles": [
-          "store_didDocument"
-        ]
+        "roles": ["store_didDocument"]
       },
       {
         "client": "sa-cl24-01",
         "roles": [
           "send_mail",
+          "create_notifications",
           "update_application_membership_credential",
-          "create_ssi_notifications",
           "update_application_bpn_credential"
         ]
       },
       {
         "client": "sa-cl8-cx-1",
-        "roles": [
-          "add_self_descriptions"
-        ]
+        "roles": ["add_self_descriptions"]
       }
     ],
     "Cl3-CX-Semantic": [
@@ -3933,12 +3331,8 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "redirectUris": [
-        "/realms/CX-Central/account/*"
-      ],
-      "webOrigins": [
-        "+"
-      ],
+      "redirectUris": ["/realms/CX-Central/account/*"],
+      "webOrigins": ["+"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -3977,11 +3371,7 @@
       "authenticationFlowBindingOverrides": {},
       "fullScopeAllowed": false,
       "nodeReRegistrationTimeout": 0,
-      "defaultClientScopes": [
-        "web-origins",
-        "roles",
-        "email"
-      ],
+      "defaultClientScopes": ["web-origins", "roles", "email"],
       "optionalClientScopes": [
         "address",
         "phone",
@@ -3999,12 +3389,8 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "redirectUris": [
-        "/realms/CX-Central/account/*"
-      ],
-      "webOrigins": [
-        "+"
-      ],
+      "redirectUris": ["/realms/CX-Central/account/*"],
+      "webOrigins": ["+"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -4069,12 +3455,7 @@
           }
         }
       ],
-      "defaultClientScopes": [
-        "web-origins",
-        "roles",
-        "profile",
-        "email"
-      ],
+      "defaultClientScopes": ["web-origins", "roles", "profile", "email"],
       "optionalClientScopes": [
         "address",
         "phone",
@@ -4108,12 +3489,7 @@
       "authenticationFlowBindingOverrides": {},
       "fullScopeAllowed": false,
       "nodeReRegistrationTimeout": 0,
-      "defaultClientScopes": [
-        "web-origins",
-        "roles",
-        "profile",
-        "email"
-      ],
+      "defaultClientScopes": ["web-origins", "roles", "profile", "email"],
       "optionalClientScopes": [
         "address",
         "phone",
@@ -4147,12 +3523,7 @@
       "authenticationFlowBindingOverrides": {},
       "fullScopeAllowed": false,
       "nodeReRegistrationTimeout": 0,
-      "defaultClientScopes": [
-        "web-origins",
-        "roles",
-        "profile",
-        "email"
-      ],
+      "defaultClientScopes": ["web-origins", "roles", "profile", "email"],
       "optionalClientScopes": [
         "address",
         "phone",
@@ -4166,19 +3537,17 @@
       "name": "",
       "description": " Portal Gate",
       "rootUrl": "",
-      "adminUrl": "",
       "baseUrl": "",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
+      "secret": "q0ma25iV6bfqV6ho3kyWKnR1trp0IRez",
       "redirectUris": [
-        "http://partners-gate.tx.test/*"
+        "https://partners-gate.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/*",
+        "https://partners-gate.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/*"
       ],
-      "webOrigins": [
-        "+"
-      ],
+      "webOrigins": ["+"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -4217,12 +3586,7 @@
       "authenticationFlowBindingOverrides": {},
       "fullScopeAllowed": true,
       "nodeReRegistrationTimeout": -1,
-      "defaultClientScopes": [
-        "web-origins",
-        "roles",
-        "profile",
-        "email"
-      ],
+      "defaultClientScopes": ["web-origins", "roles", "profile", "email"],
       "optionalClientScopes": [
         "address",
         "phone",
@@ -4240,12 +3604,10 @@
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "http://portal.tx.test/*",
-        "http://localhost:3000/*"
+        "https://portal.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/*",
+        "https://portal.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/*"
       ],
-      "webOrigins": [
-        "+"
-      ],
+      "webOrigins": ["+"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -4329,12 +3691,7 @@
           }
         }
       ],
-      "defaultClientScopes": [
-        "web-origins",
-        "roles",
-        "profile",
-        "email"
-      ],
+      "defaultClientScopes": ["web-origins", "roles", "profile", "email"],
       "optionalClientScopes": [
         "address",
         "phone",
@@ -4390,12 +3747,7 @@
       "authenticationFlowBindingOverrides": {},
       "fullScopeAllowed": true,
       "nodeReRegistrationTimeout": -1,
-      "defaultClientScopes": [
-        "web-origins",
-        "roles",
-        "profile",
-        "email"
-      ],
+      "defaultClientScopes": ["web-origins", "roles", "profile", "email"],
       "optionalClientScopes": [
         "address",
         "phone",
@@ -4451,12 +3803,7 @@
       "authenticationFlowBindingOverrides": {},
       "fullScopeAllowed": true,
       "nodeReRegistrationTimeout": -1,
-      "defaultClientScopes": [
-        "web-origins",
-        "roles",
-        "profile",
-        "email"
-      ],
+      "defaultClientScopes": ["web-origins", "roles", "profile", "email"],
       "optionalClientScopes": [
         "address",
         "phone",
@@ -4476,14 +3823,8 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "redirectUris": [
-        "",
-        "/*"
-      ],
-      "webOrigins": [
-        "",
-        "/*"
-      ],
+      "redirectUris": ["", "/*"],
+      "webOrigins": ["", "/*"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -4544,12 +3885,8 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
+      "redirectUris": ["/*"],
+      "webOrigins": ["/*"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -4562,7 +3899,6 @@
       "protocol": "openid-connect",
       "attributes": {
         "oidc.ciba.grant.enabled": "false",
-        "post.logout.redirect.uris": "+",
         "oauth2.device.authorization.grant.enabled": "false",
         "backchannel.logout.session.required": "true",
         "backchannel.logout.revoke.offline.tokens": "false"
@@ -4585,122 +3921,11 @@
       ]
     },
     {
-      "id": "955a5759-5d35-46d9-b92a-684d873a7a28",
-      "clientId": "Cl25-CX-BPDM-Orchestrator",
-      "name": "BPDM Orchestrator",
-      "description": "Roles resource for the BPDM Orchestrator component",
-      "rootUrl": "",
-      "adminUrl": "",
-      "baseUrl": "",
-      "surrogateAuthRequired": false,
-      "enabled": false,
-      "alwaysDisplayInConsole": false,
-      "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [],
-      "webOrigins": [],
-      "notBefore": 0,
-      "bearerOnly": false,
-      "consentRequired": false,
-      "standardFlowEnabled": false,
-      "implicitFlowEnabled": false,
-      "directAccessGrantsEnabled": false,
-      "serviceAccountsEnabled": false,
-      "publicClient": false,
-      "frontchannelLogout": true,
-      "protocol": "openid-connect",
-      "attributes": {
-        "oidc.ciba.grant.enabled": "false",
-        "oauth2.device.authorization.grant.enabled": "false",
-        "client.secret.creation.time": "1722276592",
-        "backchannel.logout.session.required": "true",
-        "backchannel.logout.revoke.offline.tokens": "false"
-      },
-      "authenticationFlowBindingOverrides": {},
-      "fullScopeAllowed": false,
-      "nodeReRegistrationTimeout": -1,
-      "protocolMappers": [
-        {
-          "id": "05f2c304-3ac6-4a33-bc45-01f95ca0042a",
-          "name": "Client IP Address",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usersessionmodel-note-mapper",
-          "consentRequired": false,
-          "config": {
-            "user.session.note": "clientAddress",
-            "userinfo.token.claim": "true",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "clientAddress",
-            "jsonType.label": "String"
-          }
-        },
-        {
-          "id": "dd32d24d-420b-49e9-bc1d-008aa4022a82",
-          "name": "Client Host",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usersessionmodel-note-mapper",
-          "consentRequired": false,
-          "config": {
-            "user.session.note": "clientHost",
-            "userinfo.token.claim": "true",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "clientHost",
-            "jsonType.label": "String"
-          }
-        },
-        {
-          "id": "5ccf97e0-259c-4c3e-887f-745ae9ec3fdb",
-          "name": "BPN",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-attribute-mapper",
-          "consentRequired": false,
-          "config": {
-            "introspection.token.claim": "true",
-            "userinfo.token.claim": "true",
-            "user.attribute": "bpn",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "bpn",
-            "jsonType.label": "String"
-          }
-        },
-        {
-          "id": "fc8fc1f5-4e97-407a-8cb6-5f82cea9a334",
-          "name": "Client ID",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usersessionmodel-note-mapper",
-          "consentRequired": false,
-          "config": {
-            "user.session.note": "client_id",
-            "userinfo.token.claim": "true",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "client_id",
-            "jsonType.label": "String"
-          }
-        }
-      ],
-      "defaultClientScopes": [
-        "web-origins",
-        "roles",
-        "profile",
-        "email"
-      ],
-      "optionalClientScopes": [
-        "address",
-        "phone",
-        "offline_access",
-        "microprofile-jwt"
-      ]
-    },
-    {
       "id": "e0806293-f9b3-44f1-a6d0-4e4406787f80",
       "clientId": "Cl2-CX-Portal",
       "name": "",
       "description": "",
-      "rootUrl": "http://portal.tx.test/home",
+      "rootUrl": "https://portal.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/home",
       "adminUrl": "",
       "baseUrl": "",
       "surrogateAuthRequired": false,
@@ -4708,12 +3933,10 @@
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "http://portal.tx.test/*",
-        "http://localhost:3000/*"
+        "https://portal.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/*",
+        "https://portal.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/*"
       ],
-      "webOrigins": [
-        "+"
-      ],
+      "webOrigins": ["+"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -4798,17 +4021,16 @@
       "id": "36e2745d-f331-4fa5-bbfa-90947d7f1dc4",
       "clientId": "Cl3-CX-Semantic",
       "rootUrl": "",
-      "adminUrl": "https://portal.example.org/home",
+      "adminUrl": "https://portal.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/home",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "http://portal.tx.test/*"
+        "https://portal.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/*",
+        "https://portal.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/*"
       ],
-      "webOrigins": [
-        "+"
-      ],
+      "webOrigins": ["+"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -4897,9 +4119,10 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
+      "secret": "XzZNs56cadY8b2P253By8GS4jbY7QCui",
       "redirectUris": [
-        "http://managed-identity-wallets.tx.test/*"
+        "https://managed-identity-wallets.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/*",
+        "https://managed-identity-wallets.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/*"
       ],
       "webOrigins": [],
       "notBefore": 0,
@@ -4988,9 +4211,7 @@
           }
         }
       ],
-      "defaultClientScopes": [
-        "roles"
-      ],
+      "defaultClientScopes": ["roles"],
       "optionalClientScopes": []
     },
     {
@@ -4999,19 +4220,17 @@
       "name": "",
       "description": " BPDM Pool",
       "rootUrl": "",
-      "adminUrl": "",
       "baseUrl": "",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
+      "secret": "4pJIiaUsLeQsSH6OEqoZmq6aEsZkeBj2",
       "redirectUris": [
-        "http://partners-pool.tx.test/*"
+        "https://partners-pool.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/*",
+        "https://partners-pool.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/*"
       ],
-      "webOrigins": [
-        "+"
-      ],
+      "webOrigins": ["+"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -5050,12 +4269,7 @@
       "authenticationFlowBindingOverrides": {},
       "fullScopeAllowed": true,
       "nodeReRegistrationTimeout": -1,
-      "defaultClientScopes": [
-        "web-origins",
-        "roles",
-        "profile",
-        "email"
-      ],
+      "defaultClientScopes": ["web-origins", "roles", "profile", "email"],
       "optionalClientScopes": [
         "address",
         "phone",
@@ -5089,12 +4303,7 @@
       "authenticationFlowBindingOverrides": {},
       "fullScopeAllowed": false,
       "nodeReRegistrationTimeout": 0,
-      "defaultClientScopes": [
-        "web-origins",
-        "roles",
-        "profile",
-        "email"
-      ],
+      "defaultClientScopes": ["web-origins", "roles", "profile", "email"],
       "optionalClientScopes": [
         "address",
         "phone",
@@ -5110,10 +4319,8 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "*"
-      ],
+      "secret": "aEoUADDw2aNPa0WAaKGAyKfC80n8sKxJ",
+      "redirectUris": ["*"],
       "webOrigins": [],
       "notBefore": 0,
       "bearerOnly": false,
@@ -5215,12 +4422,7 @@
           }
         }
       ],
-      "defaultClientScopes": [
-        "web-origins",
-        "roles",
-        "profile",
-        "email"
-      ],
+      "defaultClientScopes": ["web-origins", "roles", "profile", "email"],
       "optionalClientScopes": [
         "address",
         "phone",
@@ -5236,7 +4438,7 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
+      "secret": "w6Ib6d7hdltXwkdtsJYF3Cb6fEywia7S",
       "redirectUris": [],
       "webOrigins": [],
       "notBefore": 0,
@@ -5339,12 +4541,7 @@
           }
         }
       ],
-      "defaultClientScopes": [
-        "web-origins",
-        "roles",
-        "profile",
-        "email"
-      ],
+      "defaultClientScopes": ["web-origins", "roles", "profile", "email"],
       "optionalClientScopes": [
         "address",
         "phone",
@@ -5360,7 +4557,7 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
+      "secret": "T1oUdErz8w7VbIbpAHDnTLeyssZ8wTmj",
       "redirectUris": [],
       "webOrigins": [],
       "notBefore": 0,
@@ -5463,12 +4660,7 @@
           }
         }
       ],
-      "defaultClientScopes": [
-        "web-origins",
-        "roles",
-        "profile",
-        "email"
-      ],
+      "defaultClientScopes": ["web-origins", "roles", "profile", "email"],
       "optionalClientScopes": [
         "address",
         "phone",
@@ -5484,7 +4676,7 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
+      "secret": "wyNYzSnyu4iGvj17XgLSl0aQxAPjTjmI",
       "redirectUris": [],
       "webOrigins": [],
       "notBefore": 0,
@@ -5587,12 +4779,7 @@
           }
         }
       ],
-      "defaultClientScopes": [
-        "web-origins",
-        "roles",
-        "profile",
-        "email"
-      ],
+      "defaultClientScopes": ["web-origins", "roles", "profile", "email"],
       "optionalClientScopes": [
         "address",
         "phone",
@@ -5612,13 +4799,9 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
+      "secret": "c0gFPfWWUpeOr7MP6DIqdRPhUfaX4GRC",
+      "redirectUris": ["/*"],
+      "webOrigins": ["/*"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -5633,7 +4816,6 @@
         "oidc.ciba.grant.enabled": "false",
         "client.secret.creation.time": "1712762229",
         "backchannel.logout.session.required": "true",
-        "post.logout.redirect.uris": "+",
         "display.on.consent.screen": "false",
         "oauth2.device.authorization.grant.enabled": "false",
         "backchannel.logout.revoke.offline.tokens": "false"
@@ -5650,7 +4832,6 @@
           "consentRequired": false,
           "config": {
             "user.session.note": "clientHost",
-            "introspection.token.claim": "true",
             "id.token.claim": "true",
             "access.token.claim": "true",
             "claim.name": "clientHost",
@@ -5665,7 +4846,6 @@
           "consentRequired": false,
           "config": {
             "user.session.note": "client_id",
-            "introspection.token.claim": "true",
             "id.token.claim": "true",
             "access.token.claim": "true",
             "claim.name": "client_id",
@@ -5680,7 +4860,6 @@
           "consentRequired": false,
           "config": {
             "user.session.note": "clientAddress",
-            "introspection.token.claim": "true",
             "id.token.claim": "true",
             "access.token.claim": "true",
             "claim.name": "clientAddress",
@@ -5729,13 +4908,9 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
+      "secret": "zuBGfr67Tj0WJ5fAJSIRvoPEP5hSQFMT",
+      "redirectUris": ["/*"],
+      "webOrigins": ["/*"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -5748,10 +4923,9 @@
       "protocol": "openid-connect",
       "attributes": {
         "oidc.ciba.grant.enabled": "false",
+        "oauth2.device.authorization.grant.enabled": "false",
         "client.secret.creation.time": "1712764151",
         "backchannel.logout.session.required": "true",
-        "post.logout.redirect.uris": "+",
-        "oauth2.device.authorization.grant.enabled": "false",
         "backchannel.logout.revoke.offline.tokens": "false"
       },
       "authenticationFlowBindingOverrides": {},
@@ -5766,7 +4940,6 @@
           "consentRequired": false,
           "config": {
             "user.session.note": "client_id",
-            "introspection.token.claim": "true",
             "id.token.claim": "true",
             "access.token.claim": "true",
             "claim.name": "client_id",
@@ -5781,7 +4954,6 @@
           "consentRequired": false,
           "config": {
             "user.session.note": "clientHost",
-            "introspection.token.claim": "true",
             "id.token.claim": "true",
             "access.token.claim": "true",
             "claim.name": "clientHost",
@@ -5811,7 +4983,6 @@
           "consentRequired": false,
           "config": {
             "user.session.note": "clientAddress",
-            "introspection.token.claim": "true",
             "id.token.claim": "true",
             "access.token.claim": "true",
             "claim.name": "clientAddress",
@@ -5841,7 +5012,7 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
+      "secret": "oFbXttMA7vI5MysN7AiEpobX5o3Jfbhp",
       "redirectUris": [],
       "webOrigins": [],
       "notBefore": 0,
@@ -5944,12 +5115,7 @@
           }
         }
       ],
-      "defaultClientScopes": [
-        "web-origins",
-        "roles",
-        "profile",
-        "email"
-      ],
+      "defaultClientScopes": ["web-origins", "roles", "profile", "email"],
       "optionalClientScopes": [
         "address",
         "phone",
@@ -5965,7 +5131,7 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
+      "secret": "1yDWW7BNwouRGxYRkDmzkpzqz5FG748f",
       "redirectUris": [],
       "webOrigins": [],
       "notBefore": 0,
@@ -6068,12 +5234,7 @@
           }
         }
       ],
-      "defaultClientScopes": [
-        "web-origins",
-        "roles",
-        "profile",
-        "email"
-      ],
+      "defaultClientScopes": ["web-origins", "roles", "profile", "email"],
       "optionalClientScopes": [
         "address",
         "phone",
@@ -6093,13 +5254,9 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
+      "secret": "VRHQM2NOA4176Vrscxey1DdO4P7ikUQc",
+      "redirectUris": ["/*"],
+      "webOrigins": ["/*"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -6114,7 +5271,6 @@
         "oidc.ciba.grant.enabled": "false",
         "client.secret.creation.time": "1712762671",
         "backchannel.logout.session.required": "true",
-        "post.logout.redirect.uris": "+",
         "display.on.consent.screen": "false",
         "oauth2.device.authorization.grant.enabled": "false",
         "backchannel.logout.revoke.offline.tokens": "false"
@@ -6131,7 +5287,6 @@
           "consentRequired": false,
           "config": {
             "user.session.note": "client_id",
-            "introspection.token.claim": "true",
             "id.token.claim": "true",
             "access.token.claim": "true",
             "claim.name": "client_id",
@@ -6146,7 +5301,6 @@
           "consentRequired": false,
           "config": {
             "user.session.note": "clientAddress",
-            "introspection.token.claim": "true",
             "id.token.claim": "true",
             "access.token.claim": "true",
             "claim.name": "clientAddress",
@@ -6176,367 +5330,9 @@
           "consentRequired": false,
           "config": {
             "user.session.note": "clientHost",
-            "introspection.token.claim": "true",
             "id.token.claim": "true",
             "access.token.claim": "true",
             "claim.name": "clientHost",
-            "jsonType.label": "String"
-          }
-        }
-      ],
-      "defaultClientScopes": [
-        "web-origins",
-        "acr",
-        "roles",
-        "profile",
-        "email"
-      ],
-      "optionalClientScopes": [
-        "address",
-        "phone",
-        "offline_access",
-        "microprofile-jwt"
-      ]
-    },
-    {
-      "id": "0156e40d-9b7a-43a4-af4d-ec52cc71a2c2",
-      "clientId": "sa-cl25-cx-1",
-      "name": "BPDM Dummy Cleaning Task Processor",
-      "description": "Technical User for the BPDM cleaning service dummy component to process golden record tasks from the Orchestrator",
-      "rootUrl": "",
-      "adminUrl": "",
-      "baseUrl": "",
-      "surrogateAuthRequired": false,
-      "enabled": true,
-      "alwaysDisplayInConsole": false,
-      "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
-      "notBefore": 0,
-      "bearerOnly": false,
-      "consentRequired": false,
-      "standardFlowEnabled": false,
-      "implicitFlowEnabled": false,
-      "directAccessGrantsEnabled": false,
-      "serviceAccountsEnabled": true,
-      "publicClient": false,
-      "frontchannelLogout": true,
-      "protocol": "openid-connect",
-      "attributes": {
-        "oidc.ciba.grant.enabled": "false",
-        "oauth2.device.authorization.grant.enabled": "false",
-        "client.secret.creation.time": "1722276592",
-        "backchannel.logout.session.required": "true",
-        "backchannel.logout.revoke.offline.tokens": "false"
-      },
-      "authenticationFlowBindingOverrides": {},
-      "fullScopeAllowed": false,
-      "nodeReRegistrationTimeout": -1,
-      "protocolMappers": [
-        {
-          "id": "67aa583e-133c-409f-b0f6-200b9d6dd08e",
-          "name": "Client ID",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usersessionmodel-note-mapper",
-          "consentRequired": false,
-          "config": {
-            "user.session.note": "client_id",
-            "introspection.token.claim": "true",
-            "userinfo.token.claim": "true",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "client_id",
-            "jsonType.label": "String"
-          }
-        },
-        {
-          "id": "b90c1aa3-74f7-4baf-89eb-12675c2e3b88",
-          "name": "Client IP Address",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usersessionmodel-note-mapper",
-          "consentRequired": false,
-          "config": {
-            "user.session.note": "clientAddress",
-            "introspection.token.claim": "true",
-            "userinfo.token.claim": "true",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "clientAddress",
-            "jsonType.label": "String"
-          }
-        },
-        {
-          "id": "5b8324fe-e645-4c0b-8975-fb425eb418c3",
-          "name": "Client Host",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usersessionmodel-note-mapper",
-          "consentRequired": false,
-          "config": {
-            "user.session.note": "clientHost",
-            "introspection.token.claim": "true",
-            "userinfo.token.claim": "true",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "clientHost",
-            "jsonType.label": "String"
-          }
-        },
-        {
-          "id": "04ed4138-fcfc-40dd-9347-44277f07d6f7",
-          "name": "BPN",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-attribute-mapper",
-          "consentRequired": false,
-          "config": {
-            "introspection.token.claim": "true",
-            "userinfo.token.claim": "true",
-            "user.attribute": "bpn",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "bpn",
-            "jsonType.label": "String"
-          }
-        }
-      ],
-      "defaultClientScopes": [
-        "web-origins",
-        "acr",
-        "roles",
-        "profile",
-        "email"
-      ],
-      "optionalClientScopes": [
-        "address",
-        "phone",
-        "offline_access",
-        "microprofile-jwt"
-      ]
-    },
-    {
-      "id": "3357c367-7cbe-4308-ada6-ee232655981a",
-      "clientId": "sa-cl25-cx-2",
-      "name": "BPDM Pool Task Processor",
-      "description": "Technical User for the BPDM Pool component to process golden record tasks from the Orchestrator",
-      "rootUrl": "",
-      "adminUrl": "",
-      "baseUrl": "",
-      "surrogateAuthRequired": false,
-      "enabled": true,
-      "alwaysDisplayInConsole": false,
-      "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
-      "notBefore": 0,
-      "bearerOnly": false,
-      "consentRequired": false,
-      "standardFlowEnabled": false,
-      "implicitFlowEnabled": false,
-      "directAccessGrantsEnabled": false,
-      "serviceAccountsEnabled": true,
-      "publicClient": false,
-      "frontchannelLogout": true,
-      "protocol": "openid-connect",
-      "attributes": {
-        "oidc.ciba.grant.enabled": "false",
-        "oauth2.device.authorization.grant.enabled": "false",
-        "client.secret.creation.time": "1722276592",
-        "backchannel.logout.session.required": "true",
-        "backchannel.logout.revoke.offline.tokens": "false"
-      },
-      "authenticationFlowBindingOverrides": {},
-      "fullScopeAllowed": false,
-      "nodeReRegistrationTimeout": -1,
-      "protocolMappers": [
-        {
-          "id": "a778897d-9db7-4c71-9dc3-355687bac1a2",
-          "name": "Client ID",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usersessionmodel-note-mapper",
-          "consentRequired": false,
-          "config": {
-            "user.session.note": "client_id",
-            "introspection.token.claim": "true",
-            "userinfo.token.claim": "true",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "client_id",
-            "jsonType.label": "String"
-          }
-        },
-        {
-          "id": "b7ca6d48-403e-42d1-9014-910bcf330c0b",
-          "name": "BPN",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-attribute-mapper",
-          "consentRequired": false,
-          "config": {
-            "introspection.token.claim": "true",
-            "userinfo.token.claim": "true",
-            "user.attribute": "bpn",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "bpn",
-            "jsonType.label": "String"
-          }
-        },
-        {
-          "id": "bafb2436-b72d-4e8a-915b-07a2a7bfd377",
-          "name": "Client IP Address",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usersessionmodel-note-mapper",
-          "consentRequired": false,
-          "config": {
-            "user.session.note": "clientAddress",
-            "introspection.token.claim": "true",
-            "userinfo.token.claim": "true",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "clientAddress",
-            "jsonType.label": "String"
-          }
-        },
-        {
-          "id": "9571694e-f2f1-43b6-ad4e-06437a3f8fc9",
-          "name": "Client Host",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usersessionmodel-note-mapper",
-          "consentRequired": false,
-          "config": {
-            "user.session.note": "clientHost",
-            "introspection.token.claim": "true",
-            "userinfo.token.claim": "true",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "clientHost",
-            "jsonType.label": "String"
-          }
-        }
-      ],
-      "defaultClientScopes": [
-        "web-origins",
-        "acr",
-        "roles",
-        "profile",
-        "email"
-      ],
-      "optionalClientScopes": [
-        "address",
-        "phone",
-        "offline_access",
-        "microprofile-jwt"
-      ]
-    },
-    {
-      "id": "aaf33934-8ed8-47c5-9478-cd053b0507d6",
-      "clientId": "sa-cl25-cx-3",
-      "name": "BPDM Portal Gate Task Creator",
-      "description": "Technical User for the BPDM Portal Gate to create and monitor golden record tasks inside the Orchestrator",
-      "rootUrl": "",
-      "adminUrl": "",
-      "baseUrl": "",
-      "surrogateAuthRequired": false,
-      "enabled": true,
-      "alwaysDisplayInConsole": false,
-      "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
-      "notBefore": 0,
-      "bearerOnly": false,
-      "consentRequired": false,
-      "standardFlowEnabled": false,
-      "implicitFlowEnabled": false,
-      "directAccessGrantsEnabled": false,
-      "serviceAccountsEnabled": true,
-      "publicClient": false,
-      "frontchannelLogout": true,
-      "protocol": "openid-connect",
-      "attributes": {
-        "oidc.ciba.grant.enabled": "false",
-        "oauth2.device.authorization.grant.enabled": "false",
-        "client.secret.creation.time": "1722276592",
-        "backchannel.logout.session.required": "true",
-        "backchannel.logout.revoke.offline.tokens": "false"
-      },
-      "authenticationFlowBindingOverrides": {},
-      "fullScopeAllowed": false,
-      "nodeReRegistrationTimeout": -1,
-      "protocolMappers": [
-        {
-          "id": "4efdb2d6-1399-4c06-84e1-bd15d0c56443",
-          "name": "Client IP Address",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usersessionmodel-note-mapper",
-          "consentRequired": false,
-          "config": {
-            "user.session.note": "clientAddress",
-            "introspection.token.claim": "true",
-            "userinfo.token.claim": "true",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "clientAddress",
-            "jsonType.label": "String"
-          }
-        },
-        {
-          "id": "7d9ee0d9-c89d-4f39-a4de-8cb68c859878",
-          "name": "Client Host",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usersessionmodel-note-mapper",
-          "consentRequired": false,
-          "config": {
-            "user.session.note": "clientHost",
-            "introspection.token.claim": "true",
-            "userinfo.token.claim": "true",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "clientHost",
-            "jsonType.label": "String"
-          }
-        },
-        {
-          "id": "ceca8d39-dc31-43f8-aee6-1503beaacb8a",
-          "name": "BPN",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-attribute-mapper",
-          "consentRequired": false,
-          "config": {
-            "introspection.token.claim": "true",
-            "userinfo.token.claim": "true",
-            "user.attribute": "bpn",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "bpn",
-            "jsonType.label": "String"
-          }
-        },
-        {
-          "id": "d55296a3-9c77-40c2-b89d-3575661ff91f",
-          "name": "Client ID",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usersessionmodel-note-mapper",
-          "consentRequired": false,
-          "config": {
-            "user.session.note": "client_id",
-            "introspection.token.claim": "true",
-            "userinfo.token.claim": "true",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "client_id",
             "jsonType.label": "String"
           }
         }
@@ -6563,10 +5359,8 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "*"
-      ],
+      "secret": "jzTX8jBBpDCag224ihfhmBP5NABGqdsf",
+      "redirectUris": ["*"],
       "webOrigins": [],
       "notBefore": 0,
       "bearerOnly": false,
@@ -6667,12 +5461,7 @@
           }
         }
       ],
-      "defaultClientScopes": [
-        "web-origins",
-        "roles",
-        "profile",
-        "email"
-      ],
+      "defaultClientScopes": ["web-origins", "roles", "profile", "email"],
       "optionalClientScopes": [
         "address",
         "phone",
@@ -6686,16 +5475,13 @@
       "name": "",
       "description": "Technical User for Portal to call Managed Identity Wallet (portal helm chart: backend.processesworker.custodian.clientId)",
       "rootUrl": "",
-      "adminUrl": "",
       "baseUrl": "",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "*"
-      ],
+      "secret": "UIqawwoohsvZ6AZOd1llLhnsUTKMWe4D",
+      "redirectUris": ["*"],
       "webOrigins": [],
       "notBefore": 0,
       "bearerOnly": false,
@@ -6797,132 +5583,8 @@
           }
         }
       ],
-      "defaultClientScopes": [
-        "web-origins",
-        "roles"
-      ],
-      "optionalClientScopes": [
-        "microprofile-jwt"
-      ]
-    },
-    {
-      "id": "09cc93a9-68f9-4c40-908a-4f7db2d3b5f7",
-      "clientId": "sa-cl7-cx-1",
-      "name": "BPDM Portal Gate Pool Consumer",
-      "description": "Technical User for the BPDM Portal Gate to consume golden record data from the Pool",
-      "rootUrl": "",
-      "adminUrl": "",
-      "baseUrl": "",
-      "surrogateAuthRequired": false,
-      "enabled": true,
-      "alwaysDisplayInConsole": false,
-      "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
-      "notBefore": 0,
-      "bearerOnly": false,
-      "consentRequired": false,
-      "standardFlowEnabled": false,
-      "implicitFlowEnabled": false,
-      "directAccessGrantsEnabled": false,
-      "serviceAccountsEnabled": true,
-      "publicClient": false,
-      "frontchannelLogout": true,
-      "protocol": "openid-connect",
-      "attributes": {
-        "oidc.ciba.grant.enabled": "false",
-        "oauth2.device.authorization.grant.enabled": "false",
-        "client.secret.creation.time": "1722276592",
-        "backchannel.logout.session.required": "true",
-        "backchannel.logout.revoke.offline.tokens": "false"
-      },
-      "authenticationFlowBindingOverrides": {},
-      "fullScopeAllowed": false,
-      "nodeReRegistrationTimeout": -1,
-      "protocolMappers": [
-        {
-          "id": "0f30153a-f7f3-4572-a5bf-5e6a83b03be2",
-          "name": "BPN",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-attribute-mapper",
-          "consentRequired": false,
-          "config": {
-            "introspection.token.claim": "true",
-            "userinfo.token.claim": "true",
-            "user.attribute": "bpn",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "bpn",
-            "jsonType.label": "String"
-          }
-        },
-        {
-          "id": "7a5f5893-ca63-4739-8b86-e6ec0f9bf946",
-          "name": "Client ID",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usersessionmodel-note-mapper",
-          "consentRequired": false,
-          "config": {
-            "user.session.note": "client_id",
-            "introspection.token.claim": "true",
-            "userinfo.token.claim": "true",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "client_id",
-            "jsonType.label": "String"
-          }
-        },
-        {
-          "id": "9887fcf6-a86d-4b9e-a552-18f8435952ea",
-          "name": "Client IP Address",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usersessionmodel-note-mapper",
-          "consentRequired": false,
-          "config": {
-            "user.session.note": "clientAddress",
-            "introspection.token.claim": "true",
-            "userinfo.token.claim": "true",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "clientAddress",
-            "jsonType.label": "String"
-          }
-        },
-        {
-          "id": "5b286aba-3262-4263-84db-5b9065486969",
-          "name": "Client Host",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usersessionmodel-note-mapper",
-          "consentRequired": false,
-          "config": {
-            "user.session.note": "clientHost",
-            "introspection.token.claim": "true",
-            "userinfo.token.claim": "true",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "clientHost",
-            "jsonType.label": "String"
-          }
-        }
-      ],
-      "defaultClientScopes": [
-        "web-origins",
-        "acr",
-        "roles",
-        "profile",
-        "email"
-      ],
-      "optionalClientScopes": [
-        "address",
-        "phone",
-        "offline_access",
-        "microprofile-jwt"
-      ]
+      "defaultClientScopes": ["web-origins", "roles"],
+      "optionalClientScopes": ["microprofile-jwt"]
     },
     {
       "id": "183aae87-c9cf-4d70-934b-629aa6974c54",
@@ -6932,7 +5594,7 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
+      "secret": "bWSck103qNJ0jZ1LVtG9mUAlcL7R5RLg",
       "redirectUris": [],
       "webOrigins": [],
       "notBefore": 0,
@@ -7035,131 +5697,7 @@
           }
         }
       ],
-      "defaultClientScopes": [
-        "web-origins",
-        "roles",
-        "profile",
-        "email"
-      ],
-      "optionalClientScopes": [
-        "address",
-        "phone",
-        "offline_access",
-        "microprofile-jwt"
-      ]
-    },
-    {
-      "id": "ef292675-7c9e-4f0d-a4fc-2e56be232726",
-      "clientId": "sa-cl7-cx-7",
-      "name": "",
-      "description": "Technical User for BPDM services to communicate between each other to realize the golden record process: used by the Portal Gate, Pool and Cleaning Service.",
-      "rootUrl": "",
-      "adminUrl": "",
-      "baseUrl": "",
-      "surrogateAuthRequired": false,
-      "enabled": true,
-      "alwaysDisplayInConsole": false,
-      "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
-      "notBefore": 0,
-      "bearerOnly": false,
-      "consentRequired": false,
-      "standardFlowEnabled": false,
-      "implicitFlowEnabled": false,
-      "directAccessGrantsEnabled": false,
-      "serviceAccountsEnabled": true,
-      "publicClient": false,
-      "frontchannelLogout": true,
-      "protocol": "openid-connect",
-      "attributes": {
-        "oidc.ciba.grant.enabled": "false",
-        "oauth2.device.authorization.grant.enabled": "false",
-        "client.secret.creation.time": "1722276592",
-        "backchannel.logout.session.required": "true",
-        "backchannel.logout.revoke.offline.tokens": "false"
-      },
-      "authenticationFlowBindingOverrides": {},
-      "fullScopeAllowed": false,
-      "nodeReRegistrationTimeout": -1,
-      "protocolMappers": [
-        {
-          "id": "577dad03-d3b7-41f3-a626-3905641090b8",
-          "name": "Client ID",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usersessionmodel-note-mapper",
-          "consentRequired": false,
-          "config": {
-            "user.session.note": "client_id",
-            "introspection.token.claim": "true",
-            "userinfo.token.claim": "true",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "client_id",
-            "jsonType.label": "String"
-          }
-        },
-        {
-          "id": "eacbfff3-a23f-48ec-88d5-62a16bee1713",
-          "name": "Client IP Address",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usersessionmodel-note-mapper",
-          "consentRequired": false,
-          "config": {
-            "user.session.note": "clientAddress",
-            "introspection.token.claim": "true",
-            "userinfo.token.claim": "true",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "clientAddress",
-            "jsonType.label": "String"
-          }
-        },
-        {
-          "id": "09b27dd0-614b-4e64-8d15-bf2a48db62b8",
-          "name": "Client Host",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usersessionmodel-note-mapper",
-          "consentRequired": false,
-          "config": {
-            "user.session.note": "clientHost",
-            "introspection.token.claim": "true",
-            "userinfo.token.claim": "true",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "clientHost",
-            "jsonType.label": "String"
-          }
-        },
-        {
-          "id": "f2a6c687-f40c-42b9-afe0-f087db94dd5f",
-          "name": "BPN",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-attribute-mapper",
-          "consentRequired": false,
-          "config": {
-            "introspection.token.claim": "true",
-            "userinfo.token.claim": "true",
-            "user.attribute": "bpn",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "bpn",
-            "jsonType.label": "String"
-          }
-        }
-      ],
-      "defaultClientScopes": [
-        "web-origins",
-        "acr",
-        "roles",
-        "profile",
-        "email"
-      ],
+      "defaultClientScopes": ["web-origins", "roles", "profile", "email"],
       "optionalClientScopes": [
         "address",
         "phone",
@@ -7175,10 +5713,8 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "*"
-      ],
+      "secret": "clbQOPHcVKY9tUUd068vyf8CrsPZ8BgZ",
+      "redirectUris": ["*"],
       "webOrigins": [],
       "notBefore": 0,
       "bearerOnly": false,
@@ -7280,13 +5816,8 @@
           }
         }
       ],
-      "defaultClientScopes": [
-        "web-origins",
-        "roles"
-      ],
-      "optionalClientScopes": [
-        "microprofile-jwt"
-      ]
+      "defaultClientScopes": ["web-origins", "roles"],
+      "optionalClientScopes": ["microprofile-jwt"]
     },
     {
       "id": "dfb156e1-1c4b-4ea5-b4bc-d042ea729927",
@@ -7300,13 +5831,9 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
+      "secret": "UbfW4CR1xH4OskkovqJ2JzcwnQIrG7oj",
+      "redirectUris": ["/*"],
+      "webOrigins": ["/*"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -7416,13 +5943,9 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
+      "secret": "pyFUZP2L9UCSVJUScHcN3ZEgy2PGyEpg",
+      "redirectUris": ["/*"],
+      "webOrigins": ["/*"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -7532,13 +6055,9 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
+      "secret": "tPwy4exxH1sXBRQouobSA2nNVaaPuwCs",
+      "redirectUris": ["/*"],
+      "webOrigins": ["/*"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -7648,13 +6167,9 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
+      "secret": "BxZ3cwYUPJKK7gI4wq7q6Hgoxel6MphF",
+      "redirectUris": ["/*"],
+      "webOrigins": ["/*"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -7765,13 +6280,9 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
+      "secret": "dR00GN1AWCYbRGbZY8TXjs2YEPMeCxLF",
+      "redirectUris": ["/*"],
+      "webOrigins": ["/*"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -7882,13 +6393,9 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
+      "secret": "pDSziT0TUFAkMx0qGFcvpE4XkMqPh13v",
+      "redirectUris": ["/*"],
+      "webOrigins": ["/*"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -7998,13 +6505,9 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
+      "secret": "GY5a44sNuNIjrTyjHvdEPLeNRHH0Kt39",
+      "redirectUris": ["/*"],
+      "webOrigins": ["/*"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -8115,13 +6618,9 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
+      "secret": "WUXpQx1aIclA7enqtk4o2uvLDLMreUMI",
+      "redirectUris": ["/*"],
+      "webOrigins": ["/*"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -8231,13 +6730,9 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
+      "secret": "N08TGNdhUskJcmVEnOh1tAGwr9oca9PU",
+      "redirectUris": ["/*"],
+      "webOrigins": ["/*"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -8347,13 +6842,9 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
+      "secret": "gzdSG0CBDJrtv1gje0zUASu1S9P4I7xP",
+      "redirectUris": ["/*"],
+      "webOrigins": ["/*"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -8464,13 +6955,9 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
+      "secret": "CC3fz3dQGZsBp2NCbowOV65efBFZTgEO",
+      "redirectUris": ["/*"],
+      "webOrigins": ["/*"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -8580,13 +7067,9 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
+      "secret": "2gjSlFxBO7spEM4aTz3f8CqDS0klbt7C",
+      "redirectUris": ["/*"],
+      "webOrigins": ["/*"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -8696,13 +7179,9 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
+      "secret": "3YQzDqEsdUZ83DVHSIRYUCK4pot61r5M",
+      "redirectUris": ["/*"],
+      "webOrigins": ["/*"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -8812,13 +7291,9 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
+      "secret": "7qtMpfN3otq5dGiEPssVongXK56lb9LE",
+      "redirectUris": ["/*"],
+      "webOrigins": ["/*"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -8928,13 +7403,9 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
+      "secret": "8QiZ8ineW0Lt8ZOlC2MYuCR0TvM6vMYX",
+      "redirectUris": ["/*"],
+      "webOrigins": ["/*"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -9044,13 +7515,9 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
+      "secret": "d2sqUurBH9Vd8DNRmjiMfObU67ajorCq",
+      "redirectUris": ["/*"],
+      "webOrigins": ["/*"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -9158,12 +7625,8 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "redirectUris": [
-        "/admin/CX-Central/console/*"
-      ],
-      "webOrigins": [
-        "+"
-      ],
+      "redirectUris": ["/admin/CX-Central/console/*"],
+      "webOrigins": ["+"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -9198,12 +7661,7 @@
           }
         }
       ],
-      "defaultClientScopes": [
-        "web-origins",
-        "roles",
-        "profile",
-        "email"
-      ],
+      "defaultClientScopes": ["web-origins", "roles", "profile", "email"],
       "optionalClientScopes": [
         "address",
         "phone",
@@ -9258,12 +7716,7 @@
       "authenticationFlowBindingOverrides": {},
       "fullScopeAllowed": true,
       "nodeReRegistrationTimeout": -1,
-      "defaultClientScopes": [
-        "web-origins",
-        "roles",
-        "profile",
-        "email"
-      ],
+      "defaultClientScopes": ["web-origins", "roles", "profile", "email"],
       "optionalClientScopes": [
         "address",
         "phone",
@@ -9864,9 +8317,7 @@
   "smtpServer": {},
   "loginTheme": "catenax-central",
   "eventsEnabled": true,
-  "eventsListeners": [
-    "jboss-logging"
-  ],
+  "eventsListeners": ["jboss-logging"],
   "enabledEventTypes": [
     "SEND_RESET_PASSWORD",
     "UPDATE_CONSENT_ERROR",
@@ -9968,11 +8419,11 @@
         "hideOnLoginPage": "false",
         "validateSignature": "true",
         "clientId": "central-idp",
-        "tokenUrl": "http://sharedidp.tx.test/auth/realms/CX-Operator/protocol/openid-connect/token",
-        "jwksUrl": "http://sharedidp.tx.test/auth/realms/CX-Operator/protocol/openid-connect/certs",
-        "authorizationUrl": "http://sharedidp.tx.test/auth/realms/CX-Operator/protocol/openid-connect/auth",
+        "tokenUrl": "https://sharedidp.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/auth/realms/CX-Operator/protocol/openid-connect/token",
+        "jwksUrl": "https://sharedidp.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/auth/realms/CX-Operator/protocol/openid-connect/certs",
+        "authorizationUrl": "https://sharedidp.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/auth/realms/CX-Operator/protocol/openid-connect/auth",
         "clientAuthMethod": "private_key_jwt",
-        "logoutUrl": "http://sharedidp.tx.test/auth/realms/CX-Operator/protocol/openid-connect/logout",
+        "logoutUrl": "https://sharedidp.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/auth/realms/CX-Operator/protocol/openid-connect/logout",
         "clientAssertionSigningAlg": "RS256",
         "syncMode": "FORCE",
         "useJwksUrl": "true"
@@ -9981,7 +8432,7 @@
   ],
   "identityProviderMappers": [
     {
-      "id": "08817b9b-1784-4e36-8064-026d4c85442c",
+      "id": "d6402195-c46d-4c92-9de6-b5d234acd9e5",
       "name": "organisation-mapper",
       "identityProviderAlias": "CX-Operator",
       "identityProviderMapper": "hardcoded-attribute-idp-mapper",
@@ -10001,9 +8452,7 @@
         "subType": "anonymous",
         "subComponents": {},
         "config": {
-          "max-clients": [
-            "200"
-          ]
+          "max-clients": ["200"]
         }
       },
       {
@@ -10021,12 +8470,8 @@
         "subType": "anonymous",
         "subComponents": {},
         "config": {
-          "host-sending-registration-request-must-match": [
-            "true"
-          ],
-          "client-uris-must-match": [
-            "true"
-          ]
+          "host-sending-registration-request-must-match": ["true"],
+          "client-uris-must-match": ["true"]
         }
       },
       {
@@ -10037,14 +8482,14 @@
         "subComponents": {},
         "config": {
           "allowed-protocol-mapper-types": [
-            "oidc-usermodel-property-mapper",
             "saml-role-list-mapper",
-            "oidc-sha256-pairwise-sub-mapper",
+            "oidc-usermodel-property-mapper",
+            "oidc-usermodel-attribute-mapper",
             "saml-user-attribute-mapper",
-            "oidc-address-mapper",
             "oidc-full-name-mapper",
             "saml-user-property-mapper",
-            "oidc-usermodel-attribute-mapper"
+            "oidc-sha256-pairwise-sub-mapper",
+            "oidc-address-mapper"
           ]
         }
       },
@@ -10064,14 +8509,14 @@
         "subComponents": {},
         "config": {
           "allowed-protocol-mapper-types": [
-            "saml-user-attribute-mapper",
-            "oidc-usermodel-property-mapper",
             "saml-user-property-mapper",
-            "oidc-usermodel-attribute-mapper",
-            "oidc-address-mapper",
-            "oidc-full-name-mapper",
+            "oidc-usermodel-property-mapper",
+            "saml-user-attribute-mapper",
+            "oidc-sha256-pairwise-sub-mapper",
             "saml-role-list-mapper",
-            "oidc-sha256-pairwise-sub-mapper"
+            "oidc-full-name-mapper",
+            "oidc-usermodel-attribute-mapper",
+            "oidc-address-mapper"
           ]
         }
       },
@@ -10082,9 +8527,7 @@
         "subType": "anonymous",
         "subComponents": {},
         "config": {
-          "allow-default-scopes": [
-            "true"
-          ]
+          "allow-default-scopes": ["true"]
         }
       },
       {
@@ -10094,9 +8537,7 @@
         "subType": "authenticated",
         "subComponents": {},
         "config": {
-          "allow-default-scopes": [
-            "true"
-          ]
+          "allow-default-scopes": ["true"]
         }
       }
     ],
@@ -10115,12 +8556,8 @@
         "providerId": "hmac-generated",
         "subComponents": {},
         "config": {
-          "priority": [
-            "100"
-          ],
-          "algorithm": [
-            "HS256"
-          ]
+          "priority": ["100"],
+          "algorithm": ["HS256"]
         }
       },
       {
@@ -10129,12 +8566,8 @@
         "providerId": "rsa-enc-generated",
         "subComponents": {},
         "config": {
-          "priority": [
-            "100"
-          ],
-          "algorithm": [
-            "RSA-OAEP"
-          ]
+          "priority": ["100"],
+          "algorithm": ["RSA-OAEP"]
         }
       },
       {
@@ -10143,9 +8576,7 @@
         "providerId": "rsa-generated",
         "subComponents": {},
         "config": {
-          "priority": [
-            "100"
-          ]
+          "priority": ["100"]
         }
       },
       {
@@ -10154,18 +8585,13 @@
         "providerId": "aes-generated",
         "subComponents": {},
         "config": {
-          "priority": [
-            "100"
-          ]
+          "priority": ["100"]
         }
       }
     ]
   },
   "internationalizationEnabled": true,
-  "supportedLocales": [
-    "de",
-    "en"
-  ],
+  "supportedLocales": ["de", "en"],
   "defaultLocale": "en",
   "authenticationFlows": [
     {

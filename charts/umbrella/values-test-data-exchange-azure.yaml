@@ -1,0 +1,1079 @@
+# #############################################################################
+# Copyright (c) 2023,2024 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License, Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0.
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+# #############################################################################
+---
+portal:
+  enabled: true
+  replicaCount: 1
+  postgresql:
+    nameOverride: "portal-backend-postgresql"
+    architecture: standalone
+    auth:
+      password: "dbpasswordportal"
+      portalPassword: "dbpasswordportal"
+      replicationPassword: "dbpasswordportal"
+      provisioningPassword: "dbpasswordportal"
+    primary:
+      persistence:
+        enabled: false
+  portalAddress: "https://portal.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+  portalBackendAddress: "https://portal-backend.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+  centralidpAddress: "https://centralidp.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+  sharedidpAddress: "https://sharedidp.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+  semanticsAddress: "https://semantics.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+  bpdmPartnersPoolAddress: "https://business-partners.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+  bpdmPortalGateAddress: "https://business-partners.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+  custodianAddress: "https://managed-identity-wallets.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+  sdfactoryAddress: "https://sdfactory.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+  clearinghouseAddress: "https://validation.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+  clearinghouseTokenAddress: "https://keycloak.37c3234d8454420babf.westeurope.aksapp.io/realms/example/protocol/openid-connect/token"
+  frontend:
+    ingress:
+      enabled: true
+      ingressClassName: ""
+      annotations:
+        # uncomment the following line for tls
+        nginx.ingress.kubernetes.io/rewrite-target: "/$1"
+        kubernetes.io/ingress.class: addon-http-application-routing
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+        nginx.ingress.kubernetes.io/enable-cors: "true"
+        nginx.ingress.kubernetes.io/cors-allow-origin: "https://*.37c3234d8454420babf.westeurope.aksapp.io"
+        nginx.ingress.kubernetes.io/use-regex: "true"
+      # uncomment the following lines for tls
+      tls:
+        # -- Provide tls secret.
+        - secretName: "portal.tx.test-tls"
+          # -- Provide host for tls secret.
+          hosts:
+            - "portal.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+      hosts:
+        - host: "portal.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+          paths:
+            - path: "/(.*)"
+              pathType: "ImplementationSpecific"
+              backend:
+                service: "portal"
+                port: 8080
+            - path: "/registration/(.*)"
+              pathType: "ImplementationSpecific"
+              backend:
+                service: "registration"
+                port: 8080
+            - path: "/((assets|documentation)/.*)"
+              pathType: "ImplementationSpecific"
+              backend:
+                service: "assets"
+                port: 8080
+  backend:
+    dotnetEnvironment: "Development"
+    keycloak:
+      central:
+        clientId: "sa-cl1-reg-2"
+        clientSecret: "aEoUADDw2aNPa0WAaKGAyKfC80n8sKxJ"
+        jwtBearerOptions:
+          requireHttpsMetadata: "false"
+      shared:
+        clientId: "sa-cl1-reg-1"
+        clientSecret: "YPA1t6BMQtPtaG3fpH8Sa8Ac6KYbPUM7"
+    registration:
+      logging:
+        default: "Debug"
+        bpdmLibrary: "Debug"
+        registrationService: "Debug"
+      swaggerEnabled: true
+    administration:
+      logging:
+        default: "Debug"
+        businessLogic: "Debug"
+        sdfactoryLibrary: "Debug"
+        bpdmLibrary: "Debug"
+        custodianLibrary: "Debug"
+      swaggerEnabled: true
+    appmarketplace:
+      logging:
+        default: "Debug"
+        offersLibrary: "Debug"
+      swaggerEnabled: true
+    services:
+      logging:
+        default: "Debug"
+        offersLibrary: "Debug"
+      swaggerEnabled: true
+    notification:
+      logging:
+        default: "Debug"
+      swaggerEnabled: true
+    processesworker:
+      logging:
+        default: "Debug"
+        processesLibrary: "Debug"
+        bpdmLibrary: "Debug"
+        clearinghouseLibrary: "Debug"
+        custodianLibrary: "Debug"
+        sdfactoryLibrary: "Debug"
+        offerProvider: "Debug"
+      bpdm:
+        clientId: "sa-cl7-cx-5"
+        clientSecret: "bWSck103qNJ0jZ1LVtG9mUAlcL7R5RLg"
+      # -- no configuration for clearinghouse because it's an external component
+      # clientId and clientSecret aren't in the centralidp Keycloak
+      # clearinghouse:
+      #   clientId: "clearinghouse-client-id"
+      #   clientSecret: ""
+      custodian:
+        clientId: "sa-cl5-custodian-2"
+        clientSecret: "UIqawwoohsvZ6AZOd1llLhnsUTKMWe4D"
+      sdfactory:
+        issuerBpn: "BPNL00000003CRHK"
+        clientId: "sa-cl8-cx-1"
+        clientSecret: "clbQOPHcVKY9tUUd068vyf8CrsPZ8BgZ"
+      offerprovider:
+        clientId: "sa-cl2-03"
+        clientSecret: "wyNYzSnyu4iGvj17XgLSl0aQxAPjTjmI"
+    mailing:
+      host: "smtp-server.default.svc.cluster.local"
+      port: "8025"
+      user: "myUser"
+      senderEmail: "info@napcoretx.com"
+      password: "mysecretpassword"
+    portalmigrations:
+      logging:
+        default: "Debug"
+    provisioning:
+      sharedRealm:
+        smtpServer:
+          auth: "false"
+          host: "smtp-server.default.svc.cluster.local"
+          port: "8025"
+          user: "myUser"
+          password: "mysecretpassword"
+          from: "info@napcoretx.com"
+          replyTo: "info@test.com"
+    # -- docs: https://portal-backend.37c3234d8454420babf.westeurope.aksapp.io/api/administration/swagger/index.html
+    # https://portal-backend.37c3234d8454420babf.westeurope.aksapp.io/api/registration/swagger/index.html
+    # https://portal-backend.37c3234d8454420babf.westeurope.aksapp.io/api/apps/swagger/index.html
+    # https://portal-backend.37c3234d8454420babf.westeurope.aksapp.io/api/services/swagger/index.html
+    # https://portal-backend.37c3234d8454420babf.westeurope.aksapp.io/api/notification/swagger/index.html
+    ingress:
+      enabled: true
+      ingressClassName: ""
+      name: "portal-backend"
+      annotations:
+        # uncomment the following line for tls
+        # cert-manager.io/cluster-issuer: "my-ca-issuer"
+        kubernetes.io/ingress.class: addon-http-application-routing
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+        nginx.ingress.kubernetes.io/use-regex: "true"
+        nginx.ingress.kubernetes.io/enable-cors: "true"
+        nginx.ingress.kubernetes.io/proxy-body-size: "8m"
+        nginx.ingress.kubernetes.io/cors-allow-origin: "http://localhost:3000, https://*.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+      # uncomment the following lines for tls
+      tls:
+        # -- Provide tls secret.
+        - secretName: "portal-backend.tx.test-tls"
+          # -- Provide host for tls secret.
+          hosts:
+            - "portal-backend.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+      hosts:
+        - host: "portal-backend.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+          paths:
+            - path: "/api/registration"
+              pathType: "Prefix"
+              backend:
+                service: "registration-service"
+                port: 8080
+            - path: "/api/administration"
+              pathType: "Prefix"
+              backend:
+                service: "administration-service"
+                port: 8080
+            - path: "/api/notification"
+              pathType: "Prefix"
+              backend:
+                service: "notification-service"
+                port: 8080
+            - path: "/api/provisioning"
+              pathType: "Prefix"
+              backend:
+                service: "provisioning-service"
+                port: 8080
+            - path: "/api/apps"
+              pathType: "Prefix"
+              backend:
+                service: "marketplace-app-service"
+                port: 8080
+            - path: "/api/services"
+              pathType: "Prefix"
+              backend:
+                service: "services-service"
+                port: 8080
+
+centralidp:
+  enabled: true
+  keycloak:
+    nameOverride: "centralidp"
+    replicaCount: 1
+    postgresql:
+      nameOverride: "centralidp-postgresql"
+      architecture: standalone
+      primary:
+        persistence:
+          enabled: false
+    proxy: edge
+    initContainers:
+      - name: realm-import
+        image: muhammadsaudkhan/portal-napcore-iam:latest
+        imagePullPolicy: Always
+        command:
+          - sh
+        args:
+          - -c
+          - |
+            echo "Copying realms..."
+            cp -R /import/catenax-central/R2403/realms/* /realms
+        volumeMounts:
+        - name: realms
+          mountPath: "/realms"
+      - name: theme-import
+        image: docker.io/tractusx/portal-iam:v2.1.0
+        imagePullPolicy: IfNotPresent
+        command:
+          - sh
+        args:
+          - -c
+          - |
+            echo "Copying themes..."
+            cp -R /import/themes/catenax-central/* /themes
+        volumeMounts:
+        - name: themes
+          mountPath: "/themes"
+      # uncomment the following line for tls
+      # - name: init-certs
+      #   image: docker.io/bitnami/keycloak:22.0.3-debian-11-r14
+      #   imagePullPolicy: IfNotPresent
+      #   command: ["/bin/bash"]
+      #   args:
+      #     - -ec
+      #     - |-
+      #       keytool -import -file "/certs/tls.crt" \
+      #               -keystore "/opt/bitnami/keycloak/certs/keycloak.truststore.jks" \
+      #               -storepass "${KEYCLOAK_SPI_TRUSTSTORE_PASSWORD}" \
+      #               -noprompt
+      #   env:
+      #     - name: KEYCLOAK_SPI_TRUSTSTORE_PASSWORD
+      #       value: "changeit"
+      #   volumeMounts:
+      #     - name: certificates
+      #       mountPath: /certs
+      #     - name: shared-certs
+      #       mountPath: "/opt/bitnami/keycloak/certs"
+    extraEnvVars:
+      - name: KEYCLOAK_EXTRA_ARGS
+        value: "-Dkeycloak.migration.action=import -Dkeycloak.migration.provider=singleFile -Dkeycloak.migration.file=/realms/CX-Central-realm.json -Dkeycloak.migration.strategy=IGNORE_EXISTING"
+      # uncomment the following line for tls
+      # - name: KEYCLOAK_SPI_TRUSTSTORE_FILE
+      #   value: "/opt/bitnami/keycloak/certs/keycloak.truststore.jks"
+      # - name: KEYCLOAK_SPI_TRUSTSTORE_PASSWORD
+      #   value: "changeit"
+    extraVolumes:
+      - name: realms
+        emptyDir: {}
+      - name: themes
+        emptyDir: {}
+      # uncomment the following line for tls
+      # - name: certificates
+      #   secret:
+      #     secretName: root-secret
+      #     defaultMode: 420
+      # - name: shared-certs
+      #   emptyDir: {}
+    extraVolumeMounts:
+      - name: realms
+        mountPath: "/realms"
+      - name: themes
+        mountPath: "/opt/bitnami/keycloak/themes/catenax-central"
+      # uncomment the following line for tls
+      # - name: certificates
+      #   mountPath: /certs
+      # - name: shared-certs
+      #   mountPath: "/opt/bitnami/keycloak/certs"
+    ingress:
+      enabled: true
+      ingressClassName: ""
+      hostname: "centralidp.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+      annotations:
+        # uncomment the following line for tls
+        # cert-manager.io/cluster-issuer: "my-ca-issuer"
+        kubernetes.io/ingress.class: addon-http-application-routing
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+        nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+        nginx.ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, OPTIONS"
+        nginx.ingress.kubernetes.io/cors-allow-origin: "https://centralidp.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+        nginx.ingress.kubernetes.io/enable-cors: "true"
+        nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+        nginx.ingress.kubernetes.io/proxy-buffering: "on"
+        nginx.ingress.kubernetes.io/proxy-buffers-number: "20"
+        nginx.ingress.kubernetes.io/use-regex: "true"
+      tls: 
+        - secretName: "centralidp.tx.test-tls"
+          # -- Provide host for tls secret.
+          hosts:
+            - "centralidp.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+  secrets:
+    postgresql:
+      auth:
+        existingSecret:
+          postgrespassword: "dbpasswordcentralidp"
+          password: "dbpasswordcentralidp"
+          replicationPassword: "dbpasswordcentralidp"
+    auth:
+      existingSecret:
+        # -- Password for the admin username 'admin'. Secret-key 'admin-password'.
+        adminpassword: "adminconsolepwcentralidp"
+
+sharedidp:
+  enabled: true
+  keycloak:
+    nameOverride: "sharedidp"
+    replicaCount: 1
+    postgresql:
+      nameOverride: "sharedidp-postgresql"
+      architecture: standalone
+      primary:
+        persistence:
+          enabled: false
+    proxy: edge
+    initContainers:
+      - name: realm-import
+        image: muhammadsaudkhan/portal-napcore-iam:latest
+        imagePullPolicy: Always
+        command:
+          - sh
+        args:
+          - -c
+          - |
+            echo "Copying realms..."
+            cp -R /import/catenax-shared/realms/* /realms
+        volumeMounts:
+        - name: realms
+          mountPath: "/realms"
+      - name: theme-import
+        image: docker.io/tractusx/portal-iam:v2.1.0
+        imagePullPolicy: IfNotPresent
+        command:
+          - sh
+        args:
+          - -c
+          - |
+            echo "Copying themes-catenax-shared..."
+            cp -R /import/themes/catenax-shared/* /themes-catenax-shared
+            echo "Copying themes-catenax-shared-portal..."
+            cp -R /import/themes/catenax-shared-portal/* /themes-catenax-shared-portal
+        volumeMounts:
+        - name: themes-catenax-shared
+          mountPath: "/themes-catenax-shared"
+        - name: themes-catenax-shared-portal
+          mountPath: "/themes-catenax-shared-portal"
+      # uncomment the following line for tls
+      # - name: init-certs
+      #   image: docker.io/bitnami/keycloak:22.0.3-debian-11-r14
+      #   imagePullPolicy: IfNotPresent
+      #   command: ["/bin/bash"]
+      #   args:
+      #     - -ec
+      #     - |-
+      #       keytool -import -file "/certs/tls.crt" \
+      #               -keystore "/opt/bitnami/keycloak/certs/keycloak.truststore.jks" \
+      #               -storepass "${KEYCLOAK_SPI_TRUSTSTORE_PASSWORD}" \
+      #               -noprompt
+      #   env:
+      #     - name: KEYCLOAK_SPI_TRUSTSTORE_PASSWORD
+      #       value: "changeit"
+      #   volumeMounts:
+      #     - name: certificates
+      #       mountPath: /certs
+      #     - name: shared-certs
+      #       mountPath: "/opt/bitnami/keycloak/certs"
+    extraEnvVars:
+      - name: KEYCLOAK_EXTRA_ARGS
+        value: "-Dkeycloak.migration.action=import -Dkeycloak.migration.provider=dir -Dkeycloak.migration.dir=/realms -Dkeycloak.migration.strategy=IGNORE_EXISTING"
+      # uncomment the following line for tls
+      # - name: KEYCLOAK_SPI_TRUSTSTORE_FILE
+      #   value: "/opt/bitnami/keycloak/certs/keycloak.truststore.jks"
+      # - name: KEYCLOAK_SPI_TRUSTSTORE_PASSWORD
+      #   value: "changeit"
+    extraVolumes:
+      - name: realms
+        emptyDir: {}
+      - name: themes-catenax-shared
+        emptyDir: {}
+      - name: themes-catenax-shared-portal
+        emptyDir: {}
+      # uncomment the following line for tls
+      # - name: certificates
+      #   secret:
+      #     secretName: root-secret
+      #     defaultMode: 420
+      # - name: shared-certs
+      #   emptyDir: {}
+    extraVolumeMounts:
+      - name: realms
+        mountPath: "/realms"
+      - name: themes-catenax-shared
+        mountPath: "/opt/bitnami/keycloak/themes/catenax-shared"
+      - name: themes-catenax-shared-portal
+        mountPath: "/opt/bitnami/keycloak/themes/catenax-shared-portal"
+      # uncomment the following line for tls
+      # - name: certificates
+      #   mountPath: /certs
+      # - name: shared-certs
+      #   mountPath: "/opt/bitnami/keycloak/certs"
+    ingress:
+      enabled: true
+      hostname: "sharedidp.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+      ingressClassName: ""
+      annotations:
+        # uncomment the following line for tls
+        # cert-manager.io/cluster-issuer: "my-ca-issuer"
+        kubernetes.io/ingress.class: addon-http-application-routing
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+        nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+        nginx.ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, OPTIONS"
+        nginx.ingress.kubernetes.io/cors-allow-origin: "https://sharedidp.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+        nginx.ingress.kubernetes.io/enable-cors: "true"
+        nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+        nginx.ingress.kubernetes.io/proxy-buffering: "on"
+        nginx.ingress.kubernetes.io/proxy-buffers-number: "20"
+        nginx.ingress.kubernetes.io/use-regex: "true"
+      tls:
+        - secretName: "sharedidp.tx.test-tls"
+          # -- Provide host for tls secret.
+          hosts:
+            - "sharedidp.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+  secrets:
+    postgresql:
+      auth:
+        existingSecret:
+          postgrespassword: "dbpasswordsharedidp"
+          password: "dbpasswordsharedidp"
+          replicationPassword: "dbpasswordsharedidp"
+    auth:
+      existingSecret:
+        # -- Password for the admin username 'admin'. Secret-key 'admin-password'.
+        adminpassword: "adminconsolepwsharedidp"
+
+bpndiscovery:
+  enabled: false
+  enablePostgres: true
+  bpndiscovery:
+    host: semantics.tx.test
+    ingress:
+      enabled: true
+      ingressClassName: ""
+      tls: false
+      urlPrefix: "/bpndiscovery"
+      
+      annotations:
+        kubernetes.io/ingress.class: addon-http-application-routing
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+        nginx.ingress.kubernetes.io/rewrite-target: "/$2"
+        nginx.ingress.kubernetes.io/enable-cors: "true"
+        nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+        nginx.ingress.kubernetes.io/use-regex: "true"
+        nginx.ingress.kubernetes.io/x-forwarded-prefix: "/bpndiscovery"
+    authentication: true
+    idp:
+      issuerUri: "https://centralidp.e34eabb8a136438fafe9.germanywestcentral.aksapp.io.test/auth/realms/CX-Central"
+      publicClientId: "Cl22-CX-BPND"
+    bpndiscoverEndpoint:
+      allowedTypes: oen,wmi,passtype,manufacturerPartId
+      description: Service to discover BPN for different kind of type numbers
+      endpointAddress: /bpndiscovery
+      documentation: /bpndiscovery/swagger-ui/index.html
+      timeToLive: "31536000"
+    livenessProbe:
+      initialDelaySeconds: 200
+    readinessProbe:
+      initialDelaySeconds: 200
+  postgresql:
+    nameOverride: "bpndiscovery-postgresql"
+    primary:
+      persistence:
+        enabled: false
+        size: 8Gi
+    auth:
+      password: "dbpasswordbpndiscovery"
+      postgresPassword: "dbpasswordbpndiscovery"
+
+discoveryfinder:
+  enabled: false
+  enablePostgres: true
+  discoveryfinder:
+    authentication: true
+    livenessProbe:
+      initialDelaySeconds: 200
+    readinessProbe:
+      initialDelaySeconds: 200
+    host: semantics.tx.test
+    properties:
+      discoveryfinder:
+        initialEndpoints:
+          - type: bpn
+            endpointAddress: https://discoveryfinder.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/api/administration/Connectors/discovery
+            description: Service to discover connector endpoints based on bpns
+            documentation: https://discoveryfinder.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/api/administration/swagger/index.html
+    idp:
+      issuerUri: "https://centralidp.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/auth/realms/CX-Central"
+      publicClientId: "Cl21-CX-DF"
+    dataSource:
+      url: "jdbc:postgresql://{{ .Release.Name }}-discoveryfinder-postgresql:5432/discoveryfinder"
+    # -- docs: https://semantics.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/discoveryfinder/swagger-ui/index.html
+    ingress:
+      enabled: true
+      ingressClassName: ""
+      tls:
+        - secretName: "discoveryfinder.tx.test-tls"
+          # -- Provide host for tls secret.
+          hosts:
+            - "https://discoveryfinder.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/"
+      urlPrefix: "/discoveryfinder"
+      
+      annotations:
+        kubernetes.io/ingress.class: addon-http-application-routing
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+        nginx.ingress.kubernetes.io/rewrite-target: "/$2"
+        nginx.ingress.kubernetes.io/use-regex: "true"
+        nginx.ingress.kubernetes.io/x-forwarded-prefix: "/discoveryfinder"
+  postgresql:
+    nameOverride: "discoveryfinder-postgresql"
+    primary:
+      persistence:
+        enabled: false
+        size: 8Gi
+    auth:
+      password: "dbpassworddiscoveryfinder"
+      postgresPassword: "dbpassworddiscoveryfinder"
+
+selfdescription:
+  enabled: true
+  sdfactory:
+    secret:
+      # -- JWK Set URI
+      jwkSetUri: "https://centralidp.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/auth/realms/CX-Central/protocol/openid-connect/certs"
+      # -- Custodian wallet client id
+      clientId: "sa-cl5-custodian-1"
+      # -- Custodian wallet client secret
+      clientSecret: "6pnnap7byS1TImL9Uj7g2psud9Fdq4tJ"
+      # -- Keycloak URL
+      authServerUrl: "https://centralidp.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/auth"
+      # -- Keycloak Realm detail
+      realm: "CX-Central"
+      # -- Keycloak Resource detail
+      resource: "Cl5-CX-Custodian"
+      # -- Details for Custodian wallet URI
+      custodianWalletUri: "https://managed-identity-wallets.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+      # -- Details for Clearing House URI
+      clearingHouseUri: ""
+      # -- Details for Clearing House URL
+      clearingHouseServerUrl: "https://centralidp.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/auth/realms/CX-Central/protocol/openid-connect/token"
+      # -- Details for Clearing House Realm
+      clearingHouseRealm: "CX-Central"
+      # -- Details for Clearing House Client ID
+      clearingHouseClientId: "sa-cl2-01"
+      # -- Details for Clearing House Client Secret
+      clearingHouseClientSecret: "w6Ib6d7hdltXwkdtsJYF3Cb6fEywia7S"
+  ingress:
+    enabled: true
+    ingressClassName: ""
+    hosts:
+      - host: "sdfactory.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+        paths:
+          - path: "/"
+            pathType: "Prefix"
+    # uncomment the following lines for tls
+    tls:
+    - tlsName: sdfactory.tx.test-tls
+      hosts:
+        - sdfactory.e34eabb8a136438fafe9.germanywestcentral.aksapp.io
+    
+    annotations:
+      # uncomment the following line for tls
+      # cert-manager.io/cluster-issuer: "my-ca-issuer"
+      kubernetes.io/ingress.class: addon-http-application-routing
+      nginx.ingress.kubernetes.io/cors-allow-origin: https://*.e34eabb8a136438fafe9.germanywestcentral.aksapp.io
+      nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+      nginx.ingress.kubernetes.io/enable-cors: "true"
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+
+managed-identity-wallet:
+  enabled: true
+  seeding:
+    enabled: true
+    # -- Map of company BPN and company name. For each of these Companies, a MIW wallet will be created.
+    companies:
+      BPNL00000003AZQP: "BPN_OEM_C"
+      BPNL00000003AYRE: "BPN_OEM_A"
+      BPNL00000003AVTH: "BPN_OEM_B"
+      BPNL00000003AWSS: "BPN_IRS_TEST"
+      BPNL00000003B0Q0: "BPN_N_TIER_A"
+      BPNS0000000008ZZ: "BPN_TRACEX_A_SITE_A"
+      BPNL00000003CNKC: "BPN_TRACEX_B"
+      BPNL00000003B6LU: "BPN_DISMANTLER"
+      BPNL00000003CML1: "BPN_TRACEX_A"
+      BPNS00000008BDFH: "BPN_TRACEX_B_SITE_A"
+      BPNL00000003B2OM: "BPN_TIER_A"
+      BPNL00000003CSGV: "BPN_TIER_C"
+      BPNL00000003B5MJ: "BPN_TIER_B"
+      BPNL00000003AXS3: "BPN_SUB_TIER_B"
+      BPNL00000003B3NX: "BPN_SUB_TIER_A"
+      BPNL00000000BJTL: "BPN_SUB_TIER_C"
+    clientId: sa-cl5-custodian-2
+    clientSecret: UIqawwoohsvZ6AZOd1llLhnsUTKMWe4D
+  # TLS to trust centralidp Keycloak instance of TLS enabled
+  # uncomment the following line for tls
+  # initContainers:
+  #   - name: init-certs
+  #     image: docker.io/tractusx/managed-identity-wallet:0.4.0
+  #     imagePullPolicy: IfNotPresent
+  #     command: ["sh"]
+  #     args:
+  #       - -ec
+  #       - |-
+  #         cp -R /opt/java/openjdk/lib/security/* /cacerts/
+  #         echo "Copying done"
+  #         keytool -import -noprompt -trustcacerts -alias local -file /certs/tls.crt -keystore /cacerts/cacerts -storepass changeit
+  #         keytool -list -keystore /cacerts/cacerts -alias local
+  #     volumeMounts:
+  #       - name: certificates
+  #         mountPath: /certs
+  #       - name: shared-certs
+  #         mountPath: /cacerts
+  # extraVolumes:
+  #   - name: certificates
+  #     secret:
+  #       secretName: root-secret
+  #       defaultMode: 420
+  #   - name: shared-certs
+  #     emptyDir: {}
+  # extraVolumeMounts:
+  #   - name: certificates
+  #     mountPath: /certs
+  #   - name: shared-certs
+  #     mountPath: /opt/java/openjdk/lib/security
+  miw:
+    host: "managed-identity-wallets.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+    authorityWallet:
+      bpn: &authority-bpn "BPNL00000003CRHK"
+      name: "Catena-X"
+    database:
+      host: "{{ .Release.Name }}-miw-postgres"
+      secret: "{{ .Release.Name }}-miw-postgres"
+    keycloak:
+      url: "https://centralidp.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/auth"
+      realm: "CX-Central"
+      clientId: "Cl5-CX-Custodian"
+    ssi:
+      enforceHttpsInDidWebResolution: "true"
+  postgresql:
+    nameOverride: miw-postgres
+    primary:
+      persistence:
+        enabled: false
+        size: 1Gi
+    auth:
+      password: "dbpasswordmiw"
+      enablePostgresUser: true
+      postgresPassword: "dbpasswordmiw"
+  keycloak:
+    enabled: false
+  livenessProbe:
+    initialDelaySeconds: 90
+  readinessProbe:
+    initialDelaySeconds: 90
+  # -- docs: https://managed-identity-wallets.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/ui/swagger-ui/index.html
+  ingress:
+    enabled: true
+    ingressClassName: ""
+    hosts:
+      - host: "managed-identity-wallets.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+        paths:
+          - path: "/"
+            pathType: "ImplementationSpecific"
+    # uncomment the following lines for tls
+    tls:
+      - secretName: "managed-identity-wallets.tx.test-tls"
+        hosts:
+          - "managed-identity-wallets.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+    
+    annotations:
+      # uncomment the following line for tls
+      # cert-manager.io/cluster-issuer: "my-ca-issuer"
+      kubernetes.io/ingress.class: addon-http-application-routing
+      nginx.ingress.kubernetes.io/cors-allow-origin: https://portal.e34eabb8a136438fafe9.germanywestcentral.aksapp.io
+      nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+      nginx.ingress.kubernetes.io/cors-allow-methods: GET
+      nginx.ingress.kubernetes.io/enable-cors: "true"
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+
+dataconsumerOne:
+  enabled: true
+  seedTestdata: false
+  nameOverride: dataconsumer-1
+  secrets:
+    edc-miw-keycloak-secret: UbfW4CR1xH4OskkovqJ2JzcwnQIrG7oj
+  tractusx-connector:
+    nameOverride: dataconsumer-1-edc
+    participant:
+      id: BPNLCGI000000000
+    controlplane:
+      ssi:
+        miw:
+          url: https://managed-identity-wallets.e34eabb8a136438fafe9.germanywestcentral.aksapp.io
+          authorityId: *authority-bpn
+        oauth:
+          tokenurl: https://centralidp.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/auth/realms/CX-Central/protocol/openid-connect/token
+          client:
+            id: satest01
+            secretAlias: edc-miw-keycloak-secret
+      endpoints:
+        management:
+          authKey: TEST1
+      ingresses:
+        - enabled: true
+          hostname: "dataconsumer-1-controlplane.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+          ingressClassName: ""
+          annotations:
+            # uncomment the following line for tls
+            # cert-manager.io/cluster-issuer: "my-ca-issuer"
+            kubernetes.io/ingress.class: addon-http-application-routing
+            cert-manager.io/cluster-issuer: letsencrypt-prod
+          endpoints:
+            - default
+            - protocol
+            - management
+                
+          tls:
+            enabled: true
+    
+    dataplane:
+      ingresses:
+        - enabled: true
+          ingressClassName: ""
+          annotations:
+            # uncomment the following line for tls
+            # cert-manager.io/cluster-issuer: "my-ca-issuer"
+            kubernetes.io/ingress.class: addon-http-application-routing
+            cert-manager.io/cluster-issuer: letsencrypt-prod
+          hostname: "dataconsumer-1-dataplane.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+          endpoints:
+            - default
+            - public
+          
+          tls:
+            enabled: true
+
+    postgresql:
+      nameOverride: dataconsumer-1-db
+      jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataconsumer-1-db:5432/edc"
+      auth:
+        password: "dbpassworddataconsumerone"
+        postgresPassword: "dbpassworddataconsumerone"
+    vault:
+      hashicorp:
+        url: http://edc-dataconsumer-1-vault:8200
+      secretNames:
+        transferProxyTokenSignerPrivateKey: tokenSignerPrivateKey
+        transferProxyTokenSignerPublicKey: tokenSignerPublicKey
+        transferProxyTokenEncryptionAesKey: tokenEncryptionAesKey
+
+  vault:
+    nameOverride: edc-dataconsumer-1-vault
+    fullnameOverride: edc-dataconsumer-1-vault
+    enabled: true
+    server:
+      postStart: []
+
+  digital-twin-registry:
+    enabled: false
+
+  simple-data-backend:
+    enabled: false
+
+tx-data-provider:
+  enabled: true
+  seedTestdata: true
+  backendUrl: http://{{ .Release.Name }}-dataprovider-submodelserver:8080
+  registryUrl: http://{{ .Release.Name }}-dataprovider-dtr:8080/api/v3.0
+  controlplanePublicUrl: http://{{ .Release.Name }}-dataprovider-edc-controlplane:8084
+  controlplaneManagementUrl: http://{{ .Release.Name }}-dataprovider-edc-controlplane:8081
+  dataplaneUrl: http://{{ .Release.Name }}-dataprovider-edc-dataplane:8081
+  nameOverride: dataprovider
+  secrets:
+    edc-miw-keycloak-secret: pyFUZP2L9UCSVJUScHcN3ZEgy2PGyEpg
+  tractusx-connector:
+    nameOverride: dataprovider-edc
+    participant:
+      id: BPNL000000000NDW
+    controlplane:
+      ssi:
+        miw:
+          url: https://managed-identity-wallets.e34eabb8a136438fafe9.germanywestcentral.aksapp.io
+          authorityId: *authority-bpn
+        oauth:
+          tokenurl: https://centralidp.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/auth/realms/CX-Central/protocol/openid-connect/token
+          client:
+            id: satest02
+            secretAlias: edc-miw-keycloak-secret
+      endpoints:
+        management:
+          authKey: TEST2
+      ingresses:
+        - enabled: true
+          ingressClassName: ""
+          annotations:
+            # uncomment the following line for tls
+            # cert-manager.io/cluster-issuer: "my-ca-issuer"
+            kubernetes.io/ingress.class: addon-http-application-routing
+            cert-manager.io/cluster-issuer: letsencrypt-prod
+          hostname: "dataprovider-controlplane.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+          endpoints:
+            - default
+            - protocol
+            - management
+          
+          tls:
+            enabled: true
+    dataplane:
+      ingresses:
+        - enabled: true
+          annotations:
+            kubernetes.io/ingress.class: addon-http-application-routing
+            cert-manager.io/cluster-issuer: letsencrypt-prod
+          hostname: "dataprovider-dataplane.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+          endpoints:
+            - default
+            - public
+          
+          tls:
+            enabled: true
+
+    postgresql:
+      nameOverride: dataprovider-db
+      jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataprovider-db:5432/edc"
+      auth:
+        password: "dbpasswordtxdataprovider"
+        postgresPassword: "dbpasswordtxdataprovider"
+    vault:
+      hashicorp:
+        url: http://edc-dataprovider-vault:8200
+      secretNames:
+        transferProxyTokenSignerPrivateKey: tokenSignerPrivateKey
+        transferProxyTokenSignerPublicKey: tokenSignerPublicKey
+        transferProxyTokenEncryptionAesKey: tokenEncryptionAesKey
+
+  vault:
+    nameOverride: edc-dataprovider-vault
+    fullnameOverride: edc-dataprovider-vault
+    enabled: true
+    server:
+      postStart: []
+
+  digital-twin-registry:
+    nameOverride: dataprovider-dtr
+    postgresql:
+      nameOverride: dataprovider-dtr-db
+      auth:
+        password: "dbpassworddtrdataprovider"
+        existingSecret: dataprovider-secret-dtr-postgres-init
+    registry:
+      host: dataprovider-dtr.e34eabb8a136438fafe9.germanywestcentral.aksapp.io
+
+  simple-data-backend:
+    nameOverride: dataprovider-submodelserver
+    # image:
+    #   repository: napcoredataspace.azurecr.io/simple-data-backend
+    #   tag: "v4.0"
+    ingress:
+      enabled: true
+      className: ""
+      annotations:
+        # uncomment the following line for tls
+        # cert-manager.io/cluster-issuer: "my-ca-issuer"
+        kubernetes.io/ingress.class: addon-http-application-routing
+        nginx.ingress.kubernetes.io/proxy-body-size: 50m
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+      hosts:
+      - host: "data-service.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+        paths:
+          - path: "/"
+            pathType: "ImplementationSpecific"
+      tls:
+        - secretName: "data-service.tx.test-tls"
+          hosts:
+            - "data-service.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1024Mi
+      requests:
+        cpu: 500m
+        memory: 1024Mi
+
+semantic-hub:
+  enabled: false
+  enableKeycloak: false
+  keycloak:
+    postgresql:
+      architecture: standalone
+      primary:
+        persistence:
+          enabled: false
+  hub:
+    authentication: false
+    livenessProbe:
+      initialDelaySeconds: 200
+    readinessProbe:
+      initialDelaySeconds: 200
+    host: semantics.tx.test
+    ingress:
+      enabled: true
+      ingressClassName: ""
+      tls: false
+      urlPrefix: "/hub"
+      
+      annotations: []
+        # nginx.ingress.kubernetes.io/rewrite-target: "/$2"
+        # nginx.ingress.kubernetes.io/use-regex: "true"
+        # nginx.ingress.kubernetes.io/x-forwarded-prefix: "/hub"
+        # kubernetes.io/ingress.class: addon-http-application-routing
+        # cert-manager.io/cluster-issuer: letsencrypt-prod
+  graphdb:
+    enabled: true
+    image: jena-fuseki-docker:4.7.0
+    imagePullPolicy: Never
+    storageClassName: ""
+    storageSize: 8Gi
+
+dataconsumerTwo:
+  enabled: false
+  seedTestdata: false
+  nameOverride: dataconsumer-2
+  secrets:
+    edc-miw-keycloak-secret: tPwy4exxH1sXBRQouobSA2nNVaaPuwCs
+  tractusx-connector:
+    nameOverride: dataconsumer-2-edc
+    participant:
+      id: BPNL00000003AVTH
+    controlplane:
+      ssi:
+        miw:
+          url: https://managed-identity-wallets.e34eabb8a136438fafe9.germanywestcentral.aksapp.io
+          authorityId: *authority-bpn
+        oauth:
+          tokenurl: https://centralidp.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/auth/realms/CX-Central/protocol/openid-connect/token
+          client:
+            id: satest03
+            secretAlias: edc-miw-keycloak-secret
+      endpoints:
+        management:
+          authKey: TEST3
+      ingresses:
+        - enabled: true
+          hostname: "dataconsumer-2-controlplane.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+          ingressClassName: ""
+          annotations:
+            # uncomment the following line for tls
+            # cert-manager.io/cluster-issuer: "my-ca-issuer"
+            kubernetes.io/ingress.class: addon-http-application-routing
+            cert-manager.io/cluster-issuer: letsencrypt-prod
+          endpoints:
+            - default
+            - protocol
+            - management
+          
+          tls:
+            enabled: true
+    dataplane:
+      ingresses:
+        - enabled: true
+          ingressClassName: ""
+          annotations:
+            # uncomment the following line for tls
+            # cert-manager.io/cluster-issuer: "my-ca-issuer"
+            kubernetes.io/ingress.class: addon-http-application-routing
+            cert-manager.io/cluster-issuer: letsencrypt-prod
+          hostname: "dataconsumer-2-dataplane.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"
+          endpoints:
+            - default
+            - public
+          
+          tls:
+            enabled: true
+    postgresql:
+      nameOverride: dataconsumer-2-db
+      jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataconsumer-2-db:5432/edc"
+      auth:
+        password: "dbpassworddataconsumertwo"
+        postgresPassword: "dbpassworddataconsumertwo"
+    vault:
+      hashicorp:
+        url: http://edc-dataconsumer-2-vault:8200
+      secretNames:
+        transferProxyTokenSignerPrivateKey: tokenSignerPrivateKey
+        transferProxyTokenSignerPublicKey: tokenSignerPublicKey
+        transferProxyTokenEncryptionAesKey: tokenEncryptionAesKey
+
+  vault:
+    nameOverride: edc-dataconsumer-2-vault
+    fullnameOverride: edc-dataconsumer-2-vault
+    enabled: true
+    server:
+      postStart: []
+
+  digital-twin-registry:
+    enabled: false
+
+  simple-data-backend:
+    enabled: false
+
+pgadmin4:
+  enabled: true
+  env:
+    email: pgadmin4@txtest.org
+    password: tractusxpgdamin4
+  persistentVolume:
+    enabled: false
+  ingress:
+    enabled: true
+    ingressClassName: ""
+    annotations:
+      # cert-manager.io/cluster-issuer: "my-ca-issuer"
+      kubernetes.io/ingress.class: addon-http-application-routing
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      nginx.ingress.kubernetes.io/use-regex: "true"
+      nginx.ingress.kubernetes.io/proxy-body-size: "8m"
+    hosts:
+      - host: pgadmin4.e34eabb8a136438fafe9.germanywestcentral.aksapp.io
+        paths:
+        - path: /
+          pathType: Prefix
+    tls: 
+      - secretName: "pgadmin4.tx.test-tls"
+        # -- Provide host for tls secret.
+        hosts:
+          - "pgadmin4.e34eabb8a136438fafe9.germanywestcentral.aksapp.io"

@@ -23,6 +23,7 @@ import java.util.HashMap;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,14 +32,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.print.attribute.standard.Media;
+
 @RestController
 @RequestMapping
 @Slf4j
 public class SimpleDataServiceController {
     private final HashMap<String, Object> data = new HashMap<>();
 
-    @PostMapping("/{id}")
+    @PostMapping(value = "/{id}")
     public void addData(@PathVariable final String id, @RequestBody final Object payload) {
+        System.out.println(payload);
         log.info("Adding data for id '{}'", id);
         data.put(id, payload);
     }
