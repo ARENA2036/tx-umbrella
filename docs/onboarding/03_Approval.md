@@ -42,7 +42,7 @@ Since Clearing House and Self Description components are external components, th
 If all checks are passed and registration is approved, the company admin will be notified via email
 
 
-See [technical steps](./04_Technical_Steps.md) to bypass external components
+See [technical steps](./04_Technical_Steps.md) to skip the external components
 
 
 
