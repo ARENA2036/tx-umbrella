@@ -2,7 +2,7 @@
 
 This guide explains the three simple steps required get a company onboarded in the dataspace environment.
 
-Here is the overiew:
+Here is the overview:
 
 ![General Overview](./media/overview.png)
 

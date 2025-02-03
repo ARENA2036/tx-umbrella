@@ -24,6 +24,8 @@ Click on **Lets get started**
 
 ![Add Company Data](./media/registration/fill-registration-form.png)
 
+![Add Company Role](./media/registration/company-role.png)
+
 ![Verify Company Data](./media/registration/verify-registration.png)
 
 After submission, you will receive this message.

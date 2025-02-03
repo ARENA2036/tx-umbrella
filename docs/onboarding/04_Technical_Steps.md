@@ -6,12 +6,12 @@ This guide is used to follow the steps to bypass the external components (Cleari
 ## Steps
 
 * Login to pgAdmin:
-    - url: https://pgadmin4.d37c3234d8454420babf.westeurope.aksapp.io/
+    - url: https://pgadmin4.<YOUR_DNS_ZONE>
     - username: pgadmin4@txtest.org
     - password: tractusxpgdamin4
 
 * Connect a Server
-    - Host: portal-backend-postgresql
+    - Host: fed-services-portal-backend-postgresql
     - Username: postgres
     - Password: dbpasswordportal
     - Port: 5432
@@ -48,15 +48,18 @@ Wait for some minutes (approx. 5 mins) until the **process worker** job gets tri
 
 
 The dataspace operator can see the status as confirmed!
+Wait for the process-worker job to be triggered. Once the job is get executed, it sets the company status as confirmed.
 
-![Operator - Application Requests CONFIRMED ](./media/keycloak/operator-application-requests.png)
+![Operator - Application Requests CONFIRMED ](./media/approval/company-approved.png)
+
+![Operator - Application Requests CONFIRMED ](./media/approval/company-checklist-approved.png)
 
 
 The company admin should recieve a welcome email **Welcome to Catena-X - Registration Request Approved** and should be able to access the Catena-X portal.
 
 ![Welcome Email Dashboard](./media/approval/welcome-email.png)
 
-![Admin Dashboard](./media/keycloak/company%20admin-dashboard.png)
+![Admin Dashboard](./media/approval/company-admin-dashboard.png)
 
 
 ### Sources: 
