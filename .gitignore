@@ -6,3 +6,4 @@ Chart.lock
 target/
 **/values-local.yaml
 **/your-values.yaml
+.DS_Store
