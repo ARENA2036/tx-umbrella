@@ -1,0 +1,1775 @@
+{
+	"info": {
+		"_postman_id": "ed1168c2-038c-4755-ad76-d236e7d6c811",
+		"name": "tx-umbrella",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "41478110"
+	},
+	"item": [
+		{
+			"name": "Provider",
+			"item": [
+				{
+					"name": "Submodel Server",
+					"item": [
+						{
+							"name": "Upload Data",
+							"protocolProfileBehavior": {
+								"disabledSystemHeaders": {}
+							},
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"metadata\": {\n        \"backupReference\": \"https://dummy.link\",\n        \"registrationIdentifier\": \"https://dummy.link/ID8283746239078\",\n        \"economicOperatorId\": \"BPNL0123456789ZZ\",\n        \"lastModification\": \"2000-01-01\",\n        \"predecessor\": \"urn:uuid:00000000-0000-0000-0000-000000000000\",\n        \"issueDate\": \"2000-01-01\",\n        \"version\": \"1.0.0\",\n        \"passportIdentifier\": \"urn:uuid:550e8400-e29b-41d4-a716-446655440000\",\n        \"status\": \"draft\",\n        \"expirationDate\": \"2030-01-01\"\n    },\n    \"characteristics\": {\n        \"generalPerformanceClass\": \"A\",\n        \"physicalState\": \"solid\",\n        \"physicalDimension\": {\n            \"volume\": {\n                \"value\": 20.0,\n                \"unit\": \"unit:cubicMetre\"\n            },\n            \"grossWeight\": {\n                \"value\": 20.0,\n                \"unit\": \"unit:gram\"\n            },\n            \"diameter\": {\n                \"value\": 20,\n                \"unit\": \"unit:millimetre\"\n            },\n            \"grossVolume\": {\n                \"value\": 20,\n                \"unit\": \"unit:cubicMetre\"\n            },\n            \"width\": {\n                \"value\": 20,\n                \"unit\": \"unit:millimetre\"\n            },\n            \"length\": {\n                \"value\": 20,\n                \"unit\": \"unit:millimetre\"\n            },\n            \"weight\": {\n                \"value\": 20,\n                \"unit\": \"unit:gram\"\n            },\n            \"height\": {\n                \"value\": 20,\n                \"unit\": \"unit:millimetre\"\n            }\n        },\n        \"lifespan\": [\n            {\n                \"value\": 36,\n                \"unit\": \"unit:day\",\n                \"key\": \"guaranteed lifetime\"\n            }\n        ]\n    },\n    \"commercial\": {\n        \"placedOnMarket\": \"2000-01-01\",\n        \"purpose\": [\n            \"automotive\"\n        ]\n    },\n    \"identification\": {\n        \"batch\": [\n            {\n                \"value\": \"BID12345678\",\n                \"key\": \"batchId\"\n            }\n        ],\n        \"codes\": [\n            {\n                \"value\": \"8703 24 10 00\",\n                \"key\": \"TARIC\"\n            }\n        ],\n        \"type\": {\n            \"manufacturerPartId\": \"123-0.740-3434-A\",\n            \"nameAtManufacturer\": \"Mirror left\"\n        },\n        \"classification\": [\n            {\n                \"classificationStandard\": \"GIN 20510-21513\",\n                \"classificationID\": \"1004712\",\n                \"classificationDescription\": \"Generic standard for classification of parts in the automotive industry.\"\n            }\n        ],\n        \"serial\": [\n            {\n                \"value\": \"SN12345678\",\n                \"key\": \"partInstanceId\"\n            }\n        ],\n        \"dataCarrier\": {\n            \"carrierType\": \"QR\",\n            \"carrierLayout\": \"upper-left side\"\n        }\n    },\n    \"sources\": [\n        {\n            \"header\": \"Example Document XYZ\",\n            \"category\": \"Product Specifications\",\n            \"type\": \"URL\",\n            \"content\": \"https://dummy.link\"\n        }\n    ],\n    \"materials\": {\n        \"substancesOfConcern\": {\n            \"applicable\": true,\n            \"content\": [\n                {\n                    \"unit\": \"unit:partPerMillion\",\n                    \"hazardClassification\": {\n                        \"category\": \"category 1A\",\n                        \"statement\": \"Causes severe skin burns and eye damage.\",\n                        \"class\": \"Skin corrosion\"\n                    },\n                    \"documentation\": [\n                        {\n                            \"contentType\": \"URL\",\n                            \"header\": \"Example Document XYZ\",\n                            \"content\": \"https://dummy.link\"\n                        }\n                    ],\n                    \"concentrationRange\": [\n                        {\n                            \"max\": 2.6,\n                            \"min\": 2.1\n                        }\n                    ],\n                    \"location\": \"Housing\",\n                    \"concentration\": 5.3,\n                    \"exemption\": \"shall not apply to product x containing not more than 1,5 ml of liquid\",\n                    \"id\": [\n                        {\n                            \"type\": \"CAS\",\n                            \"name\": \"phenolphthalein\",\n                            \"id\": \"201-004-7\"\n                        }\n                    ]\n                }\n            ]\n        },\n        \"materialComposition\": {\n            \"applicable\": true,\n            \"content\": [\n                {\n                    \"unit\": \"unit:partPerMillion\",\n                    \"recycled\": 12.5,\n                    \"critical\": true,\n                    \"renewable\": 23.5,\n                    \"documentation\": [\n                        {\n                            \"contentType\": \"URL\",\n                            \"header\": \"Example Document XYZ\",\n                            \"content\": \"https://dummy.link\"\n                        }\n                    ],\n                    \"concentration\": 5.3,\n                    \"id\": [\n                        {\n                            \"type\": \"CAS\",\n                            \"name\": \"phenolphthalein\",\n                            \"id\": \"201-004-7\"\n                        }\n                    ]\n                }\n            ]\n        }\n    },\n    \"handling\": {\n        \"applicable\": true,\n        \"content\": {\n            \"producer\": [\n                {\n                    \"id\": \"BPNL0123456789ZZ\"\n                }\n            ],\n            \"sparePart\": [\n                {\n                    \"manufacturerPartId\": \"123-0.740-3434-A\",\n                    \"nameAtManufacturer\": \"Mirror left\"\n                }\n            ]\n        }\n    },\n    \"additionalData\": [\n        {\n            \"description\": \"Description of an attribute\",\n            \"label\": \"Maximum permitted battery power\",\n            \"type\": {\n                \"typeUnit\": \"unit:volume\",\n                \"dataType\": \"array\"\n            },\n            \"data\": \"23\",\n            \"children\": [\n                {\n                    \"description\": \"Description of an attribute\",\n                    \"label\": \"Maximum permitted battery power\",\n                    \"type\": {\n                        \"typeUnit\": \"unit:volume\",\n                        \"dataType\": \"array\"\n                    },\n                    \"data\": \"23\"\n                },\n                {\n                    \"description\": \"Description of an attribute\",\n                    \"label\": \"Maximum permitted battery power\",\n                    \"type\": {\n                        \"typeUnit\": \"unit:volume\",\n                        \"dataType\": \"array\"\n                    },\n                    \"data\": \"null\",\n                    \"children\": [\n                        {\n                            \"description\": \"Description of an attribute\",\n                            \"label\": \"Maximum permitted battery power\",\n                            \"type\": {\n                                \"typeUnit\": \"unit:volume\",\n                                \"dataType\": \"object\"\n                            },\n                            \"children\": [\n                                {\n                                    \"description\": \"Description of an attribute\",\n                                    \"label\": \"Maximum permitted battery power\",\n                                    \"type\": {\n                                        \"typeUnit\": \"unit:volume\",\n                                        \"dataType\": \"string\"\n                                    },\n                                    \"data\": \"asdasdasd\",\n                                    \"children\": [\n                                        {\n                                            \"description\": \"Description of an attribute\",\n                                            \"label\": \"Maximum permitted battery power\",\n                                            \"type\": {\n                                                \"typeUnit\": \"unit:volume\",\n                                                \"dataType\": \"string\"\n                                            },\n                                            \"data\": \"asdasdasd\"\n                                        }\n                                    ]\n                                }\n                            ]\n                        },\n                        {\n                            \"description\": \"Description of an attribute\",\n                            \"label\": \"Maximum permitted battery power\",\n                            \"type\": {\n                                \"typeUnit\": \"unit:volume\",\n                                \"dataType\": \"string\"\n                            },\n                            \"data\": \"4323\"\n                        }\n                    ]\n                }\n            ]\n        }\n    ],\n    \"operation\": {\n        \"import\": {\n            \"applicable\": true,\n            \"content\": {\n                \"eori\": \"GB123456789000\",\n                \"id\": \"BPNL0123456789ZZ\"\n            }\n        },\n        \"other\": {\n            \"id\": \"BPNL0123456789XX\",\n            \"role\": \"distributor\"\n        },\n        \"manufacturer\": {\n            \"facility\": [\n                {\n                    \"facility\": \"BPNA1234567890AA\"\n                }\n            ],\n            \"manufacturingDate\": \"2000-01-31\",\n            \"manufacturer\": \"BPNLbi7tAJ8UiMsF\"\n        }\n    },\n    \"sustainability\": {\n        \"reparabilityScore\": \"B\",\n        \"productFootprint\": {\n            \"material\": [\n                {\n                    \"lifecycle\": \"main product production\",\n                    \"rulebook\": [\n                        {\n                            \"contentType\": \"URL\",\n                            \"header\": \"Example Document XYZ\",\n                            \"content\": \"https://dummy.link\"\n                        }\n                    ],\n                    \"unit\": \"kg CO2 / kWh\",\n                    \"performanceClass\": \"A\",\n                    \"manufacturingPlant\": [\n                        {\n                            \"facility\": \"BPNA1234567890AA\"\n                        }\n                    ],\n                    \"type\": \"Climate Change Total\",\n                    \"value\": 12.678,\n                    \"declaration\": [\n                        {\n                            \"contentType\": \"URL\",\n                            \"header\": \"Example Document XYZ\",\n                            \"content\": \"https://dummy.link\"\n                        }\n                    ]\n                }\n            ],\n            \"carbon\": [\n                {\n                    \"lifecycle\": \"main product production\",\n                    \"rulebook\": [\n                        {\n                            \"contentType\": \"URL\",\n                            \"header\": \"Example Document XYZ\",\n                            \"content\": \"https://dummy.link\"\n                        }\n                    ],\n                    \"unit\": \"kg CO2 / kWh\",\n                    \"performanceClass\": \"A\",\n                    \"manufacturingPlant\": [\n                        {\n                            \"facility\": \"BPNA1234567890AA\"\n                        }\n                    ],\n                    \"type\": \"Climate Change Total\",\n                    \"value\": 12.678,\n                    \"declaration\": [\n                        {\n                            \"contentType\": \"URL\",\n                            \"header\": \"Example Document XYZ\",\n                            \"content\": \"https://dummy.link\"\n                        }\n                    ]\n                }\n            ],\n            \"environmental\": [\n                {\n                    \"lifecycle\": \"main product production\",\n                    \"rulebook\": [\n                        {\n                            \"contentType\": \"URL\",\n                            \"header\": \"Example Document XYZ\",\n                            \"content\": \"https://dummy.link\"\n                        }\n                    ],\n                    \"unit\": \"kg CO2 / kWh\",\n                    \"performanceClass\": \"A\",\n                    \"manufacturingPlant\": [\n                        {\n                            \"facility\": \"BPNA1234567890AA\"\n                        }\n                    ],\n                    \"type\": \"Climate Change Total\",\n                    \"value\": 12.678,\n                    \"declaration\": [\n                        {\n                            \"contentType\": \"URL\",\n                            \"header\": \"Example Document XYZ\",\n                            \"content\": \"https://dummy.link\"\n                        }\n                    ]\n                }\n            ]\n        },\n        \"status\": \"original\",\n        \"durabilityScore\": \"A\"\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{submodelServer}}/test",
+									"host": [
+										"{{submodelServer}}"
+									],
+									"path": [
+										"test"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Data",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{submodelServer}}/test",
+									"host": [
+										"{{submodelServer}}"
+									],
+									"path": [
+										"test"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "EDC",
+					"item": [
+						{
+							"name": "Assets",
+							"item": [
+								{
+									"name": "Create Asset",
+									"protocolProfileBehavior": {
+										"disabledSystemHeaders": {}
+									},
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "value",
+													"value": "{{providerApiKey}}",
+													"type": "string"
+												},
+												{
+													"key": "key",
+													"value": "X-Api-Key",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"@id\": \"{{assetId}}\",\r\n    \"@type\": \"Asset\",\r\n    \"properties\": {\r\n        \"dct:type\": {\r\n            \"@id\": \"asset.prop.type\"\r\n        },\r\n        \"id\": \"{{assetId}}\"\r\n    },\r\n    \"dataAddress\": {\r\n        \"@type\": \"DataAddress\",\r\n        \"proxyPath\": \"true\",\r\n        \"type\": \"HttpData\",\r\n        \"proxyMethod\": \"true\",\r\n        \"proxyQueryParams\": \"true\",\r\n        \"proxyBody\": \"true\",\r\n        \"baseUrl\": \"{{submodelServer}}/test\"\r\n    },\r\n    \"@context\": {\r\n        \"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\",\r\n        \"cx-common\": \"https://w3id.org/catenax/ontology/common#\",\r\n        \"cx-taxo\": \"https://w3id.org/catenax/taxonomy#\",\r\n        \"dct\": \"http://purl.org/dc/terms/\"\r\n    }\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{providerUrl}}/management/v3/assets",
+											"host": [
+												"{{providerUrl}}"
+											],
+											"path": [
+												"management",
+												"v3",
+												"assets"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get Assets",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													""
+												],
+												"type": "text/javascript",
+												"packages": {}
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "value",
+													"value": "{{providerApiKey}}",
+													"type": "string"
+												},
+												{
+													"key": "key",
+													"value": "X-Api-Key",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [],
+										"url": {
+											"raw": "{{providerUrl}}/management/v3/assets/request",
+											"host": [
+												"{{providerUrl}}"
+											],
+											"path": [
+												"management",
+												"v3",
+												"assets",
+												"request"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get Asset By Id",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													""
+												],
+												"type": "text/javascript",
+												"packages": {}
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "value",
+													"value": "{{providerApiKey}}",
+													"type": "string"
+												},
+												{
+													"key": "key",
+													"value": "X-Api-Key",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{providerUrl}}/management/v3/assets/{{assetId}}",
+											"host": [
+												"{{providerUrl}}"
+											],
+											"path": [
+												"management",
+												"v3",
+												"assets",
+												"{{assetId}}"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Update Asset",
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "value",
+													"value": "{{providerApiKey}}",
+													"type": "string"
+												},
+												{
+													"key": "key",
+													"value": "X-Api-Key",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"@id\": \"{{assetId}}\",\r\n    \"@type\": \"Asset\",\r\n    \"properties\": {\r\n        \"dct:type\": {\r\n            \"@id\": \"asset.prop.type\"\r\n        },\r\n        \"id\": \"{{assetId}}\"\r\n    },\r\n    \"dataAddress\": {\r\n        \"@type\": \"DataAddress\",\r\n        \"proxyPath\": \"true\",\r\n        \"type\": \"HttpData\",\r\n        \"proxyMethod\": \"true\",\r\n        \"proxyQueryParams\": \"true\",\r\n        \"proxyBody\": \"true\",\r\n        \"baseUrl\": \"{{submodelServer}}/test\"\r\n    },\r\n    \"@context\": {\r\n        \"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\",\r\n        \"cx-common\": \"https://w3id.org/catenax/ontology/common#\",\r\n        \"cx-taxo\": \"https://w3id.org/catenax/taxonomy#\",\r\n        \"dct\": \"http://purl.org/dc/terms/\"\r\n    }\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{providerUrl}}/management/v3/assets",
+											"host": [
+												"{{providerUrl}}"
+											],
+											"path": [
+												"management",
+												"v3",
+												"assets"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Delete Asset",
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "value",
+													"value": "{{providerApiKey}}",
+													"type": "string"
+												},
+												{
+													"key": "key",
+													"value": "X-Api-Key",
+													"type": "string"
+												}
+											]
+										},
+										"method": "DELETE",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{providerUrl}}/management/v3/assets/{{assetId}}",
+											"host": [
+												"{{providerUrl}}"
+											],
+											"path": [
+												"management",
+												"v3",
+												"assets",
+												"{{assetId}}"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Policies",
+							"item": [
+								{
+									"name": "Create Policy",
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "value",
+													"value": "{{providerApiKey}}",
+													"type": "string"
+												},
+												{
+													"key": "key",
+													"value": "X-Api-Key",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"@context\": [\r\n        \"https://w3id.org/tractusx/policy/v1.0.0\",\r\n        \"http://www.w3.org/ns/odrl.jsonld\",\r\n        {\r\n            \"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\"\r\n        }\r\n    ],\r\n    \"@type\": \"PolicyDefinition\",\r\n    \"@id\": \"{{policyId}}\",\r\n    \"policy\": {\r\n        \"@type\": \"Set\",\r\n        \"permission\": []\r\n    }\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{providerUrl}}/management/v2/policydefinitions",
+											"host": [
+												"{{providerUrl}}"
+											],
+											"path": [
+												"management",
+												"v2",
+												"policydefinitions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get Policy By Id",
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "value",
+													"value": "{{providerApiKey}}",
+													"type": "string"
+												},
+												{
+													"key": "key",
+													"value": "X-Api-Key",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{providerUrl}}/management/v2/policydefinitions/{{policyId}}",
+											"host": [
+												"{{providerUrl}}"
+											],
+											"path": [
+												"management",
+												"v2",
+												"policydefinitions",
+												"{{policyId}}"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get Policies",
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "value",
+													"value": "{{providerApiKey}}",
+													"type": "string"
+												},
+												{
+													"key": "key",
+													"value": "X-Api-Key",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [],
+										"url": {
+											"raw": "{{providerUrl}}/management/v2/policydefinitions/request",
+											"host": [
+												"{{providerUrl}}"
+											],
+											"path": [
+												"management",
+												"v2",
+												"policydefinitions",
+												"request"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Delete Policy",
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "value",
+													"value": "{{providerApiKey}}",
+													"type": "string"
+												},
+												{
+													"key": "key",
+													"value": "X-Api-Key",
+													"type": "string"
+												}
+											]
+										},
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "{{providerUrl}}/management/v2/policydefinitions/{{policyId}}",
+											"host": [
+												"{{providerUrl}}"
+											],
+											"path": [
+												"management",
+												"v2",
+												"policydefinitions",
+												"{{policyId}}"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Contracts",
+							"item": [
+								{
+									"name": "Create Contract",
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "value",
+													"value": "{{providerApiKey}}",
+													"type": "string"
+												},
+												{
+													"key": "key",
+													"value": "X-Api-Key",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"@context\": {},\r\n    \"@id\": \"{{contractDefinitionId}}\",\r\n    \"@type\": \"ContractDefinition\",\r\n    \"accessPolicyId\": \"{{policyId}}\",\r\n    \"contractPolicyId\": \"{{policyId}}\",\r\n    \"assetsSelector\": {\r\n        \"@type\": \"CriterionDto\",\r\n        \"operandLeft\": \"https://w3id.org/edc/v0.0.1/ns/id\",\r\n        \"operator\": \"=\",\r\n        \"operandRight\": \"{{assetId}}\"\r\n    }\r\n}\r\n",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{providerUrl}}/management/v2/contractdefinitions",
+											"host": [
+												"{{providerUrl}}"
+											],
+											"path": [
+												"management",
+												"v2",
+												"contractdefinitions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get Contract By Id",
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "value",
+													"value": "{{providerApiKey}}",
+													"type": "string"
+												},
+												{
+													"key": "key",
+													"value": "X-Api-Key",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{providerUrl}}/management/v2/contractdefinitions/{{contractDefinitionId}}",
+											"host": [
+												"{{providerUrl}}"
+											],
+											"path": [
+												"management",
+												"v2",
+												"contractdefinitions",
+												"{{contractDefinitionId}}"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get Contracts",
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "value",
+													"value": "{{providerApiKey}}",
+													"type": "string"
+												},
+												{
+													"key": "key",
+													"value": "X-Api-Key",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [],
+										"url": {
+											"raw": "{{providerUrl}}/management/v2/contractdefinitions/request",
+											"host": [
+												"{{providerUrl}}"
+											],
+											"path": [
+												"management",
+												"v2",
+												"contractdefinitions",
+												"request"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Consumer",
+			"item": [
+				{
+					"name": "Request Catalog",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonResponse = pm.response.json();\r",
+									"pm.collectionVariables.set(\"offerId\", jsonResponse[\"dcat:dataset\"][\"odrl:hasPolicy\"][\"@id\"]);\r",
+									"\r",
+									"// extract permissions, probihitions and obligations\r",
+									"pm.collectionVariables.set(\"contractPermissions\", JSON.stringify(jsonResponse[\"dcat:dataset\"][\"odrl:hasPolicy\"][\"odrl:permission\"]));\r",
+									"pm.collectionVariables.set(\"contractProhibitions\", JSON.stringify(jsonResponse[\"dcat:dataset\"][\"odrl:hasPolicy\"][\"odrl:prohibition\"]));\r",
+									"pm.collectionVariables.set(\"contractObligations\", JSON.stringify(jsonResponse[\"dcat:dataset\"][\"odrl:hasPolicy\"][\"odrl:obligation\"]));\r",
+									"\r",
+									"var permissions = pm.collectionVariables.get(\"contractPermissions\");\r",
+									"var prohibitions = pm.collectionVariables.get(\"contractProhibitions\");\r",
+									"var obligations = pm.collectionVariables.get(\"contractObligations\");\r",
+									"\r",
+									"if (permissions.length == 0)\r",
+									"    pm.collectionVariables.set(\"contractPermissions\", \"[]\");\r",
+									"\r",
+									"if (prohibitions.length == 0)\r",
+									"    pm.collectionVariables.set(\"contractProhibitions\", \"[]\");\r",
+									"\r",
+									"if (obligations.length == 0)\r",
+									"    pm.collectionVariables.set(\"contractObligations\", \"[]\");"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "apikey",
+							"apikey": [
+								{
+									"key": "value",
+									"value": "{{consumerApiKey}}",
+									"type": "string"
+								},
+								{
+									"key": "key",
+									"value": "X-Api-Key",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"@context\": {\r\n        \"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\",\r\n        \"odrl\": \"http://www.w3.org/ns/odrl/2/\",\r\n        \"dct\": \"http://purl.org/dc/terms/\"\r\n    },\r\n    \"@type\": \"CatalogRequest\",\r\n    \"counterPartyId\": \"{{providerBpn}}\",\r\n    \"counterPartyAddress\": \"{{providerUrl}}/api/v1/dsp\",\r\n    \"protocol\": \"dataspace-protocol-http\"\r\n}\r\n\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{consumerUrl}}/management/v3/catalog/request",
+							"host": [
+								"{{consumerUrl}}"
+							],
+							"path": [
+								"management",
+								"v3",
+								"catalog",
+								"request"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Request Catalog",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"@context\": {\r\n        \"edc\": \"https://w3id.org/edc/v0.0.1/ns/\",\r\n        \"odrl\": \"http://www.w3.org/ns/odrl/2/\",\r\n        \"dct\": \"https://purl.org/dc/terms/\"\r\n    },\r\n    \"@type\": \"edc:CatalogRequest\",\r\n    \"counterPartyAddress\": \"{{providerUrl}}/api/v1/dsp\",\r\n    \"protocol\": \"dataspace-protocol-http\",\r\n    \"querySpec\": {\r\n        \"filterExpression\": [\r\n            {\r\n                \"operandLeft\": \"https://w3id.org/edc/v0.0.1/ns/id\",\r\n                \"operator\": \"=\",\r\n                \"operandRight\": \"{{assetId}}\"\r\n            }\r\n        ]\r\n    }\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{consumerUrl}}/management/v2/catalog/request",
+									"host": [
+										"{{consumerUrl}}"
+									],
+									"path": [
+										"management",
+										"v2",
+										"catalog",
+										"request"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Date",
+									"value": "Thu, 29 Aug 2024 17:44:55 GMT"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "1863"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Strict-Transport-Security",
+									"value": "max-age=15724800; includeSubDomains"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"@id\": \"da15a6a8-a80c-4493-95d2-e1ffdfd1e173\",\n    \"@type\": \"dcat:Catalog\",\n    \"dcat:dataset\": {\n        \"@id\": \"urn:uuid:73a63342-bddd-47a7-91fb-280e39fce653\",\n        \"@type\": \"dcat:Dataset\",\n        \"odrl:hasPolicy\": {\n            \"@id\": \"ZGVmYXVsdC1jb250cmFjdERlZmluaXRpb24=:dXJuOnV1aWQ6NzNhNjMzNDItYmRkZC00N2E3LTkxZmItMjgwZTM5ZmNlNjUz:ZDg2N2ZhZjctOWZmNS00NDExLWEzNjQtM2IyMDdiYjIxZjE2\",\n            \"@type\": \"odrl:Set\",\n            \"odrl:permission\": [],\n            \"odrl:prohibition\": [],\n            \"odrl:obligation\": [],\n            \"odrl:target\": \"urn:uuid:73a63342-bddd-47a7-91fb-280e39fce653\"\n        },\n        \"dcat:distribution\": [\n            {\n                \"@type\": \"dcat:Distribution\",\n                \"dct:format\": {\n                    \"@id\": \"HttpProxy\"\n                },\n                \"dcat:accessService\": \"43273bd3-89ed-488c-a143-6b1a3d3d5872\"\n            },\n            {\n                \"@type\": \"dcat:Distribution\",\n                \"dct:format\": {\n                    \"@id\": \"AmazonS3\"\n                },\n                \"dcat:accessService\": \"43273bd3-89ed-488c-a143-6b1a3d3d5872\"\n            }\n        ],\n        \"edc:description\": \"Die Publikation beinhaltet Informationen zu Arbeitsstellen auf den deutschen Bundesautobahnen. Neben Arbeitsstellen mit einer Dauer von mind. 4 Tage (meldepflichtig) kann die Publikation auch zeitlich kürzere Arbeitsstellen (nicht meldepflichtig) beinhalten.  Die Datenbereitstellung erfolgt durch das Verkehrsanalysesystem, welches von der Bundesanstalt für Straßenwesen im Auftrag des BMDV betrieben wird.  Die Dateneingabe im Verkehrsanalysesystem erfolgt durch die Autobahn GmbH des Bundes.\",\n        \"edc:title\": \"Mobilithek Portal\",\n        \"edc:id\": \"urn:uuid:73a63342-bddd-47a7-91fb-280e39fce653\"\n    },\n    \"dcat:service\": {\n        \"@id\": \"43273bd3-89ed-488c-a143-6b1a3d3d5872\",\n        \"@type\": \"dcat:DataService\",\n        \"dct:terms\": \"connector\",\n        \"dct:endpointUrl\": \"https://dataprovider-controlplane.d37c3234d8454420babf.westeurope.aksapp.io/api/v1/dsp\"\n    },\n    \"edc:participantId\": \"BPNL000000000NDW\",\n    \"@context\": {\n        \"dct\": \"https://purl.org/dc/terms/\",\n        \"tx\": \"https://w3id.org/tractusx/v0.0.1/ns/\",\n        \"edc\": \"https://w3id.org/edc/v0.0.1/ns/\",\n        \"dcat\": \"https://www.w3.org/ns/dcat/\",\n        \"odrl\": \"http://www.w3.org/ns/odrl/2/\",\n        \"dspace\": \"https://w3id.org/dspace/v0.8/\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Initiate EDR",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Body matches string\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.collectionVariables.set(\"edrNegotiationId\", jsonData[\"@id\"]);\r",
+									"\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "apikey",
+							"apikey": [
+								{
+									"key": "value",
+									"value": "{{consumerApiKey}}",
+									"type": "string"
+								},
+								{
+									"key": "key",
+									"value": "X-Api-Key",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "\r\n{\r\n    \"@context\": [\r\n        \"https://w3id.org/tractusx/policy/v1.0.0\",\r\n        \"http://www.w3.org/ns/odrl.jsonld\",\r\n        {\r\n            \"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\"\r\n        }\r\n    ],\r\n    \"@type\": \"ContractRequest\",\r\n    \"counterPartyAddress\": \"{{providerUrl}}/api/v1/dsp\",\r\n    \"protocol\": \"dataspace-protocol-http\",\r\n    \"policy\": {\r\n        \"@id\": \"{{offerId}}\",\r\n        \"@type\": \"odrl:Offer\",\r\n        \"odrl:permission\": {{contractPermissions}},\r\n        \"odrl:prohibition\": {{contractProhibitions}},\r\n        \"odrl:obligation\": {{contractObligations}},\r\n        \"assigner\": \"{{providerBpn}}\",\r\n        \"target\": \"{{assetId}}\"\r\n    },\r\n    \"callbackAddresses\": []\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{consumerUrl}}/management/v2/edrs",
+							"host": [
+								"{{consumerUrl}}"
+							],
+							"path": [
+								"management",
+								"v2",
+								"edrs"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Initiate EDR",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"@context\": {\r\n        \"odrl\": \"http://www.w3.org/ns/odrl/2/\",\r\n        \"edc\": \"https://w3id.org/edc/v0.0.1/ns/\",\r\n        \"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\"\r\n    },\r\n    \"@type\": \"NegotiationInitiateRequestDto\",\r\n    \"connectorAddress\": \"{{providerUrl}}/api/v1/dsp\",\r\n    \"protocol\": \"dataspace-protocol-http\",\r\n    \"connectorId\": \"{{providerBpn}}\",\r\n    \"providerId\": \"{{providerBpn}}\",\r\n    \"offer\": {\r\n        \"offerId\": \"{{offerId}}\",\r\n        \"assetId\": \"{{assetId}}\",\r\n        \"policy\": {\r\n            \"@type\": \"odrl:Set\",\r\n            \"odrl:permission\": {{contractPermissions}},\r\n            \"odrl:prohibition\": {{contractProhibitions}},\r\n            \"odrl:obligation\": {{contractObligations}},\r\n            \"odrl:target\": \"{{assetId}}\"\r\n        }\r\n    }\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{consumerUrl}}/management/edrs",
+									"host": [
+										"{{consumerUrl}}"
+									],
+									"path": [
+										"management",
+										"edrs"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Date",
+									"value": "Thu, 29 Aug 2024 17:45:13 GMT"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "349"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Strict-Transport-Security",
+									"value": "max-age=15724800; includeSubDomains"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"@type\": \"edc:IdResponse\",\n    \"@id\": \"b58f24a0-868a-4392-955b-1582daaf925b\",\n    \"edc:createdAt\": 1724953513378,\n    \"@context\": {\n        \"dct\": \"https://purl.org/dc/terms/\",\n        \"tx\": \"https://w3id.org/tractusx/v0.0.1/ns/\",\n        \"edc\": \"https://w3id.org/edc/v0.0.1/ns/\",\n        \"dcat\": \"https://www.w3.org/ns/dcat/\",\n        \"odrl\": \"http://www.w3.org/ns/odrl/2/\",\n        \"dspace\": \"https://w3id.org/dspace/v0.8/\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Query Cached EDR",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"pm.collectionVariables.set(\"transferProcessId\", jsonData.at(-1)[\"transferProcessId\"]);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "apikey",
+							"apikey": [
+								{
+									"key": "value",
+									"value": "{{consumerApiKey}}",
+									"type": "string"
+								},
+								{
+									"key": "key",
+									"value": "X-Api-Key",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"@context\": {\n        \"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\"\n    },\n    \"@type\": \"QuerySpec\",\n    \"filterExpression\": [\n        {\n            \"operandLeft\": \"contractNegotiationId\",\n            \"operator\": \"=\",\n            \"operandRight\": \"{{edrNegotiationId}}\"\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{consumerUrl}}/management/v2/edrs/request",
+							"host": [
+								"{{consumerUrl}}"
+							],
+							"path": [
+								"management",
+								"v2",
+								"edrs",
+								"request"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Query Cached EDR",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{consumerUrl}}/management/edrs?assetId={{assetId}}",
+									"host": [
+										"{{consumerUrl}}"
+									],
+									"path": [
+										"management",
+										"edrs"
+									],
+									"query": [
+										{
+											"key": "assetId",
+											"value": "{{assetId}}"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Date",
+									"value": "Thu, 29 Aug 2024 17:45:27 GMT"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "1359"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Strict-Transport-Security",
+									"value": "max-age=15724800; includeSubDomains"
+								}
+							],
+							"cookie": [],
+							"body": "[\n    {\n        \"@type\": \"tx:EndpointDataReferenceEntry\",\n        \"edc:agreementId\": \"ZGVmYXVsdC1jb250cmFjdERlZmluaXRpb24=:dXJuOnV1aWQ6NzNhNjMzNDItYmRkZC00N2E3LTkxZmItMjgwZTM5ZmNlNjUz:NTc3NTZiNzMtMWI4MS00MmYxLThkNWItNTRlNjM0ZTExNjVm\",\n        \"edc:transferProcessId\": \"999389b3-2b16-4f18-8ebb-d04a692a3f29\",\n        \"edc:assetId\": \"urn:uuid:73a63342-bddd-47a7-91fb-280e39fce653\",\n        \"edc:providerId\": \"BPNL000000000NDW\",\n        \"tx:edrState\": \"NEGOTIATED\",\n        \"tx:expirationDate\": 1724954118000,\n        \"@context\": {\n            \"dct\": \"https://purl.org/dc/terms/\",\n            \"tx\": \"https://w3id.org/tractusx/v0.0.1/ns/\",\n            \"edc\": \"https://w3id.org/edc/v0.0.1/ns/\",\n            \"dcat\": \"https://www.w3.org/ns/dcat/\",\n            \"odrl\": \"http://www.w3.org/ns/odrl/2/\",\n            \"dspace\": \"https://w3id.org/dspace/v0.8/\"\n        }\n    },\n    {\n        \"@type\": \"tx:EndpointDataReferenceEntry\",\n        \"edc:agreementId\": \"ZGVmYXVsdC1jb250cmFjdERlZmluaXRpb24=:dXJuOnV1aWQ6NzNhNjMzNDItYmRkZC00N2E3LTkxZmItMjgwZTM5ZmNlNjUz:Y2EwMjkwMzItMTc4ZC00NTg0LWFlMjYtMDg2ZWEyNGM1MTYw\",\n        \"edc:transferProcessId\": \"609d7e4b-7159-4ce0-9b92-5c86c376b780\",\n        \"edc:assetId\": \"urn:uuid:73a63342-bddd-47a7-91fb-280e39fce653\",\n        \"edc:providerId\": \"BPNL000000000NDW\",\n        \"tx:edrState\": \"NEGOTIATED\",\n        \"tx:expirationDate\": 1724953769000,\n        \"@context\": {\n            \"dct\": \"https://purl.org/dc/terms/\",\n            \"tx\": \"https://w3id.org/tractusx/v0.0.1/ns/\",\n            \"edc\": \"https://w3id.org/edc/v0.0.1/ns/\",\n            \"dcat\": \"https://www.w3.org/ns/dcat/\",\n            \"odrl\": \"http://www.w3.org/ns/odrl/2/\",\n            \"dspace\": \"https://w3id.org/dspace/v0.8/\"\n        }\n    }\n]"
+						}
+					]
+				},
+				{
+					"name": "Get AuthCode",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"pm.collectionVariables.set(\"authCode\", jsonData[\"authorization\"]);\r",
+									"pm.collectionVariables.set(\"dataplanePublicEndpoint\", jsonData[\"endpoint\"]);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "apikey",
+							"apikey": [
+								{
+									"key": "value",
+									"value": "{{consumerApiKey}}",
+									"type": "string"
+								},
+								{
+									"key": "key",
+									"value": "X-Api-Key",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{consumerUrl}}/management/v2/edrs/{{transferProcessId}}/dataaddress",
+							"host": [
+								"{{consumerUrl}}"
+							],
+							"path": [
+								"management",
+								"v2",
+								"edrs",
+								"{{transferProcessId}}",
+								"dataaddress"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Get AuthCode",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{consumerUrl}}/management/edrs/{{transferProcessId}}",
+									"host": [
+										"{{consumerUrl}}"
+									],
+									"path": [
+										"management",
+										"edrs",
+										"{{transferProcessId}}"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Date",
+									"value": "Thu, 29 Aug 2024 17:45:40 GMT"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "2269"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Strict-Transport-Security",
+									"value": "max-age=15724800; includeSubDomains"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"@type\": \"edc:DataAddress\",\n    \"edc:type\": \"EDR\",\n    \"edc:authCode\": \"eyJhbGciOiJSUzI1NiJ9.eyJleHAiOjE3MjQ5NTM3NjksImRhZCI6Imlib0VsOWlpUW82ZnRRaU5UNENxSzlILzBjQmJRMkUrV2hNVkwwNVVnUHEwNmJUNU1VT25tZkRFSzNkL2dueXVTMXMyOFZZQUFyMmx6SUFJcDU3ZnJ3YkNOcEtPeXNLcm5xRDBMRUROK21lVkJoS2dUTkVhcm52SkdESkVPeUxINWRWUDNDTUE2ajhQWXYxcXpleFp6VW1SdlJNUEpMVTZZUVhmTGMwenNSRE92Qng4U25XNkcwQXRTS2UvSkxZUldNcUpTSUJsWmlDZzVhZjNsdXp5WTRLdmhTK2thY0JpcHhrTXRNcFJJNWx3Z25CbjRZZXk4a3VJOUxtMTRrekcrK09oZjk2c2V5aEJHanpiZ2hYUEFuY1FxWENnOGhUcHhBUmpoNDVGdFhyV1h0QUthVlJUR1EwdHpVSU1QcSt6bTJRMVZtREhlTnQ3cnJHd1grT2hEb2lxTFpINVRvekpXWFRCNXBaKzdGWEwwRWJhc28reWpSRDc4YnluMVpVZmJQUjNFbFJkVzZyckQwS1NrQmNYdDBIVkw3YmVNK05CRnBZaXc2Ynk4N1NTR0cyNzlOTzJFNStQSHRSbGZpcjBjbWdxdjhwQ2NlVFIzbCtsSXNnN25iYlJRMGQzTXBiNytTazI4eU01TjVtdC82SXBPSUhEQWpaZVcxYkVTa2t6dy9POGZzODY0dWF0YXlabmFsQXRSY2IxN3RBdFhoeG5IQ0ZnblJ2Y2xCZUVkN294bU1qOFNmRnhiYU5jaXZOZEM1UzBWS0JhMVluLytQUU1JRWhXVTBsMmZkdHVMMTFoby9iZ2dnZFhldm1Xa2VNd3E1N2k1eEVOZzlTUHU2S3ZCMlFLN1BzSkRhellwcE5Oa2lNTzdld0h0OUFaNXpFeHlORlBQQnQxY1FIR2p6TUl6eUNwZld1V0RSbXIwaDVYRHdnUU5zSmxnWE1PRzQ0QmhONk9NVUpkejhEK0FjNkt4RmpQMnBIY0tELzVreEhsdld6eWZhS0hxcW12RkNmZHNmRDFBcTMvcVc2TkZ5eVNFVVJIbUk3ZVQ1eE1OTERDQ2RvNUFuRS9vTXlFN08wS20xNk9ETElkMjVSNEc0a0FMTDVlVUMzK1hYY1VtOWUvbmQvb0hjUnBMU0dmQ3BTeWFyOFdDODhlOXQxWG9oNEMiLCJjaWQiOiJaR1ZtWVhWc2RDMWpiMjUwY21GamRFUmxabWx1YVhScGIyND06ZFhKdU9uVjFhV1E2TnpOaE5qTXpOREl0WW1Sa1pDMDBOMkUzTFRreFptSXRNamd3WlRNNVptTmxOalV6OlkyRXdNamt3TXpJdE1UYzRaQzAwTlRnMExXRmxNall0TURnMlpXRXlOR00xTVRZdyJ9.JfKhHlz3svRhh5FwsK_COZSORKB04SD3PsVMf9X0Sn8UdwSwxqo3eT0MMxDJ-p_BlBDmT6ResSfhC_73_ilADzakrck4rv6T6s6xknXMSuYCuaFOEQpSFkbbNBkQk6_GPzVZT00OkvSvcIyPnPWdZAdo4gz3sxKB8L_21mkORTml_a84H8qv5PSBACCPDGuWGNczwzrrLK402wgSFmuvUBx1kFI7xVFoM92QlruXiJfZ0XLEX_YDGG6k6GLzo3Si9FE4Ankq8BJbQaSjUz2_1yQ9DS_jnLF8Eeri-AnRYx9d4G-chlKcCJL3X9FJibuRTKvyOwea-7Sg7uZtIVfn2Q\",\n    \"edc:endpoint\": \"https://dataprovider-dataplane.d37c3234d8454420babf.westeurope.aksapp.io/api/public\",\n    \"edc:id\": \"609d7e4b-7159-4ce0-9b92-5c86c376b780\",\n    \"edc:authKey\": \"Authorization\",\n    \"@context\": {\n        \"dct\": \"https://purl.org/dc/terms/\",\n        \"tx\": \"https://w3id.org/tractusx/v0.0.1/ns/\",\n        \"edc\": \"https://w3id.org/edc/v0.0.1/ns/\",\n        \"dcat\": \"https://www.w3.org/ns/dcat/\",\n        \"odrl\": \"http://www.w3.org/ns/odrl/2/\",\n        \"dspace\": \"https://w3id.org/dspace/v0.8/\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get data",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {}
+					},
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/plain",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "{{authCode}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{dataplanePublicEndpoint}}",
+							"host": [
+								"{{dataplanePublicEndpoint}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "SSI DIM Wallet",
+			"item": [
+				{
+					"name": "Create a Wallet",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"companyName\": \"DC40\",\r\n    \"bpn\": \"BPNLA36000000001\",\r\n    \"didDocumentLocation\": \"did:web:ssi-dim-wallet-stub.e34eabb8a136438fafe9.germanywestcentral.aksapp.io:BPNLA36000000001\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{walletUrl}}/api/dim/setup-dim",
+							"host": [
+								"{{walletUrl}}"
+							],
+							"path": [
+								"api",
+								"dim",
+								"setup-dim"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "{bpn}/did.json",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{walletUrl}}/{{consumerBpn}}/did.json",
+							"host": [
+								"{{walletUrl}}"
+							],
+							"path": [
+								"{{consumerBpn}}",
+								"did.json"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "api/credentials",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"application\": \"catena-x\",\r\n  \"payload\": {\r\n    \"issue\": {\r\n      \"@context\": [\r\n        \"https://www.w3.org/2018/credentials/v1\",\r\n        \"https://catenax-ng.github.io/product-core-schemas/businessPartnerData.json\",\r\n        \"https://w3id.org/security/suites/jws-2020/v1\"\r\n      ],\r\n      \"id\": \"did:web:ssi-dim-wallet-stub.e34eabb8a136438fafe9.germanywestcentral.aksapp.io:BPNL000ARENA2036#a1f8ae36-9919-4ed8-8546-535280acc5bf\",\r\n      \"type\": [\r\n        \"VerifiableCredential\",\r\n        \"BpnCredential\"\r\n      ],\r\n      \"issuer\": \"did:web:ssi-dim-wallet-stub.e34eabb8a136438fafe9.germanywestcentral.aksapp.io:BPNL000ARENA2036\",\r\n      \"issuanceDate\": \"2025-01-10T09:14:45Z\",\r\n      \"expirationDate\": \"2025-12-30T18:30:00Z\",\r\n      \"credentialSubject\": {\r\n        \"bpn\": \"BPNL000ARENA2036\",\r\n        \"id\": \"did:web:ssi-dim-wallet-stub.e34eabb8a136438fafe9.germanywestcentral.aksapp.io:BPNL000ARENA2036\",\r\n        \"type\": \"BpnCredential\"\r\n      }\r\n    }\r\n  }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{walletUrl}}/api/v2.0.0/credentials",
+							"host": [
+								"{{walletUrl}}"
+							],
+							"path": [
+								"api",
+								"v2.0.0",
+								"credentials"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "api/issuer",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{miwUrl}}/api/credentials/issuer?credentialId=did:web:managed-identity-wallets.d37c3234d8454420babf.westeurope.aksapp.io:BPNL000000000NDW%23238418f2-b1e2-43d5-9475-ffe74868f4ea",
+							"host": [
+								"{{miwUrl}}"
+							],
+							"path": [
+								"api",
+								"credentials",
+								"issuer"
+							],
+							"query": [
+								{
+									"key": "holderIdentifier",
+									"value": "{{consumerBpn}}",
+									"disabled": true
+								},
+								{
+									"key": "type",
+									"value": "BpnCredential",
+									"disabled": true
+								},
+								{
+									"key": "pageNumber",
+									"value": "0",
+									"disabled": true
+								},
+								{
+									"key": "size",
+									"value": "2147483647",
+									"disabled": true
+								},
+								{
+									"key": "sortColumn",
+									"value": "createdAt",
+									"disabled": true
+								},
+								{
+									"key": "sortTpe",
+									"value": "desc",
+									"disabled": true
+								},
+								{
+									"key": "credentialId",
+									"value": "did:web:managed-identity-wallets.d37c3234d8454420babf.westeurope.aksapp.io:BPNL000000000NDW%23238418f2-b1e2-43d5-9475-ffe74868f4ea"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "oauth2",
+				"oauth2": [
+					{
+						"key": "accessTokenUrl",
+						"value": "https://centralidp.e34eabb8a136438fafe9.germanywestcentral.aksapp.io/auth/realms/CX-Central/protocol/openid-connect/token",
+						"type": "string"
+					},
+					{
+						"key": "clientSecret",
+						"value": "UIqawwoohsvZ6AZOd1llLhnsUTKMWe4D",
+						"type": "string"
+					},
+					{
+						"key": "clientId",
+						"value": "sa-cl5-custodian-2",
+						"type": "string"
+					},
+					{
+						"key": "grant_type",
+						"value": "client_credentials",
+						"type": "string"
+					},
+					{
+						"key": "addTokenTo",
+						"value": "header",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Get Access Token",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "client_id",
+									"value": "satest01",
+									"type": "text"
+								},
+								{
+									"key": "client_secret",
+									"value": "UbfW4CR1xH4OskkovqJ2JzcwnQIrG7oj",
+									"type": "text"
+								},
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{centralidpUrl}}/auth/realms/CX-Central/protocol/openid-connect/token",
+							"host": [
+								"{{centralidpUrl}}"
+							],
+							"path": [
+								"auth",
+								"realms",
+								"CX-Central",
+								"protocol",
+								"openid-connect",
+								"token"
+							],
+							"query": [
+								{
+									"key": "client_id",
+									"value": "sa-cl5-custodian-2",
+									"disabled": true
+								},
+								{
+									"key": "client_secret",
+									"value": "UIqawwoohsvZ6AZOd1llLhnsUTKMWe4D",
+									"disabled": true
+								},
+								{
+									"key": "grant_type",
+									"value": "Client Credentials",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Portal-Backend",
+			"item": [
+				{
+					"name": "Verify Checklist",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "authUrl",
+									"value": "https://centralidp.d37c3234d8454420babf.westeurope.aksapp.io/auth/realms/CX-Central/protocol/openid-connect/auth",
+									"type": "string"
+								},
+								{
+									"key": "redirect_uri",
+									"value": "https://portal.d37c3234d8454420babf.westeurope.aksapp.io/",
+									"type": "string"
+								},
+								{
+									"key": "useBrowser",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "clientSecret",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "Cl2-CX-Portal",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "authorization_code",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "tractusx-umbr3lla!",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "cx-operator@tx.test",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "https://centralidp.d37c3234d8454420babf.westeurope.aksapp.io/auth/realms/CX-Central/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJ3bmdFWU5NQWVmYjN6ZlMxckVSb0oyaFNGd1M1bjdNNkx5cHVvMzZsTjVNIn0.eyJleHAiOjE3MjQxNjQ4MDgsImlhdCI6MTcyNDE2NDUwOCwianRpIjoiYTc2OGRkN2ItZDIyZC00OWQwLWI1ZGEtMTBkNWFkN2Q3MzMxIiwiaXNzIjoiaHR0cHM6Ly9jZW50cmFsaWRwLmQzN2MzMjM0ZDg0NTQ0MjBiYWJmLndlc3RldXJvcGUuYWtzYXBwLmlvL2F1dGgvcmVhbG1zL0NYLUNlbnRyYWwiLCJhdWQiOiJyZWFsbS1tYW5hZ2VtZW50Iiwic3ViIjoiZTY5YzEzOTctZWVlOC00MzRhLWI4M2ItZGM3OTQ0YmI5YmRkIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoic2EtY2wxLXJlZy0yIiwicmVzb3VyY2VfYWNjZXNzIjp7InJlYWxtLW1hbmFnZW1lbnQiOnsicm9sZXMiOlsibWFuYWdlLWlkZW50aXR5LXByb3ZpZGVycyIsIm1hbmFnZS11c2VycyIsIm1hbmFnZS1jbGllbnRzIl19fSwic2NvcGUiOiJwcm9maWxlIGVtYWlsIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJjbGllbnRIb3N0IjoiODguMTUyLjE4NS4yNyIsInByZWZlcnJlZF91c2VybmFtZSI6InNlcnZpY2UtYWNjb3VudC1zYS1jbDEtcmVnLTIiLCJjbGllbnRBZGRyZXNzIjoiODguMTUyLjE4NS4yNyIsImNsaWVudF9pZCI6InNhLWNsMS1yZWctMiJ9.PFOLboZqNwOVPulWD0Er4EQmdogjN-tx_YiBpsTQJmS4wteTghM4Ivngc152Qb2NKhWeWMIW690P6lWAM9EqFGy7ULUi_4baYIBmxL1zDM674GKBqntzjdXDuTS7M55R495hg0XNaV0J8zJWlRmQwR-a4X8xSXuCWh9nGtSImCaDs-57kJxP7ZtIEGFp-zIP6DcWUc5fbQVt3ccgSt7IaPW5ZtYwwW6uXfCsibLp30HZunjM_srxRguHWXLsK629Qp77omRRwilFRkhmZ_ZTREiG8aMcbej6qFXbw1BsRqRM16QoTEkLEiqXFO34Wb7Fx3WogS1C1ibAgtY1rp2oew",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{portalBackendUrl}}/api/administration/registration/applications/e0c10719-591c-4cf8-9646-8885544e0da1/checklistDetails",
+							"host": [
+								"{{portalBackendUrl}}"
+							],
+							"path": [
+								"api",
+								"administration",
+								"registration",
+								"applications",
+								"e0c10719-591c-4cf8-9646-8885544e0da1",
+								"checklistDetails"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register a Connector",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {}
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJ3bmdFWU5NQWVmYjN6ZlMxckVSb0oyaFNGd1M1bjdNNkx5cHVvMzZsTjVNIn0.eyJleHAiOjE3MjQxNjQ4MDgsImlhdCI6MTcyNDE2NDUwOCwianRpIjoiYTc2OGRkN2ItZDIyZC00OWQwLWI1ZGEtMTBkNWFkN2Q3MzMxIiwiaXNzIjoiaHR0cHM6Ly9jZW50cmFsaWRwLmQzN2MzMjM0ZDg0NTQ0MjBiYWJmLndlc3RldXJvcGUuYWtzYXBwLmlvL2F1dGgvcmVhbG1zL0NYLUNlbnRyYWwiLCJhdWQiOiJyZWFsbS1tYW5hZ2VtZW50Iiwic3ViIjoiZTY5YzEzOTctZWVlOC00MzRhLWI4M2ItZGM3OTQ0YmI5YmRkIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoic2EtY2wxLXJlZy0yIiwicmVzb3VyY2VfYWNjZXNzIjp7InJlYWxtLW1hbmFnZW1lbnQiOnsicm9sZXMiOlsibWFuYWdlLWlkZW50aXR5LXByb3ZpZGVycyIsIm1hbmFnZS11c2VycyIsIm1hbmFnZS1jbGllbnRzIl19fSwic2NvcGUiOiJwcm9maWxlIGVtYWlsIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJjbGllbnRIb3N0IjoiODguMTUyLjE4NS4yNyIsInByZWZlcnJlZF91c2VybmFtZSI6InNlcnZpY2UtYWNjb3VudC1zYS1jbDEtcmVnLTIiLCJjbGllbnRBZGRyZXNzIjoiODguMTUyLjE4NS4yNyIsImNsaWVudF9pZCI6InNhLWNsMS1yZWctMiJ9.PFOLboZqNwOVPulWD0Er4EQmdogjN-tx_YiBpsTQJmS4wteTghM4Ivngc152Qb2NKhWeWMIW690P6lWAM9EqFGy7ULUi_4baYIBmxL1zDM674GKBqntzjdXDuTS7M55R495hg0XNaV0J8zJWlRmQwR-a4X8xSXuCWh9nGtSImCaDs-57kJxP7ZtIEGFp-zIP6DcWUc5fbQVt3ccgSt7IaPW5ZtYwwW6uXfCsibLp30HZunjM_srxRguHWXLsK629Qp77omRRwilFRkhmZ_ZTREiG8aMcbej6qFXbw1BsRqRM16QoTEkLEiqXFO34Wb7Fx3WogS1C1ibAgtY1rp2oew",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Content-Type",
+								"value": "multipart/form-data",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "Name",
+									"value": "ndw-edc-provider",
+									"type": "text"
+								},
+								{
+									"key": "ConnectorUrl",
+									"value": "https://dataprovider-controlplane.d37c3234d8454420babf.westeurope.aksapp.io/api/v1/dsp",
+									"type": "text"
+								},
+								{
+									"key": "Location",
+									"value": "NL",
+									"type": "text"
+								},
+								{
+									"key": "TechnicalUserId",
+									"value": "23f28d91-f288-4957-bd21-2e313b964435",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{portalBackendUrl}}/api/administration/Connectors",
+							"host": [
+								"{{portalBackendUrl}}"
+							],
+							"path": [
+								"api",
+								"administration",
+								"Connectors"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add Data to Clearing House",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJ3bmdFWU5NQWVmYjN6ZlMxckVSb0oyaFNGd1M1bjdNNkx5cHVvMzZsTjVNIn0.eyJleHAiOjE3MjQxNjQ4MDgsImlhdCI6MTcyNDE2NDUwOCwianRpIjoiYTc2OGRkN2ItZDIyZC00OWQwLWI1ZGEtMTBkNWFkN2Q3MzMxIiwiaXNzIjoiaHR0cHM6Ly9jZW50cmFsaWRwLmQzN2MzMjM0ZDg0NTQ0MjBiYWJmLndlc3RldXJvcGUuYWtzYXBwLmlvL2F1dGgvcmVhbG1zL0NYLUNlbnRyYWwiLCJhdWQiOiJyZWFsbS1tYW5hZ2VtZW50Iiwic3ViIjoiZTY5YzEzOTctZWVlOC00MzRhLWI4M2ItZGM3OTQ0YmI5YmRkIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoic2EtY2wxLXJlZy0yIiwicmVzb3VyY2VfYWNjZXNzIjp7InJlYWxtLW1hbmFnZW1lbnQiOnsicm9sZXMiOlsibWFuYWdlLWlkZW50aXR5LXByb3ZpZGVycyIsIm1hbmFnZS11c2VycyIsIm1hbmFnZS1jbGllbnRzIl19fSwic2NvcGUiOiJwcm9maWxlIGVtYWlsIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJjbGllbnRIb3N0IjoiODguMTUyLjE4NS4yNyIsInByZWZlcnJlZF91c2VybmFtZSI6InNlcnZpY2UtYWNjb3VudC1zYS1jbDEtcmVnLTIiLCJjbGllbnRBZGRyZXNzIjoiODguMTUyLjE4NS4yNyIsImNsaWVudF9pZCI6InNhLWNsMS1yZWctMiJ9.PFOLboZqNwOVPulWD0Er4EQmdogjN-tx_YiBpsTQJmS4wteTghM4Ivngc152Qb2NKhWeWMIW690P6lWAM9EqFGy7ULUi_4baYIBmxL1zDM674GKBqntzjdXDuTS7M55R495hg0XNaV0J8zJWlRmQwR-a4X8xSXuCWh9nGtSImCaDs-57kJxP7ZtIEGFp-zIP6DcWUc5fbQVt3ccgSt7IaPW5ZtYwwW6uXfCsibLp30HZunjM_srxRguHWXLsK629Qp77omRRwilFRkhmZ_ZTREiG8aMcbej6qFXbw1BsRqRM16QoTEkLEiqXFO34Wb7Fx3WogS1C1ibAgtY1rp2oew",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"bpn\": \"BPNL000000000NDW\",\r\n  \"status\": \"CONFIRM\",\r\n  \"message\": \"Success\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{portalBackendUrl}}/api/administration/registration/clearinghouse",
+							"host": [
+								"{{portalBackendUrl}}"
+							],
+							"path": [
+								"api",
+								"administration",
+								"registration",
+								"clearinghouse"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "oauth2",
+				"oauth2": [
+					{
+						"key": "clientId",
+						"value": "Cl2-CX-Portal",
+						"type": "string"
+					},
+					{
+						"key": "redirect_uri",
+						"value": "https://portal.d37c3234d8454420babf.westeurope.aksapp.io/",
+						"type": "string"
+					},
+					{
+						"key": "accessTokenUrl",
+						"value": "https://centralidp.d37c3234d8454420babf.westeurope.aksapp.io/auth/realms/CX-Central/protocol/openid-connect/token",
+						"type": "string"
+					},
+					{
+						"key": "authUrl",
+						"value": "https://centralidp.d37c3234d8454420babf.westeurope.aksapp.io/auth/realms/CX-Central/protocol/openid-connect/auth",
+						"type": "string"
+					},
+					{
+						"key": "addTokenTo",
+						"value": "header",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "EDC HealthCheck",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{consumerUrl}}/api/check/liveness",
+					"host": [
+						"{{consumerUrl}}"
+					],
+					"path": [
+						"api",
+						"check",
+						"liveness"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get all contract agreements",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const jsonResponse = pm.response.json();\r",
+							"pm.collectionVariables.set(\"contractAgreementId\", jsonResponse[\"edc:contractAgreementId\"]);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "apikey",
+					"apikey": [
+						{
+							"key": "value",
+							"value": "TEST2",
+							"type": "string"
+						},
+						{
+							"key": "key",
+							"value": "X-Api-Key",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{providerUrl}}/management/v2/contractnegotiations/request",
+					"host": [
+						"{{providerUrl}}"
+					],
+					"path": [
+						"management",
+						"v2",
+						"contractnegotiations",
+						"request"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "providerUrl",
+			"value": "https://dataprovider-controlplane.e34eabb8a136438fafe9.germanywestcentral.aksapp.io",
+			"type": "string"
+		},
+		{
+			"key": "consumerUrl",
+			"value": "https://dataconsumer-2-controlplane.e34eabb8a136438fafe9.germanywestcentral.aksapp.io",
+			"type": "string"
+		},
+		{
+			"key": "contractPermissions",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "contractProhibitions",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "contractObligations",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "offerId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "negotiationId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "contractAgreementId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "edrNegotiationId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "transferProcessId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "providerBpn",
+			"value": "BPNL00000003AYRE",
+			"type": "string"
+		},
+		{
+			"key": "consumerBpn",
+			"value": "BPNLARN000000011",
+			"type": "string"
+		},
+		{
+			"key": "authCode",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "dataplanePublicEndpoint",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "assetId",
+			"value": "demo-asset",
+			"type": "string"
+		},
+		{
+			"key": "policyId",
+			"value": "default-policy",
+			"type": "string"
+		},
+		{
+			"key": "submodelServer",
+			"value": "https://submodelserver.e34eabb8a136438fafe9.germanywestcentral.aksapp.io",
+			"type": "string"
+		},
+		{
+			"key": "transferId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "providerApiKey",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "consumerApiKey",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "walletUrl",
+			"value": "https://ssi-dim-wallet-stub.e34eabb8a136438fafe9.germanywestcentral.aksapp.io",
+			"type": "string"
+		},
+		{
+			"key": "contractDefinitionId",
+			"value": "default-contract",
+			"type": "string"
+		},
+		{
+			"key": "centralidpUrl",
+			"value": "https://centralidp.e34eabb8a136438fafe9.germanywestcentral.aksapp.io",
+			"type": "string"
+		},
+		{
+			"key": "portalBackendUrl",
+			"value": "https://portal-backend.e34eabb8a136438fafe9.germanywestcentral.aksapp.io",
+			"type": "string"
+		}
+	]
+}
