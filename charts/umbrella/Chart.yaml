@@ -83,6 +83,11 @@ dependencies:
     version: 0.1.5
     repository: file://../tx-data-provider
     condition: dataconsumerOne.enabled
+  - name: tx-data-provider
+    alias: bpdm-edc
+    version: 0.1.5
+    repository: file://../tx-data-provider
+    condition: bpdm-edc.enabled
     # TX Data Providers
   - name: tx-data-provider
     version: 0.1.5

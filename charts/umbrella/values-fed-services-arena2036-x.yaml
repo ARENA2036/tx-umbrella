@@ -380,10 +380,10 @@ portal:
                 connectorUrl: "http://company15-controlplane.arena2036-x.de/api/v1/dsp"
                 connectorName: "BPN SUB TIER A Connector"
               company16:
-                name: "BPN_SUB_TIER_C"
+                name: "BPDM_EDC"
                 bpn: "BPNL00000000BJTL"
-                connectorUrl: "http://company16-controlplane.arena2036-x.de/api/v1/dsp"
-                connectorName: "BPN SUB TIER C Connector"
+                connectorUrl: "http://bpdm-edc-controlplane.arena2036-x.de/api/v1/dsp"
+                connectorName: "BPDM Provider Connector"
       logging:
         default: "Debug"
     provisioning:
@@ -1213,6 +1213,133 @@ bpdm:
           orchestrator:
             registration:
               client-secret: *bpdmAdminClientSecret
+
+bpdm-edc:
+  enabled: true
+  seedTestdata: true
+  backendUrl: http://{{ .Release.Name }}-bpdm-submodelserver:8080
+  registryUrl: http://{{ .Release.Name }}-bpdm-provider-dtr:8080/api/v3
+  controlplanePublicUrl: http://{{ .Release.Name }}-bpdm-edc-controlplane:8084
+  controlplaneManagementUrl: http://{{ .Release.Name }}-bpdm-edc-controlplane:8081
+  dataplaneUrl: http://{{ .Release.Name }}-bpdm-edc-dataplane:8081
+  nameOverride: dataprovider
+  secrets:
+    edc-wallet-secret: changeme
+  tractusx-connector:
+    nameOverride: bpdm-edc
+    participant:
+      id: BPNL00000000BJTL
+    iatp:
+      id: did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000000BJTL
+      trustedIssuers:
+        - did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000003CRHK
+      sts:
+        dim:
+          url: https://ssi-dim-wallet-stub.arena2036-x.de/api/sts
+        oauth:
+          token_url: https://ssi-dim-wallet-stub.arena2036-x.de/oauth/token
+          client:
+            id: BPNL00000000BJTL
+            secret_alias: edc-wallet-secret
+    controlplane:
+      env:
+        TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.arena2036-x.de/api
+        EDC_IAM_DID_WEB_USE_HTTPS: false
+      bdrs:
+        server:
+          url: http://ssi-dim-wallet-stub.arena2036-x.de/api/v1/directory
+      endpoints:
+        management:
+          authKey: TEST3
+      ingresses:
+        - enabled: true
+          annotations:
+            cert-manager.io/cluster-issuer: letsencrypt-prod
+          hostname: "bpdm-edc-controlplane.arena2036-x.de"
+          endpoints:
+            - default
+            - protocol
+            - management
+          className: "webapprouting.kubernetes.azure.com"
+          tls:
+            enabled: true
+    dataplane:
+      env:
+        TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.arena2036-x.de/api
+        EDC_IAM_DID_WEB_USE_HTTPS: false
+      ingresses:
+        - enabled: true
+          annotations:
+            cert-manager.io/cluster-issuer: letsencrypt-prod
+          hostname: "bpdm-edc-dataplane.arena2036-x.de"
+          endpoints:
+            - default
+            - public
+          className: "webapprouting.kubernetes.azure.com"
+          tls:
+            enabled: true
+      token:
+        signer:
+          privatekey_alias: tokenSignerPrivateKey
+        verifier:
+          publickey_alias: tokenSignerPublicKey
+    postgresql:
+      nameOverride: bpdm-provider-db
+      jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-bpdm-provider-db:5432/edc"
+      auth:
+        password: "dbpasswordbpdmprovider"
+        postgresPassword: "dbpasswordbpdmprovider"
+    vault:
+      hashicorp:
+        url: http://bpdm-edc-provider-vault:8200
+      secretNames:
+        transferProxyTokenSignerPrivateKey: tokenSignerPrivateKey
+        transferProxyTokenSignerPublicKey: tokenSignerPublicKey
+        transferProxyTokenEncryptionAesKey: tokenEncryptionAesKey
+
+  vault:
+    nameOverride: bpdm-edc-provider-vault
+    fullnameOverride: bpdm-edc-provider-vault
+    enabled: true
+    server:
+      postStart: []
+
+  digital-twin-registry:
+    nameOverride: bpdm-provider-dtr
+    postgresql:
+      nameOverride: bpdm-provider-dtr-db
+      auth:
+        password: "dbpasswordbpdmproviderdtr"
+        existingSecret: bpdmprovider-secret-dtr-postgres-init
+    registry:
+      host: bpdmprovider-dtr.test
+
+  simple-data-backend:
+    nameOverride: bpdmprovider-submodelserver
+    ingress:
+      enabled: true
+      className: "webapprouting.kubernetes.azure.com"
+      annotations:
+        # uncomment the following line for tls
+        # kubernetes.io/ingress.class: addon-http-application-routing
+        # nginx.ingress.kubernetes.io/proxy-body-size: 50m
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+      hosts:
+      - host: "bpdmprovider-submodelserver.arena2036-x.de"
+        paths:
+          - path: "/"
+            pathType: "Prefix"
+      tls:
+        - secretName: "bpdm-submodelserver.tx.test-tls"
+          hosts:
+            - "bpdmprovider-submodelserver.arena2036-x.de"
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1024Mi
+      requests:
+        cpu: 500m
+        memory: 1024Mi
 
 dataconsumerOne:
   enabled: true

@@ -1141,6 +1141,8 @@ bpdm:
           orchestrator:
             registration:
               client-secret: *bpdmAdminClientSecret
+bpdm-edc:
+  enabled: false
 
 dataconsumerOne:
   enabled: true
