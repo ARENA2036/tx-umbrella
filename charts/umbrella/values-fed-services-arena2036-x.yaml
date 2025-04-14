@@ -31,45 +31,76 @@ portal:
     primary:
       persistence:
         enabled: true
-  portalAddress: "https://portal.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
-  portalBackendAddress: "https://portal-backend.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+  portalAddress: "https://portal.arena2036-x.de"
+  portalBackendAddress: "https://portal-backend.arena2036-x.de"
   centralidp:
-    address: "https://centralidp.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
-  sharedidpAddress: "https://sharedidp.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
-  semanticsAddress: "https://semantics.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+    address: "https://centralidp.arena2036-x.de"
+  sharedidpAddress: "https://sharedidp.arena2036-x.de"
+  semanticsAddress: "https://semantics.arena2036-x.de"
   bpdm:
-    poolAddress: "https://partners-pool.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+    poolAddress: "https://partners-pool.arena2036-x.de"
     poolApiPath: "/pool/v6"
-    portalGateAddress: "https://partners-gate.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+    portalGateAddress: "https://partners-gate.arena2036-x.de"
     portalGateApiPath: "/gate/v6"
-  custodianAddress: "https://ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+  custodianAddress: "https://ssi-dim-wallet-stub.arena2036-x.de"
   dimWrapper:
-    baseAddress: "https://ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+    baseAddress: "https://ssi-dim-wallet-stub.arena2036-x.de"
     apiPath: "/api/dim"
-  decentralIdentityManagementAuthAddress: "https://ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io/api/sts"
-  sdfactoryAddress: "https://sdfactory.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
-  clearinghouseAddress: "https://validation.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
-  clearinghouseTokenAddress: "https://keycloak.e8090aa860b1488d9573.germanywestcentral.aksapp.io/realms/example/protocol/openid-connect/token"
-  issuerComponentAddress: "https://ssi-credential-issuer.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+    tokenAddress: "http://ssi-dim-wallet-stub.arena2036-x.de/oauth/token"
+  decentralIdentityManagementAuthAddress: "https://ssi-dim-wallet-stub.arena2036-x.de/api/sts"
+  sdfactoryAddress: "https://sdfactory.arena2036-x.de"
+  clearinghouseAddress: "https://validation.arena2036-x.de"
+  clearinghouseTokenAddress: "https://keycloak.arena2036-x.de/realms/example/protocol/openid-connect/token"
+  # -- if set to true the self description document creation will be skipped for company registrations as well as connector registrations
+  clearinghouseConnectDisabled: true
+  # -- if error code is set, the sd document creation will be skipped if clearing house is sending failure including this error code in the response
+  clearinghouseConnectorAllowSdDocumentSkipErrorCode: "E2010"
+  issuerComponentAddress: "https://ssi-credential-issuer.arena2036-x.de"
   frontend:
+    portal:
+      image:
+        name: "arena2036.azurecr.io/portal-frontend"
+        portaltag: "v1"
+        pullPolicy: "Always"
+        pullSecrets: []
+      resources:
+        requests:
+          cpu: 25m
+          memory: 125M
+        limits:
+          cpu: 75m
+          memory: 125M
+    assets:
+      image:
+        name: "arena2036.azurecr.io/portal-assets"
+        assetstag: "latest"
+        pullPolicy: "Always"
+        pullSecrets: []
+      resources:
+        requests:
+          cpu: 25m
+          memory: 100M
+        limits:
+          cpu: 45m
+          memory: 100M
     ingress:
       enabled: true
-      className : ""
+      className : "webapprouting.kubernetes.azure.com"
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-prod
-        kubernetes.io/ingress.class: addon-http-application-routing
+        # kubernetes.io/ingress.class: addon-http-application-routing
         nginx.ingress.kubernetes.io/rewrite-target: "/$1"
         nginx.ingress.kubernetes.io/use-regex: "true"
         nginx.ingress.kubernetes.io/enable-cors: "true"
-        nginx.ingress.kubernetes.io/cors-allow-origin: "https://*.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+        nginx.ingress.kubernetes.io/cors-allow-origin: "https://*.arena2036-x.de"
       tls:
         # -- Provide tls secret.
         - secretName: "portal.tx.test-tls"
           # -- Provide host for tls secret.
           hosts:
-            - "portal.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+            - "portal.arena2036-x.de"
       hosts:
-        - host: "portal.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+        - host: "portal.arena2036-x.de"
           paths:
             - path: "/(.*)"
               pathType: "ImplementationSpecific"
@@ -103,6 +134,13 @@ portal:
         default: "Debug"
         bpdmLibrary: "Debug"
         registrationService: "Debug"
+      resources:
+        requests:
+          cpu: 75m
+          memory: 400M
+        limits:
+          cpu: 225m
+          memory: 400M
       swaggerEnabled: true
     administration:
       logging:
@@ -115,21 +153,49 @@ portal:
         encryptionConfigs:
           index0:
             encryptionKey: "deb8261ec7b89c344f1c5ef5a11606e305f14e0d231b1357d90ad0180c5081d3"
-      issuerdid: "did:web:ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io:BPNL00000003CRHK"
+      issuerdid: "did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000003CRHK"
       swaggerEnabled: true
+      resources:
+        requests:
+          cpu: 75m
+          memory: 600M
+        limits:
+          cpu: 225m
+          memory: 600M
     appmarketplace:
       logging:
         default: "Debug"
         offersLibrary: "Debug"
       swaggerEnabled: true
+      resources:
+        requests:
+          cpu: 75m
+          memory: 500M
+        limits:
+          cpu: 225m
+          memory: 500M
     services:
       logging:
         default: "Debug"
         offersLibrary: "Debug"
       swaggerEnabled: true
+      resources:
+        requests:
+          cpu: 75m
+          memory: 500M
+        limits:
+          cpu: 225m
+          memory: 500M
     notification:
       logging:
         default: "Debug"
+      resources:
+        requests:
+          cpu: 75m
+          memory: 200M
+        limits:
+          cpu: 225m
+          memory: 200M
       swaggerEnabled: true
     processesworker:
       clearinghouseConnectDisabled: true
@@ -141,6 +207,13 @@ portal:
         custodianLibrary: "Debug"
         sdfactoryLibrary: "Debug"
         offerProvider: "Debug"
+      resources:
+        requests:
+          cpu: 75m
+          memory: 600M
+        limits:
+          cpu: 225m
+          memory: 600M
       bpdm:
         clientId: &bpdmAdminClientId "sa-cl7-cx-5"
         clientSecret: &bpdmAdminClientSecret "changeme"
@@ -164,7 +237,7 @@ portal:
         clientSecret: "changeme"
         grantType: "client_credentials"
         scope: "openid"
-        baseAddress: "https://ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+        baseAddress: "https://ssi-dim-wallet-stub.arena2036-x.de"
         universalResolverAddress: "https://dev.uniresolver.io/"
         encryptionConfigs:
           index0:
@@ -207,102 +280,110 @@ portal:
       senderEmail: "info@arena2036.com"
       password: "mysecretpassword"
     portalmigrations:
+      resources:
+        requests:
+          cpu: 75m
+          memory: 350M
+        limits:
+          cpu: 225m
+          memory: 350M
       seeding:
-        testData:
+        seedTestData:
           enabled: true
-          configMap: "portal-testdata"
-          filename: "test"
-          companies:
-            # BPN is retrieved from participant id of the dataconsumerOne
-            dataconsumerOne:
-              name: "BPN_OEM_C"
-              connectorUrl: "http://dataconsumer-1-controlplane.tx.test/api/v1/dsp"
-              connectorName: "BPN OEM C Connector"
-            # BPN is retrieved from participant id of the tx-data-provider
-            tx-data-provider:
-              name: "BPN_OEM_A"
-              connectorUrl: "http://dataprovider-controlplane.tx.test/api/v1/dsp"
-              connectorName: "BPN OEM A Connector"
-            # BPN is retrieved from participant id of the dataconsumerTwo
-            dataconsumerTwo:
-              name: "BPN_OEM_B"
-              connectorUrl: "http://dataconsumer-2-controlplane.tx.test/api/v1/dsp"
-              connectorName: "BPN OEM B Connector"
-            company4:
-              name: "BPN_IRS_TEST"
-              bpn: "BPNL00000003AWSS"
-              connectorUrl: "http://company4-controlplane.tx.test/api/v1/dsp"
-              connectorName: "BPN IRS TEST Connector"
-            company5:
-              name: "BPN_N_TIER_A"
-              bpn: "BPNL00000003B0Q0"
-              connectorUrl: "http://company5-controlplane.tx.test/api/v1/dsp"
-              connectorName: "BPN N TIER A Connector"
-            company6:
-              name: "BPN_TRACEX_A_SITE_A"
-              bpn: "BPNS0000000008ZZ"
-              connectorUrl: "http://company6-controlplane.tx.test/api/v1/dsp"
-              connectorName: "BPN TRACEX A SITE A Connector"
-            company7:
-              name: "BPN_TRACEX_B"
-              bpn: "BPNL00000003CNKC"
-              connectorUrl: "http://company7-controlplane.tx.test/api/v1/dsp"
-              connectorName: "BPN TRACEX B Connector"
-            company8:
-              name: "BPN_DISMANTLER"
-              bpn: "BPNL00000003B6LU"
-              connectorUrl: "http://company8-controlplane.tx.test/api/v1/dsp"
-              connectorName: "BPN DISMANTLER Connector"
-            company9:
-              name: "BPN_TRACEX_A"
-              bpn: "BPNL00000003CML1"
-              connectorUrl: "http://company9-controlplane.tx.test/api/v1/dsp"
-              connectorName: "BPN TRACEX A Connector"
-            company10:
-              name: "BPN_TRACEX_B_SITE_A"
-              bpn: "BPNS00000008BDFH"
-              connectorUrl: "http://company10-controlplane.tx.test/api/v1/dsp"
-              connectorName: "BPN TRACEX B SITE A Connector"
-            # company11:
-            #   name: "BPN_TIER_A"
-            #   bpn: "BPNL00000003B2OM"
-            #   connectorUrl: "http://company11-controlplane.tx.test/api/v1/dsp"
-            #   connectorName: "BPN TIER A Connector"
-            # company12:
-            #   name: "BPN_TIER_C"
-            #   bpn: "BPNL00000003CSGV"
-            #   connectorUrl: "http://company12-controlplane.tx.test/api/v1/dsp"
-            #   connectorName: "BPN TIER C Connector"
-            company11:
-              name: "BPN_TIER_A"
-              bpn: "BPNL00000003B2OM"
-              connectorUrl: "https://dpp-provider-controlplane.a3fb75c369e540489a65.germanywestcentral.aksapp.io/api/v1/dsp"
-              connectorName: "BPN TIER A Connector"
-            company12:
-              name: "BPN_TIER_C"
-              bpn: "BPNL00000003CSGV"
-              connectorUrl: "https://dpp-consumer-controlplane.a3fb75c369e540489a65.germanywestcentral.aksapp.io/api/v1/dsp"
-              connectorName: "BPN TIER C Connector"
-            company13:
-              name: "BPN_TIER_B"
-              bpn: "BPNL00000003B5MJ"
-              connectorUrl: "http://company13-controlplane.tx.test/api/v1/dsp"
-              connectorName: "BPN TIER B Connector"
-            company14:
-              name: "BPN_SUB_TIER_B"
-              bpn: "BPNL00000003AXS3"
-              connectorUrl: "http://company14-controlplane.tx.test/api/v1/dsp"
-              connectorName: "BPN SUB TIER B Connector"
-            company15:
-              name: "BPN_SUB_TIER_A"
-              bpn: "BPNL00000003B3NX"
-              connectorUrl: "http://company15-controlplane.tx.test/api/v1/dsp"
-              connectorName: "BPN SUB TIER A Connector"
-            company16:
-              name: "BPN_SUB_TIER_C"
-              bpn: "BPNL00000000BJTL"
-              connectorUrl: "http://company16-controlplane.tx.test/api/v1/dsp"
-              connectorName: "BPN SUB TIER C Connector"
+          useOwnConfigMap:
+            configMap: "portal-testdata"
+            filename: "test"
+            companies:
+              # BPN is retrieved from participant id of the dataconsumerOne
+              dataconsumerOne:
+                name: "BPN_OEM_C"
+                connectorUrl: "http://dataconsumer-1-controlplane.arena2036-x.de/api/v1/dsp"
+                connectorName: "BPN OEM C Connector"
+              # BPN is retrieved from participant id of the tx-data-provider
+              tx-data-provider:
+                name: "BPN_OEM_A"
+                connectorUrl: "http://dataprovider-controlplane.arena2036-x.de/api/v1/dsp"
+                connectorName: "BPN OEM A Connector"
+              # BPN is retrieved from participant id of the dataconsumerTwo
+              dataconsumerTwo:
+                name: "BPN_OEM_B"
+                connectorUrl: "http://dataconsumer-2-controlplane.arena2036-x.de/api/v1/dsp"
+                connectorName: "BPN OEM B Connector"
+              company4:
+                name: "BPN_IRS_TEST"
+                bpn: "BPNL00000003AWSS"
+                connectorUrl: "http://company4-controlplane.arena2036-x.de/api/v1/dsp"
+                connectorName: "BPN IRS TEST Connector"
+              company5:
+                name: "BPN_N_TIER_A"
+                bpn: "BPNL00000003B0Q0"
+                connectorUrl: "http://company5-controlplane.arena2036-x.de/api/v1/dsp"
+                connectorName: "BPN N TIER A Connector"
+              company6:
+                name: "BPN_TRACEX_A_SITE_A"
+                bpn: "BPNS0000000008ZZ"
+                connectorUrl: "http://company6-controlplane.arena2036-x.de/api/v1/dsp"
+                connectorName: "BPN TRACEX A SITE A Connector"
+              company7:
+                name: "BPN_TRACEX_B"
+                bpn: "BPNL00000003CNKC"
+                connectorUrl: "http://company7-controlplane.arena2036-x.de/api/v1/dsp"
+                connectorName: "BPN TRACEX B Connector"
+              company8:
+                name: "BPN_DISMANTLER"
+                bpn: "BPNL00000003B6LU"
+                connectorUrl: "http://company8-controlplane.arena2036-x.de/api/v1/dsp"
+                connectorName: "BPN DISMANTLER Connector"
+              company9:
+                name: "BPN_TRACEX_A"
+                bpn: "BPNL00000003CML1"
+                connectorUrl: "http://company9-controlplane.arena2036-x.de/api/v1/dsp"
+                connectorName: "BPN TRACEX A Connector"
+              company10:
+                name: "BPN_TRACEX_B_SITE_A"
+                bpn: "BPNS00000008BDFH"
+                connectorUrl: "http://company10-controlplane.arena2036-x.de/api/v1/dsp"
+                connectorName: "BPN TRACEX B SITE A Connector"
+              # company11:
+              #   name: "BPN_TIER_A"
+              #   bpn: "BPNL00000003B2OM"
+              #   connectorUrl: "http://company11-controlplane.arena2036-x.de/api/v1/dsp"
+              #   connectorName: "BPN TIER A Connector"
+              # company12:
+              #   name: "BPN_TIER_C"
+              #   bpn: "BPNL00000003CSGV"
+              #   connectorUrl: "http://company12-controlplane.arena2036-x.de/api/v1/dsp"
+              #   connectorName: "BPN TIER C Connector"
+              company11:
+                name: "BPN_TIER_A"
+                bpn: "BPNL00000003B2OM"
+                connectorUrl: "https://dpp-provider-controlplane.arena2036-x.de/api/v1/dsp"
+                connectorName: "BPN TIER A Connector"
+              company12:
+                name: "BPN_TIER_C"
+                bpn: "BPNL00000003CSGV"
+                connectorUrl: "https://dpp-consumer-controlplane.arena2036-x.de/api/v1/dsp"
+                connectorName: "BPN TIER C Connector"
+              company13:
+                name: "BPN_TIER_B"
+                bpn: "BPNL00000003B5MJ"
+                connectorUrl: "http://company13-controlplane.arena2036-x.de/api/v1/dsp"
+                connectorName: "BPN TIER B Connector"
+              company14:
+                name: "BPN_SUB_TIER_B"
+                bpn: "BPNL00000003AXS3"
+                connectorUrl: "http://company14-controlplane.arena2036-x.de/api/v1/dsp"
+                connectorName: "BPN SUB TIER B Connector"
+              company15:
+                name: "BPN_SUB_TIER_A"
+                bpn: "BPNL00000003B3NX"
+                connectorUrl: "http://company15-controlplane.arena2036-x.de/api/v1/dsp"
+                connectorName: "BPN SUB TIER A Connector"
+              company16:
+                name: "BPN_SUB_TIER_C"
+                bpn: "BPNL00000000BJTL"
+                connectorUrl: "http://company16-controlplane.arena2036-x.de/api/v1/dsp"
+                connectorName: "BPN SUB TIER C Connector"
       logging:
         default: "Debug"
     provisioning:
@@ -314,30 +395,30 @@ portal:
           password: "mysecretpassword"
           from: "info@arena2036.com"
           replyTo: "info@test.com"
-    # -- docs: https://portal-backend.e8090aa860b1488d9573.germanywestcentral.aksapp.io/api/administration/swagger/index.html
-    # https://portal-backend.e8090aa860b1488d9573.germanywestcentral.aksapp.io/api/registration/swagger/index.html
-    # https://portal-backend.e8090aa860b1488d9573.germanywestcentral.aksapp.io/api/apps/swagger/index.html
-    # https://portal-backend.e8090aa860b1488d9573.germanywestcentral.aksapp.io/api/services/swagger/index.html
-    # https://portal-backend.e8090aa860b1488d9573.germanywestcentral.aksapp.io/api/notification/swagger/index.html
+    # -- docs: https://portal-backend.arena2036-x.de/api/administration/swagger/index.html
+    # https://portal-backend.arena2036-x.de/api/registration/swagger/index.html
+    # https://portal-backend.arena2036-x.de/api/apps/swagger/index.html
+    # https://portal-backend.arena2036-x.de/api/services/swagger/index.html
+    # https://portal-backend.arena2036-x.de/api/notification/swagger/index.html
     ingress:
       enabled: true
-      className : ""
+      className : "webapprouting.kubernetes.azure.com"
       name: "portal-backend"
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-prod
-        kubernetes.io/ingress.class: addon-http-application-routing
+        # kubernetes.io/ingress.class: addon-http-application-routing
         nginx.ingress.kubernetes.io/use-regex: "true"
         nginx.ingress.kubernetes.io/enable-cors: "true"
         nginx.ingress.kubernetes.io/proxy-body-size: "8m"
-        nginx.ingress.kubernetes.io/cors-allow-origin: "http://localhost:3000, https://*.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+        nginx.ingress.kubernetes.io/cors-allow-origin: "http://localhost:3000, https://*.arena2036-x.de"
       tls:
         # -- Provide tls secret.
         - secretName: "portal-backend.tx.test-tls"
           # -- Provide host for tls secret.
           hosts:
-            - "portal-backend.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+            - "portal-backend.arena2036-x.de"
       hosts:
-        - host: "portal-backend.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+        - host: "portal-backend.arena2036-x.de"
           paths:
             - path: "/api/registration"
               pathType: "Prefix"
@@ -378,7 +459,7 @@ centralidp:
     nameOverride: "centralidp"
     replicaCount: 1
     auth:
-      adminPassword: "adminconsolepwcentralidp"
+      adminPassword: "adm!n@centr4l!dp"
     postgresql:
       nameOverride: "centralidp-postgresql"
       auth:
@@ -390,14 +471,14 @@ centralidp:
           enabled: true
     ingress:
       enabled: true
-      ingressClassName: ""
-      hostname: "centralidp.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+      ingressClassName: "webapprouting.kubernetes.azure.com"
+      hostname: "centralidp.arena2036-x.de"
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-prod
-        kubernetes.io/ingress.class: addon-http-application-routing
+        # kubernetes.io/ingress.class: addon-http-application-routing
         nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
         nginx.ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, OPTIONS"
-        nginx.ingress.kubernetes.io/cors-allow-origin: "https://centralidp.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+        nginx.ingress.kubernetes.io/cors-allow-origin: "https://centralidp.arena2036-x.de"
         nginx.ingress.kubernetes.io/enable-cors: "true"
         nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
         nginx.ingress.kubernetes.io/proxy-buffering: "on"
@@ -407,7 +488,7 @@ centralidp:
     # uncomment the following line for tls
     # initContainers:
     #   - name: init-certs
-    #     image: docker.io/bitnami/keycloak:23.0.7-debian-12-r1
+    #     image: docker.io/bitnami/keycloak:25.0.6-debian-12-r0
     #     imagePullPolicy: IfNotPresent
     #     command: ["/bin/bash"]
     #     args:
@@ -454,26 +535,26 @@ centralidp:
     clients:
       registration:
         redirects:
-          - https://portal.e8090aa860b1488d9573.germanywestcentral.aksapp.io/*
+          - https://portal.arena2036-x.de/*
       portal:
-        rootUrl: https://portal.e8090aa860b1488d9573.germanywestcentral.aksapp.io/home
+        rootUrl: https://portal.arena2036-x.de/home
         redirects:
-          - https://portal.e8090aa860b1488d9573.germanywestcentral.aksapp.io/*
+          - https://portal.arena2036-x.de/*
       semantics:
         redirects:
-          - https://portal.e8090aa860b1488d9573.germanywestcentral.aksapp.io/*
+          - https://portal.arena2036-x.de/*
       miw:
         clientSecret: "changeme"
         redirects:
-          - https://managed-identity-wallets.e8090aa860b1488d9573.germanywestcentral.aksapp.io/*
+          - https://managed-identity-wallets.arena2036-x.de/*
       bpdm:
         clientSecret: "changeme"
         redirects:
-          - https://partners-pool.e8090aa860b1488d9573.germanywestcentral.aksapp.io/*
+          - https://partners-pool.arena2036-x.de/*
       bpdmGate:
         clientSecret: "changeme"
         redirects:
-          - https://partners-gate.e8090aa860b1488d9573.germanywestcentral.aksapp.io/*
+          - https://partners-gate.arena2036-x.de/*
       bpdmOrchestrator:
         clientSecret: "changeme"
     serviceAccounts:
@@ -515,7 +596,7 @@ centralidp:
         - clientId: "sa-cl25-cx-3"
           clientSecret: "changeme"
     bpn: "BPNL00000003CRHK"
-    sharedidp: "https://sharedidp.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+    sharedidp: "https://sharedidp.arena2036-x.de"
     # -- test service accounts for EDC - MIW which are obsolete since R24.05;
     # uncomment once EDC uses SSI DIM Wallet Stub and the helm chart testing has been updated;
     # currently the post-install testdata-upload-job fails if not available
@@ -581,26 +662,26 @@ sharedidp:
   keycloak:
     nameOverride: "sharedidp"
     auth:
-      adminPassword: "adminconsolepwsharedidp"
+      adminPassword: "adm!n@shar3d!dp"
     postgresql:
       nameOverride: "sharedidp-postgresql"
       auth:
-        password: "dbpasswordsharedidp"
-        postgresPassword: "dbpasswordsharedidp"
+        password: "dbpasswordshared!dp"
+        postgresPassword: "dbpasswordshared!dp"
       architecture: standalone
       primary:
         persistence:
           enabled: true
     ingress:
       enabled: true
-      ingressClassName: ""
-      hostname: "sharedidp.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+      ingressClassName: "webapprouting.kubernetes.azure.com"
+      hostname: "sharedidp.arena2036-x.de"
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-prod
-        kubernetes.io/ingress.class: addon-http-application-routing
+        # kubernetes.io/ingress.class: addon-http-application-routing
         nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
         nginx.ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, OPTIONS"
-        nginx.ingress.kubernetes.io/cors-allow-origin: "https://sharedidp.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+        nginx.ingress.kubernetes.io/cors-allow-origin: "https://sharedidp.arena2036-x.de"
         nginx.ingress.kubernetes.io/enable-cors: "true"
         nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
         nginx.ingress.kubernetes.io/proxy-buffering: "on"
@@ -610,7 +691,7 @@ sharedidp:
     # uncomment the following line for tls
     # initContainers:
     #   - name: init-certs
-    #     image: docker.io/bitnami/keycloak:23.0.7-debian-12-r1
+    #     image: docker.io/bitnami/keycloak:25.0.6-debian-12-r0
     #     imagePullPolicy: IfNotPresent
     #     command: ["/bin/bash"]
     #     args:
@@ -656,10 +737,10 @@ sharedidp:
     realms:
       cxOperator:
         sslRequired: "none"
-        centralidp: "https://centralidp.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+        centralidp: "https://centralidp.arena2036-x.de"
         initialUser:
-          username: "cx-operator@tx.test"
-          password: "tractusx-umbr3lla!"
+          username: "cx-operator@arena2036.de"
+          password: "ar3na2036-umbr3lla"
         mailing:
           host: "smtp4dev.release24-12.svc.cluster.local"
           port: "25"
@@ -675,18 +756,18 @@ sharedidp:
             clientSecret: "changeme"
 
 bpndiscovery:
-  enabled: false
+  enabled: true
   enablePostgres: true
   bpndiscovery:
-    host: semantics.e8090aa860b1488d9573.germanywestcentral.aksapp.io
+    host: semantics.arena2036-x.de
     ingress:
       enabled: true
       tls: true
       urlPrefix: "/bpndiscovery"
-      className: ""
+      className: "webapprouting.kubernetes.azure.com"
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-prod
-        kubernetes.io/ingress.class: addon-http-application-routing
+        # kubernetes.io/ingress.class: addon-http-application-routing
         nginx.ingress.kubernetes.io/rewrite-target: "/$2"
         nginx.ingress.kubernetes.io/use-regex: "true"
         nginx.ingress.kubernetes.io/enable-cors: "true"
@@ -694,7 +775,7 @@ bpndiscovery:
         nginx.ingress.kubernetes.io/x-forwarded-prefix: "/bpndiscovery"
     authentication: true
     idp:
-      issuerUri: "https://centralidp.e8090aa860b1488d9573.germanywestcentral.aksapp.io/auth/realms/CX-Central"
+      issuerUri: "https://centralidp.arena2036-x.de/auth/realms/CX-Central"
       publicClientId: "Cl22-CX-BPND"
     bpndiscoveryEndpoint:
       allowedTypes: oen,wmi,passtype,manufacturerPartId
@@ -703,14 +784,14 @@ bpndiscovery:
       documentation: /bpndiscovery/swagger-ui/index.html
       timeToLive: "31536000"
     discoveryfinderClient:
-      baseUrl: "semantics.e8090aa860b1488d9573.germanywestcentral.aksapp.io/discoveryfinder"
+      baseUrl: "semantics.arena2036-x.de/discoveryfinder"
       registration:
         clientId: sa-cl22-01
         clientSecret: "client-secret"
         authorizationGrantType: changeme
       schedulerCronFrequency: "0 0 */1 * * *"
       provider:
-        tokenUri: "http://centralidp.e8090aa860b1488d9573.germanywestcentral.aksapp.io/auth/realms/CX-Central/protocol/openid-connect/token"
+        tokenUri: "http://centralidp.arena2036-x.de/auth/realms/CX-Central/protocol/openid-connect/token"
     livenessProbe:
       initialDelaySeconds: 200
     readinessProbe:
@@ -722,11 +803,11 @@ bpndiscovery:
         enabled: false
         size: 8Gi
     auth:
-      password: "dbpasswordbpndiscovery"
-      postgresPassword: "dbpasswordbpndiscovery"
+      password: "dbpasswordbpnd!sc0very"
+      postgresPassword: "dbpasswordbpnd!sc0very"
 
 discoveryfinder:
-  enabled: false
+  enabled: true
   enablePostgres: true
   discoveryfinder:
     authentication: true
@@ -734,28 +815,28 @@ discoveryfinder:
       initialDelaySeconds: 200
     readinessProbe:
       initialDelaySeconds: 200
-    host: semantics.e8090aa860b1488d9573.germanywestcentral.aksapp.io
+    host: semantics.arena2036-x.de
     properties:
       discoveryfinder:
         initialEndpoints:
           - type: bpn
-            endpointAddress: https://portal-backend.e8090aa860b1488d9573.germanywestcentral.aksapp.io/api/administration/Connectors/discovery
+            endpointAddress: https://portal-backend.arena2036-x.de/api/administration/Connectors/discovery
             description: Service to discover connector endpoints based on bpns
-            documentation: https://portal-backend.e8090aa860b1488d9573.germanywestcentral.aksapp.io/api/administration/swagger/index.html
+            documentation: https://portal-backend.arena2036-x.de/api/administration/swagger/index.html
     idp:
-      issuerUri: "https://centralidp.e8090aa860b1488d9573.germanywestcentral.aksapp.io/auth/realms/CX-Central"
+      issuerUri: "https://centralidp.arena2036-x.de/auth/realms/CX-Central"
       publicClientId: "Cl21-CX-DF"
     dataSource:
       url: "jdbc:postgresql://{{ .Release.Name }}-discoveryfinder-postgresql:5432/discoveryfinder"
-    # -- docs: https://semantics.e8090aa860b1488d9573.germanywestcentral.aksapp.io/discoveryfinder/swagger-ui/index.html
+    # -- docs: https://semantics.arena2036-x.de/discoveryfinder/swagger-ui/index.html
     ingress:
       enabled: true
       tls: true
       urlPrefix: "/discoveryfinder"
-      className: ""
+      className: "webapprouting.kubernetes.azure.com"
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-prod
-        kubernetes.io/ingress.class: addon-http-application-routing
+        # kubernetes.io/ingress.class: addon-http-application-routing
         nginx.ingress.kubernetes.io/use-regex: "true"
         nginx.ingress.kubernetes.io/enable-cors: "true"
         nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
@@ -764,24 +845,24 @@ discoveryfinder:
     nameOverride: "discoveryfinder-postgresql"
     primary:
       persistence:
-        enabled: false
+        enabled: true
         size: 8Gi
     auth:
-      password: "dbpassworddiscoveryfinder"
-      postgresPassword: "dbpassworddiscoveryfinder"
+      password: "dbpassworddiscv0eryf!nder"
+      postgresPassword: "dbpassworddisc0veryf!nder"
 
 selfdescription:
   enabled: true
   sdfactory:
     secret:
       # -- JWK Set URI
-      jwkSetUri: "https://centralidp.e8090aa860b1488d9573.germanywestcentral.aksapp.io/auth/realms/CX-Central/protocol/openid-connect/certs"
+      jwkSetUri: "https://centralidp.arena2036-x.de/auth/realms/CX-Central/protocol/openid-connect/certs"
       # -- Custodian wallet client id
       clientId: "sa-cl5-custodian-1"
       # -- Custodian wallet client secret
       clientSecret: "6pnnap7byS1TImL9Uj7g2psud9Fdq4tJ"
       # -- Keycloak URL
-      authServerUrl: "https://centralidp.e8090aa860b1488d9573.germanywestcentral.aksapp.io/auth"
+      authServerUrl: "https://centralidp.arena2036-x.de/auth"
       # -- Keycloak Realm detail
       realm: "CX-Central"
       # -- Keycloak Resource detail
@@ -802,9 +883,9 @@ selfdescription:
     enabled: true
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt-prod
-      kubernetes.io/ingress.class: addon-http-application-routing
+      kubernetes.io/ingress.class: webapprouting.kubernetes.azure.com
     hosts:
-      - host: "sdfactory.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+      - host: "sdfactory.arena2036-x.de"
         paths:
           - path: "/"
             pathType: "Prefix"
@@ -812,11 +893,7 @@ selfdescription:
     tls:
     - tlsName: sdfactory.tx.test-tls
       hosts:
-        - sdfactory.e8090aa860b1488d9573.germanywestcentral.aksapp.io
-    className: ""
-    # annotations:
-    #   # uncomment the following line for tls
-    #   cert-manager.io/cluster-issuer: "my-ca-issuer"
+        - sdfactory.arena2036-x.de
 
 iatpmock:
   enabled: false
@@ -831,16 +908,16 @@ iatpmock:
   ingress:
     enabled: true
     hosts:
-      - host: iatpmock.e8090aa860b1488d9573.germanywestcentral.aksapp.io
+      - host: iatpmock.arena2036-x.de
         paths:
           - path: /
             pathType: ImplementationSpecific
 
 ssi-credential-issuer:
   enabled: true
-  portalBackendAddress: "https://portal-backend.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
-  walletAddress: "https://ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
-  walletTokenAddress: "https://ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io/oauth/token"
+  portalBackendAddress: "https://portal-backend.arena2036-x.de"
+  walletAddress: "https://ssi-dim-wallet-stub.arena2036-x.de"
+  walletTokenAddress: "https://ssi-dim-wallet-stub.arena2036-x.de/oauth/token"
   service:
     swaggerEnabled: true
     logging:
@@ -853,9 +930,9 @@ ssi-credential-issuer:
       # -- Client-secret for portal client-id. Secret-key 'portal-client-secret'.
       clientSecret: "changeme"
     credential:
-      issuerDid: "did:web:ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io:BPNL00000003CRHK"
+      issuerDid: "did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000003CRHK"
       issuerBpn: "BPNL00000003CRHK"
-      statusListUrl: "https://ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io/status-list/BPNL00000003CRHK/8a6c7486-1e1f-4555-bdd2-1a178182651e"
+      statusListUrl: "https://ssi-dim-wallet-stub.arena2036-x.de/status-list/BPNL00000003CRHK/8a6c7486-1e1f-4555-bdd2-1a178182651e"
       encryptionConfigIndex: 0
       encryptionConfigs:
         index0:
@@ -903,26 +980,26 @@ ssi-credential-issuer:
 
   centralidp:
     # -- Provide centralidp base address (CX IAM), without trailing '/auth'.
-    address: "https://centralidp.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+    address: "https://centralidp.arena2036-x.de"
     jwtBearerOptions:
       requireHttpsMetadata: "false"
   ingress:
     enabled: true
-    className: ""
+    className: "webapprouting.kubernetes.azure.com"
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt-prod
-      kubernetes.io/ingress.class: addon-http-application-routing
+      # kubernetes.io/ingress.class: addon-http-application-routing
       nginx.ingress.kubernetes.io/use-regex: "true"
       nginx.ingress.kubernetes.io/enable-cors: "true"
       nginx.ingress.kubernetes.io/proxy-body-size: "8m"
-      nginx.ingress.kubernetes.io/cors-allow-origin: "https://*.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+      nginx.ingress.kubernetes.io/cors-allow-origin: "https://*.arena2036-x.de"
     # -- Ingress TLS configuration
     tls:
       - secretName: "ssi-credential-issuer.tx.test-tls"
         hosts:
-          - "ssi-credential-issuer.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+          - "ssi-credential-issuer.arena2036-x.de"
     hosts:
-      - host: "ssi-credential-issuer.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+      - host: "ssi-credential-issuer.arena2036-x.de"
         paths:
           - path: "/"
             pathType: "Prefix"
@@ -932,7 +1009,7 @@ ssi-credential-issuer:
 # Set up services for a business partner pool, golden record process
 # and a gate with which the Portal and the users can share business partner data
 bpdm:
-  enabled: false
+  enabled: true
   postgres:
     # We use the default name for BPDM postgres
     fullnameOverride:
@@ -940,13 +1017,13 @@ bpdm:
     auth:
       # BPDM can't handle random initial passwords at the moment
       # so need to set a fixed one here and use it in the app configs later
-      password: &bpdmPostgresPassword "dbpasswordbpdm"
+      password: &bpdmPostgresPassword "dbpassw0rdbpdm"
       postgresPassword: *bpdmPostgresPassword
     architecture: standalone
     primary:
       persistence:
-        enabled: false
-  keycloak:
+        enabled: true
+  centralidp:
     # We use Central-IDP as authentication server
     enabled: true
   # Set up a Gate that acts as the Portal's Gate
@@ -959,7 +1036,7 @@ bpdm:
       enabled: true
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-prod
-        kubernetes.io/ingress.class: addon-http-application-routing
+        kubernetes.io/ingress.class: webapprouting.kubernetes.azure.com
         nginx.ingress.kubernetes.io/rewrite-target: "/$2"
         nginx.ingress.kubernetes.io/use-regex: "true"
         nginx.ingress.kubernetes.io/x-forwarded-prefix: "/gate"
@@ -968,9 +1045,9 @@ bpdm:
       tls:
         - secretName: "partners-gate.tx.test-tls"
           hosts:
-            - "partners-gate.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+            - "partners-gate.arena2036-x.de"
       hosts:
-        - host: "partners-gate.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+        - host: "partners-gate.arena2036-x.de"
           paths:
             - path: "/gate(/|$)(.*)"
               pathType: "ImplementationSpecific"
@@ -984,14 +1061,9 @@ bpdm:
         bpn:
           # This Gate has no owner restriction as other companies can write into the Gate under their own tenant
           owner-bpn-l:
-        tasks:
-          creation:
-            fromSharingMember:
-              # Portal needs to set uploaded business partner data as ready to be shared by itself (disables setting it automatically as ready)
-              starts-as-ready: false
         security:
           # App's API is authenticated over Central-IDP
-          auth-server-url: "https://centralidp.e8090aa860b1488d9573.germanywestcentral.aksapp.io/auth"
+          auth-server-url: "https://centralidp.arena2036-x.de/auth"
           realm: "CX-Central"
           # Is Central-IDPs name for the Gate client
           # The Gate will use that name to check for existing client permissions here
@@ -1002,11 +1074,11 @@ bpdm:
         # We will reuse the general BPDM admin technical user to establish connection between the services
         client:
           pool:
-            base-url: http://business-partners.tx.test/pool
+            base-url: http://business-partners.arena2036-x.de/pool
             registration:
               client-id: "sa-cl7-cx-1"
           orchestrator:
-            base-url: http://business-partners.tx.test/orchestrator
+            base-url: http://business-partners.arena2036-x.de/orchestrator
             registration:
               client-id: "sa-cl25-cx-3"
     applicationSecrets:
@@ -1033,7 +1105,7 @@ bpdm:
       enabled: true
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-prod
-        kubernetes.io/ingress.class: addon-http-application-routing
+        kubernetes.io/ingress.class: webapprouting.kubernetes.azure.com
         nginx.ingress.kubernetes.io/rewrite-target: "/$2"
         nginx.ingress.kubernetes.io/use-regex: "true"
         nginx.ingress.kubernetes.io/x-forwarded-prefix: "/pool"
@@ -1041,9 +1113,9 @@ bpdm:
       tls:
         - secretName: "partners-pool.tx.test-tls"
           hosts:
-            - "partners-pool.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+            - "partners-pool.arena2036-x.de"
       hosts:
-        - host: "partners-pool.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+        - host: "partners-pool.arena2036-x.de"
           paths:
             - path: "/pool(/|$)(.*)"
               pathType: "ImplementationSpecific"
@@ -1056,7 +1128,7 @@ bpdm:
           host: *bpdmPostgresName
         security:
           # App's API is authenticated over Central-IDP
-          auth-server-url: "https://centralidp.e8090aa860b1488d9573.germanywestcentral.aksapp.io/auth"
+          auth-server-url: "https://centralidp.arena2036-x.de/auth"
           realm: "CX-Central"
           # Is Central-IDPs name for the Pool client
           # The Pool will use that name to check for existing client permissions here
@@ -1067,7 +1139,7 @@ bpdm:
         # We will reuse the general BPDM admin technical user to establish connection between the services
         client:
           orchestrator:
-            base-url: http://business-partners.tx.test/orchestrator
+            base-url: http://business-partners.arena2036-x.de/orchestrator
             registration:
               client-id: "sa-cl25-cx-2"
     applicationSecrets:
@@ -1087,7 +1159,7 @@ bpdm:
       enabled: true
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-prod
-        kubernetes.io/ingress.class: addon-http-application-routing
+        kubernetes.io/ingress.class: webapprouting.kubernetes.azure.com
         nginx.ingress.kubernetes.io/rewrite-target: "/$2"
         nginx.ingress.kubernetes.io/use-regex: "true"
         nginx.ingress.kubernetes.io/x-forwarded-prefix: "/orchestrator"
@@ -1095,14 +1167,14 @@ bpdm:
       tls:
         - secretName: "partners-orchestrator.tx.test-tls"
           hosts:
-            - "partners-orchestrator.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+            - "partners-orchestrator.arena2036-x.de"
       hosts:
-        - host: "partners-orchestrator.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+        - host: "partners-orchestrator.arena2036-x.de"
           paths:
             - path: "/orchestrator(/|$)(.*)"
               pathType: "ImplementationSpecific"
     postgres:
-      enabled: false
+      enabled: true
       fullnameOverride: bpdm-postgres
     applicationConfig:
       server:
@@ -1112,7 +1184,7 @@ bpdm:
         datasource:
           host: *bpdmPostgresName
         security:
-          auth-server-url: "https://centralidp.e8090aa860b1488d9573.germanywestcentral.aksapp.io/auth"
+          auth-server-url: "https://centralidp.arena2036-x.de/auth"
           realm: "CX-Central"
           client-id: "Cl25-CX-BPDM-Orchestrator"
     applicationSecrets:
@@ -1130,9 +1202,9 @@ bpdm:
         # We reuse the general BPDM admin technical user to establish connection between the services
         client:
           orchestrator:
-            base-url: http://business-partners.e8090aa860b1488d9573.germanywestcentral.aksapp.io/orchestrator
+            base-url: http://business-partners.arena2036-x.de/orchestrator
             provider:
-              issuer-uri: "https://centralidp.e8090aa860b1488d9573.germanywestcentral.aksapp.io/auth/realms/CX-Central"
+              issuer-uri: "https://centralidp.arena2036-x.de/auth/realms/CX-Central"
             registration:
               client-id: "sa-cl25-cx-1"
     applicationSecrets:
@@ -1153,24 +1225,24 @@ dataconsumerOne:
     participant:
       id: BPNL00000003AZQP
     iatp:
-      id: did:web:ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io:BPNL00000003AZQP
+      id: did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000003AZQP
       trustedIssuers:
-        - did:web:ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io:BPNL00000003CRHK
+        - did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000003CRHK
       sts:
         dim:
-          url: https://ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io/api/sts
+          url: https://ssi-dim-wallet-stub.arena2036-x.de/api/sts
         oauth:
-          token_url: https://ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io/oauth/token
+          token_url: https://ssi-dim-wallet-stub.arena2036-x.de/oauth/token
           client:
             id: BPNL00000003AZQP
             secret_alias: edc-wallet-secret
     controlplane:
       env:
-        TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io/api
+        TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.arena2036-x.de/api
         EDC_IAM_DID_WEB_USE_HTTPS: false
       bdrs:
         server:
-          url: https://bdrs-server.e8090aa860b1488d9573.germanywestcentral.aksapp.io/api/directory
+          url: http://ssi-dim-wallet-stub.arena2036-x.de/api/v1/directory
       endpoints:
         management:
           authKey: TEST1
@@ -1178,29 +1250,29 @@ dataconsumerOne:
         - enabled: true
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt-prod
-            kubernetes.io/ingress.class: addon-http-application-routing
-          hostname: "dataconsumer-1-controlplane.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+            # kubernetes.io/ingress.class: addon-http-application-routing
+          hostname: "dataconsumer-1-controlplane.arena2036-x.de"
           endpoints:
             - default
             - protocol
             - management
-          # className: ""
+          className: "webapprouting.kubernetes.azure.com"
           tls:
             enabled: true
     dataplane:
       env:
-        TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io/api
+        TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.arena2036-x.de/api
         EDC_IAM_DID_WEB_USE_HTTPS: false
       ingresses:
         - enabled: true
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt-prod
-            kubernetes.io/ingress.class: addon-http-application-routing
-          hostname: "dataconsumer-1-dataplane.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+            # kubernetes.io/ingress.class: addon-http-application-routing
+          hostname: "dataconsumer-1-dataplane.arena2036-x.de"
           endpoints:
             - default
             - public
-          # className: ""
+          className: "webapprouting.kubernetes.azure.com"
           tls:
             enabled: true
       token:
@@ -1251,24 +1323,24 @@ tx-data-provider:
     participant:
       id: BPNL00000003AYRE
     iatp:
-      id: did:web:ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io:BPNL00000003AYRE
+      id: did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000003AYRE
       trustedIssuers:
-        - did:web:ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io:BPNL00000003CRHK
+        - did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000003CRHK
       sts:
         dim:
-          url: https://ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io/api/sts
+          url: https://ssi-dim-wallet-stub.arena2036-x.de/api/sts
         oauth:
-          token_url: https://ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io/oauth/token
+          token_url: https://ssi-dim-wallet-stub.arena2036-x.de/oauth/token
           client:
             id: BPNL00000003AYRE
             secret_alias: edc-wallet-secret
     controlplane:
       env:
-        TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io/api
+        TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.arena2036-x.de/api
         EDC_IAM_DID_WEB_USE_HTTPS: false
       bdrs:
         server:
-          url: https://bdrs-server.e8090aa860b1488d9573.germanywestcentral.aksapp.io/api/directory
+          url: http://ssi-dim-wallet-stub.arena2036-x.de/api/v1/directory
       endpoints:
         management:
           authKey: TEST2
@@ -1276,29 +1348,29 @@ tx-data-provider:
         - enabled: true
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt-prod
-            kubernetes.io/ingress.class: addon-http-application-routing
-          hostname: "dataprovider-controlplane.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+            # kubernetes.io/ingress.class: addon-http-application-routing
+          hostname: "dataprovider-controlplane.arena2036-x.de"
           endpoints:
             - default
             - protocol
             - management
-          # className: ""
+          className: "webapprouting.kubernetes.azure.com"
           tls:
             enabled: true
     dataplane:
       env:
-        TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io/api
+        TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.arena2036-x.de/api
         EDC_IAM_DID_WEB_USE_HTTPS: false
       ingresses:
         - enabled: true
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt-prod
-            kubernetes.io/ingress.class: addon-http-application-routing
-          hostname: "dataprovider-dataplane.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+            # kubernetes.io/ingress.class: addon-http-application-routing
+          hostname: "dataprovider-dataplane.arena2036-x.de"
           endpoints:
             - default
             - public
-          # className: ""
+          className: "webapprouting.kubernetes.azure.com"
           tls:
             enabled: true
       token:
@@ -1341,21 +1413,21 @@ tx-data-provider:
     nameOverride: dataprovider-submodelserver
     ingress:
       enabled: true
-      className: ""
+      className: "webapprouting.kubernetes.azure.com"
       annotations:
         # uncomment the following line for tls
-        kubernetes.io/ingress.class: addon-http-application-routing
+        # kubernetes.io/ingress.class: addon-http-application-routing
         # nginx.ingress.kubernetes.io/proxy-body-size: 50m
         cert-manager.io/cluster-issuer: letsencrypt-prod
       hosts:
-      - host: "dataprovider-submodelserver.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+      - host: "dataprovider-submodelserver.arena2036-x.de"
         paths:
           - path: "/"
             pathType: "Prefix"
       tls:
         - secretName: "submodelserver.tx.test-tls"
           hosts:
-            - "dataprovider-submodelserver.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+            - "dataprovider-submodelserver.arena2036-x.de"
     resources:
       limits:
         cpu: 500m
@@ -1379,7 +1451,7 @@ semantic-hub:
       initialDelaySeconds: 200
     readinessProbe:
       initialDelaySeconds: 200
-    host: semantics.e8090aa860b1488d9573.germanywestcentral.aksapp.io
+    host: semantics.arena2036-x.de
     ingress:
       enabled: true
       tls: false
@@ -1394,7 +1466,7 @@ semantic-hub:
         nginx.ingress.kubernetes.io/x-forwarded-prefix: "/hub"
   graphdb:
     enabled: true
-    image: jena-fuseki-docker:4.7.0
+    image: jena-fuseki-docker:5.0.0
     imagePullPolicy: Never
     storageClassName: ""
     storageSize: 8Gi
@@ -1410,24 +1482,24 @@ dataconsumerTwo:
     participant:
       id: BPNL00000003AVTH
     iatp:
-      id: did:web:ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io:BPNL00000003AVTH
+      id: did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000003AVTH
       trustedIssuers:
-        - did:web:ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io:BPNL00000003CRHK
+        - did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000003CRHK
       sts:
         dim:
-          url: https://ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io/api/sts
+          url: https://ssi-dim-wallet-stub.arena2036-x.de/api/sts
         oauth:
-          token_url: https://ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io/oauth/token
+          token_url: https://ssi-dim-wallet-stub.arena2036-x.de/oauth/token
           client:
             id: BPNL00000003AVTH
             secret_alias: edc-wallet-secret
     controlplane:
       env:
-        TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io/api
+        TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.arena2036-x.de/api
         EDC_IAM_DID_WEB_USE_HTTPS: false
       bdrs:
         server:
-          url: https://bdrs-server.e8090aa860b1488d9573.germanywestcentral.aksapp.io/api/directory
+          url: http://ssi-dim-wallet-stub.arena2036-x.de/api/v1/directory
       endpoints:
         management:
           authKey: TEST3
@@ -1435,29 +1507,29 @@ dataconsumerTwo:
         - enabled: true
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt-prod
-            kubernetes.io/ingress.class: addon-http-application-routing
-          hostname: "dataconsumer-2-controlplane.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+            # kubernetes.io/ingress.class: addon-http-application-routing
+          hostname: "dataconsumer-2-controlplane.arena2036-x.de"
           endpoints:
             - default
             - protocol
             - management
-          className: ""
+          className: "webapprouting.kubernetes.azure.com"
           tls:
             enabled: false
     dataplane:
       env:
-        TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io/api
+        TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.arena2036-x.de/api
         EDC_IAM_DID_WEB_USE_HTTPS: false
       ingresses:
         - enabled: true
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt-prod
-            kubernetes.io/ingress.class: addon-http-application-routing
-          hostname: "dataconsumer-2-dataplane.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+            # kubernetes.io/ingress.class: addon-http-application-routing
+          hostname: "dataconsumer-2-dataplane.arena2036-x.de"
           endpoints:
             - default
             - public
-          className: ""
+          className: "webapprouting.kubernetes.azure.com"
           tls:
             enabled: false
       token:
@@ -1495,27 +1567,27 @@ dataconsumerTwo:
 pgadmin4:
   enabled: true
   env:
-    email: pgadmin4@txtest.org
-    password: tractusxpgdamin4
+    email: pgadmin4@arena2036.de
+    password: arena2036-xpgdamin4
   persistentVolume:
-    enabled: false
+    enabled: true
   ingress:
     enabled: true
-    ingressClassName: ""
+    ingressClassName: "webapprouting.kubernetes.azure.com"
     annotations:
         # uncomment the following line for tls
-        kubernetes.io/ingress.class: addon-http-application-routing
+        # kubernetes.io/ingress.class: addon-http-application-routing
         # nginx.ingress.kubernetes.io/proxy-body-size: 50m
         cert-manager.io/cluster-issuer: letsencrypt-prod
     hosts:
-      - host: pgadmin4.e8090aa860b1488d9573.germanywestcentral.aksapp.io
+      - host: pgadmin4.arena2036-x.de
         paths:
         - path: /
           pathType: Prefix
     tls:
       - secretName: "pgadmin4.tx.test-tls"
         hosts:
-          - "pgadmin4.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+          - "pgadmin4.arena2036-x.de"
 
 
 bdrs-server-memory:
@@ -1527,43 +1599,43 @@ bdrs-server-memory:
     enabled: true
     bpnList:
       - bpn: "BPNL00000003CRHK"
-        did: "did:web:ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io:BPNL00000003CRHK"
+        did: "did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000003CRHK"
       - bpn: "BPNL00000003B3NX"
-        did: "did:web:ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io:BPNL00000003B3NX"
+        did: "did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000003B3NX"
       - bpn: "BPNL00000003CSGV"
-        did: "did:web:ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io:BPNL00000003CSGV"
+        did: "did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000003CSGV"
       - bpn: "BPNL00000003B6LU"
-        did: "did:web:ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io:BPNL00000003B6LU"
+        did: "did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000003B6LU"
       - bpn: "BPNL00000003AXS3"
-        did: "did:web:ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io:BPNL00000003AXS3"
+        did: "did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000003AXS3"
       - bpn: "BPNL00000003AZQP"
-        did: "did:web:ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io:BPNL00000003AZQP"
+        did: "did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000003AZQP"
       - bpn: "BPNL00000003AWSS"
-        did: "did:web:ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io:BPNL00000003AWSS"
+        did: "did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000003AWSS"
       - bpn: "BPNL00000003AYRE"
-        did: "did:web:ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io:BPNL00000003AYRE"
+        did: "did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000003AYRE"
       - bpn: "BPNL00000003AVTH"
-        did: "did:web:ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io:BPNL00000003AVTH"
+        did: "did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000003AVTH"
       - bpn: "BPNL00000000BJTL"
-        did: "did:web:ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io:BPNL00000000BJTL"
+        did: "did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000000BJTL"
       - bpn: "BPNL00000003CML1"
-        did: "did:web:ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io:BPNL00000003CML1"
+        did: "did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000003CML1"
       - bpn: "BPNL00000003B2OM"
-        did: "did:web:ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io:BPNL00000003B2OM"
+        did: "did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000003B2OM"
       - bpn: "BPNL00000003B0Q0"
-        did: "did:web:ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io:BPNL00000003B0Q0"
+        did: "did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000003B0Q0"
       - bpn: "BPNL00000003B5MJ"
-        did: "did:web:ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io:BPNL00000003B5MJ"
+        did: "did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000003B5MJ"
       - bpn: "BPNS0000000008ZZ"
-        did: "did:web:ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io:BPNS0000000008ZZ"
+        did: "did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNS0000000008ZZ"
       - bpn: "BPNL00000003CNKC"
-        did: "did:web:ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io:BPNL00000003CNKC"
+        did: "did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000003CNKC"
       - bpn: "BPNS00000008BDFH"
-        did: "did:web:ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io:BPNS00000008BDFH"
+        did: "did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNS00000008BDFH"
 
   server:
     trustedIssuers:
-      - did:web:ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io:BPNL00000003CRHK
+      - did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000003CRHK
     env:
       EDC_IAM_DID_WEB_USE_HTTPS: false
     endpoints:
@@ -1573,14 +1645,14 @@ bdrs-server-memory:
       - enabled: true
         annotations:
           # uncomment the following line for tls
-          kubernetes.io/ingress.class: addon-http-application-routing
+          # kubernetes.io/ingress.class: addon-http-application-routing
           # nginx.ingress.kubernetes.io/proxy-body-size: 50m
           cert-manager.io/cluster-issuer: letsencrypt-prod
-        hostname: bdrs-server.e8090aa860b1488d9573.germanywestcentral.aksapp.io
+        hostname: bdrs-server.arena2036-x.de
         endpoints:
           - directory
           - management
-        # className: "nginx"
+        className: "webapprouting.kubernetes.azure.com"
         tls:
           enabled: true
 
@@ -1589,13 +1661,15 @@ ssi-dim-wallet-stub:
   enabled: true
   wallet:
     replicaCount: 1
-    host: ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io
+    host: ssi-dim-wallet-stub.arena2036-x.de
     nameSpace: "release24-12"
     appName: "ssi-dim-wallet-stub"
     configName: "ssi-dim-wallet-config"
     serviceName: "ssi-dim-wallet-service"
     secretName: "ssi-dim-wallet-secret"
     ingressName: "ssi-dim-wallet-ingress"
+    seeding:
+      bpnList: "BPNL00000003AZQP,BPNL00000003AYRE"
     resources:
       requests:
         memory: "1.5Gi"
@@ -1609,9 +1683,9 @@ ssi-dim-wallet-stub:
         enabled: true
         name: "ssi-dim-wallet-stub-tx-test-tls"
       urlPrefix: /
-      className: ""
+      className: "webapprouting.kubernetes.azure.com"
       annotations:
-        kubernetes.io/ingress.class: addon-http-application-routing
+        # kubernetes.io/ingress.class: addon-http-application-routing
         cert-manager.io/cluster-issuer: letsencrypt-prod
     swagger:
       ui:
@@ -1621,18 +1695,18 @@ ssi-dim-wallet-stub:
     logLevel: "debug"
     environment: "default"
     baseWalletBpn: "BPNL00000003CRHK"
-    didHost: "ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
-    stubUrl: "https://ssi-dim-wallet-stub.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+    didHost: "ssi-dim-wallet-stub.arena2036-x.de"
+    stubUrl: "https://ssi-dim-wallet-stub.arena2036-x.de"
     statusListVcId: "8a6c7486-1e1f-4555-bdd2-1a178182651e"
     tokenExpiryTime: "5"
     portal:
-      waitTime: "10"
-      host: "https://portal-backend.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+      waitTime: "60"
+      host: "https://portal-backend.arena2036-x.de"
       clientId: "sa-cl2-05"
       clientSecret: "changeme"
     keycloak:
       realm: "CX-Central"
-      authServerUrl: "https://centralidp.e8090aa860b1488d9573.germanywestcentral.aksapp.io/auth"
+      authServerUrl: "https://centralidp.arena2036-x.de/auth"
     service:
       type: ClusterIP
       port: 8080
@@ -1641,17 +1715,18 @@ ssi-dim-wallet-stub:
 
 smtp4dev:
   enabled: true
+  namespace: "release24-12"
   ingress:
     enabled: true
-    className: ""
+    className: "webapprouting.kubernetes.azure.com"
+    tls:
+     - secretName: smtpdev.tx.test-tls
+       hosts:
+        - "smtpdev.arena2036-x.de"
     annotations:
-      kubernetes.io/ingress.class: addon-http-application-routing
+      # kubernetes.io/ingress.class: webapprouting.kubernetes.azure.com
       cert-manager.io/cluster-issuer: letsencrypt-prod
-    url: "smtpdev.e8090aa860b1488d9573.germanywestcentral.aksapp.io"
+    url: "smtpdev.arena2036-x.de"
   ports:
     smtp: 25
     http: 80
-  tls:
-   - secretName: smtp4dev.tx.test-tls
-     hosts:
-       - smtpdev.e8090aa860b1488d9573.germanywestcentral.aksapp.io
