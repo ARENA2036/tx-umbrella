@@ -1172,7 +1172,7 @@ dataconsumerOne:
         EDC_IAM_DID_WEB_USE_HTTPS: false
       bdrs:
         server:
-          url: http://ssi-dim-wallet-stub.arena2036-x.de/api/v1/directory
+          url: https://ssi-dim-wallet-stub.arena2036-x.de/api/v1/directory
       endpoints:
         management:
           authKey: TEST1
@@ -1270,7 +1270,7 @@ tx-data-provider:
         EDC_IAM_DID_WEB_USE_HTTPS: false
       bdrs:
         server:
-          url: http://ssi-dim-wallet-stub.arena2036-x.de/api/v1/directory
+          url: https://ssi-dim-wallet-stub.arena2036-x.de/api/v1/directory
       endpoints:
         management:
           authKey: TEST2
@@ -1448,7 +1448,7 @@ dataconsumerTwo:
         EDC_IAM_DID_WEB_USE_HTTPS: false
       bdrs:
         server:
-          url: http://ssi-dim-wallet-stub.arena2036-x.de/api/v1/directory
+          url: https://ssi-dim-wallet-stub.arena2036-x.de/api/v1/directory
       endpoints:
         management:
           authKey: TEST3
