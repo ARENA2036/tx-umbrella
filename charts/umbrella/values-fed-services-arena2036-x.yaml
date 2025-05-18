@@ -274,12 +274,11 @@ portal:
             encryptionKey:
               "d2e27d71b018cb36029184852f1baa3e26891be94718f77de4c7cc6c882fe317"
     mailing:
-      # host: "smtp4dev.release24-12.svc.cluster.local"
-      host: "smtp.office365.com"
-      port: "587"
-      user: "it@arena2036.de"
-      senderEmail: "it@arena2036.de"
-      password: "Q.744239431169ah"
+      host: "smtp4dev.release24-12.svc.cluster.local"
+      port: "25"
+      user: "myUser"
+      senderEmail: "info@arena2036.com"
+      password: "mysecretpassword"
     portalmigrations:
       resources:
         requests:
@@ -390,12 +389,12 @@ portal:
     provisioning:
       sharedRealm:
         smtpServer:
-          host: "smtp.office365.com"
-          port: "587"
-          user: "it@arena2036.de"
-          password: "Q.744239431169ah"
-          from: "it@arena2036.de"
-          replyTo: "it@arena2036.de"
+          host: "smtp4dev.release24-12.svc.cluster.local"
+          port: "25"
+          user: "myUser"
+          password: "mysecretpassword"
+          from: "info@arena2036.com"
+          replyTo: "info@test.com"
     # -- docs: https://portal-backend.arena2036-x.de/api/administration/swagger/index.html
     # https://portal-backend.arena2036-x.de/api/registration/swagger/index.html
     # https://portal-backend.arena2036-x.de/api/apps/swagger/index.html
@@ -743,12 +742,12 @@ sharedidp:
           username: "cx-operator@arena2036.de"
           password: "ar3na2036-umbr3lla"
         mailing:
-          host: "smtp.office365.com"
-          port: "587"
-          username: "it@arena2036.de"
-          password: "Q.744239431169ah"
-          from: "it@arena2036.de"
-          replyTo: "it@arena2036.de"
+          host: "smtp4dev.release24-12.svc.cluster.local"
+          port: "25"
+          username: "myUser"
+          password: "mysecretpassword"
+          from: "info@arena2036.com"
+          replyTo: "info@arena2036.com"
       master:
         serviceAccounts:
           provisioning:
@@ -916,7 +915,6 @@ iatpmock:
 
 ssi-credential-issuer:
   enabled: true
-  replicaCount: 1
   portalBackendAddress: "https://portal-backend.arena2036-x.de"
   walletAddress: "https://ssi-dim-wallet-stub.arena2036-x.de"
   walletTokenAddress: "https://ssi-dim-wallet-stub.arena2036-x.de/oauth/token"
@@ -938,9 +936,6 @@ ssi-credential-issuer:
       encryptionConfigIndex: 0
       encryptionConfigs:
         index0:
-          index: 0
-          cipherMode: "CBC"
-          paddingMode: "PKCS7"
           # EncryptionKey for wallet. Secret-key 'credential-encryption-key0'. Expected format is 256 bit (64 digits) hex.
           encryptionKey: "deb8261ec7b89c344f1c5ef5a11606e305f14e0d231b1357d90ad0180c5081d3"
   processesworker:
@@ -960,14 +955,6 @@ ssi-credential-issuer:
       clientId: "sa-cl5-custodian-2"
       # -- Client-secret for wallet client-id. Secret-key 'wallet-client-secret'.
       clientSecret: "changeme"
-      # -- path to create a credential
-      createCredentialPath: "api/v2.0.0/credentials"
-      # -- path to create a specific credential which is directly signed
-      createSignedCredentialPath: "/api/v2.0.0/credentials"
-      # -- path to get a specific credential; {0} will be replaced by the credential id
-      getCredentialPath: "/api/v2.0.0/credentials/{0}"
-      # -- path to revoke a specific credential; {0} will be replaced by the credential id
-      revokeCredentialPath: "/api/v2.0.0/credentials/{0}"
       # encryptionConfigIndex: 0
       # encryptionConfigs:
         # index0:
@@ -981,18 +968,15 @@ ssi-credential-issuer:
       default: "Debug"
   postgresql:
     enabled: true
-    nameOverride: issuer-postgresql
     architecture: standalone
     primary:
       persistence:
-        enabled: true
+        enabled: false
     auth:
-      database: issuer
-      username: issuer
       # -- Password for the root username 'postgres'. Secret-key 'postgres-password'.
-      postgrespassword: "dbpasswordissuer"
+      postgrespassword: "rootissuerpassword"
       # -- Password for the non-root username 'issuer'. Secret-key 'password'.
-      password: "dbpasswordissuer"
+      password: "issuerpassword"
 
   centralidp:
     # -- Provide centralidp base address (CX IAM), without trailing '/auth'.
@@ -1263,7 +1247,7 @@ bpdm-edc:
         EDC_IAM_DID_WEB_USE_HTTPS: false
       bdrs:
         server:
-          url: https://ssi-dim-wallet-stub.arena2036-x.de/api/v1/directory
+          url: http://ssi-dim-wallet-stub.arena2036-x.de/api/v1/directory
       endpoints:
         management:
           authKey: TEST3
@@ -1300,8 +1284,8 @@ bpdm-edc:
         verifier:
           publickey_alias: tokenSignerPublicKey
     postgresql:
-      nameOverride: bpdm-edc-db
-      jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-bpdm-edc-db:5432/edc"
+      nameOverride: bpdm-provider-db
+      jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-bpdm-provider-db:5432/edc"
       auth:
         password: "dbpasswordbpdmprovider"
         postgresPassword: "dbpasswordbpdmprovider"
@@ -1358,7 +1342,7 @@ bpdm-edc:
         memory: 1024Mi
 
 dataconsumerOne:
-  enabled: false
+  enabled: true
   seedTestdata: false
   nameOverride: dataconsumer-1
   secrets:
@@ -1811,15 +1795,8 @@ ssi-dim-wallet-stub:
     serviceName: "ssi-dim-wallet-service"
     secretName: "ssi-dim-wallet-secret"
     ingressName: "ssi-dim-wallet-ingress"
-    image:
-      # -- Image repository
-      repository: arena2036.azurecr.io/ssi-dim-wallet-stub
-      # -- PullPolicy
-      pullPolicy: IfNotPresent
-      # -- Image tag (empty one will use "appVersion" value from chart definition)
-      tag: "latest"
     seeding:
-      bpnList: "BPNL00000003AZQP,BPNL00000003AYRE,BPNL00000000BJTL"
+      bpnList: "BPNL00000003AZQP,BPNL00000003AYRE"
     resources:
       requests:
         memory: "1.5Gi"
