@@ -1142,6 +1142,9 @@ bpdm:
             registration:
               client-secret: *bpdmAdminClientSecret
 
+bpdm-edc:
+  enabled: false
+
 dataconsumerOne:
   enabled: true
   seedTestdata: false
@@ -1596,6 +1599,13 @@ ssi-dim-wallet-stub:
     serviceName: "ssi-dim-wallet-service"
     secretName: "ssi-dim-wallet-secret"
     ingressName: "ssi-dim-wallet-ingress"
+    # image:
+    #   # -- Image repository
+    #   repository: arena2036.azurecr.io/ssi-dim-wallet-stub
+    #   # -- PullPolicy
+    #   pullPolicy: IfNotPresent
+    #   # -- Image tag (empty one will use "appVersion" value from chart definition)
+    #   tag: "latest"
     resources:
       requests:
         memory: "1.5Gi"
