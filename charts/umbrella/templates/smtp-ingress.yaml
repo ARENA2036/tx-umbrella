@@ -25,6 +25,19 @@ metadata:
   labels:
     name: smtp4dev-ingress
 spec:
+  {{- if and .Values.smtp4dev.ingress.className (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion) }}
+  ingressClassName: {{ .Values.smtp4dev.ingress.className }}
+  {{- end }}
+  {{- if .Values.smtp4dev.ingress.tls }}
+  tls:
+    {{- range .Values.smtp4dev.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
   rules:
   - host: {{ .Values.smtp4dev.ingress.url }}
     http:
