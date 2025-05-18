@@ -277,9 +277,9 @@ portal:
       # host: "smtp4dev.release24-12.svc.cluster.local"
       host: "smtp.office365.com"
       port: "587"
-      user: "test@arena2036-x.de"
-      senderEmail: "test@arena2036-x.de"
-      password: "userpassword"
+      user: "it@arena2036.de"
+      senderEmail: "it@arena2036.de"
+      password: "Q.744239431169ah"
     portalmigrations:
       resources:
         requests:
@@ -392,10 +392,10 @@ portal:
         smtpServer:
           host: "smtp.office365.com"
           port: "587"
-          user: "test@arena2036-x.de"
-          password: "userpassword"
-          from: "test@arena2036-x.de"
-          replyTo: "test@arena2036-x.de"
+          user: "it@arena2036.de"
+          password: "Q.744239431169ah"
+          from: "it@arena2036.de"
+          replyTo: "it@arena2036.de"
     # -- docs: https://portal-backend.arena2036-x.de/api/administration/swagger/index.html
     # https://portal-backend.arena2036-x.de/api/registration/swagger/index.html
     # https://portal-backend.arena2036-x.de/api/apps/swagger/index.html
@@ -745,10 +745,10 @@ sharedidp:
         mailing:
           host: "smtp.office365.com"
           port: "587"
-          username: "test@arena2036-x.de"
-          password: "userpassword"
-          from: "test@arena2036-x.de"
-          replyTo: "test@arena2036-x.de"
+          username: "it@arena2036.de"
+          password: "Q.744239431169ah"
+          from: "it@arena2036.de"
+          replyTo: "it@arena2036.de"
       master:
         serviceAccounts:
           provisioning:
