@@ -22,9 +22,16 @@
 name: Stop AKS Cluster(s)
 
 on:
+  push:
+    branches:
+      - 'workflows/manage-aks'
   schedule:
     - cron: "0 18 * * 5"  # Runs every Friday at 18:00 UTC
   workflow_dispatch:
+    inputs:
+      cluster_name:
+        description: 'Cluster name'
+        required: false
 
 jobs:
   stop-cluster:
