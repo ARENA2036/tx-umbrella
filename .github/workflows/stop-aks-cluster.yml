@@ -29,10 +29,9 @@ on:
 jobs:
   stop-cluster:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        cluster: [${{ vars.AKS_CLUSTER_NAMES }}]
-        resource_groups: [${{ vars.AKS_RESOURCE_GROUPS }}]
+    env:
+      CLUSTERS: ${{ vars.AKS_CLUSTER_NAMES }}
+      RESOURCE_GROUPS: "arena2036-x-edc"
 
     steps:
       - name: Checkout repository
@@ -44,4 +43,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Stop AKS Cluster
-        run: az aks stop --name ${{ matrix.cluster }} --resource-group ${{ matrix.resource_groups }}
+        run: |
+           for CLUSTER in $CLUSTERS; do
+            az aks stop --name $CLUSTER --resource-group $RESOURCE_GROUPS
+           done
