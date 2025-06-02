@@ -1,4 +1,4 @@
-[![OverarchingRelease](https://img.shields.io/badge/Release_24.08-blue)](https://github.com/eclipse-tractusx/tractus-x-release/blob/24.08/CHANGELOG.md#2408---2024-08-05)
+[![OverarchingRelease](https://img.shields.io/badge/Release_25.03-blue)](https://github.com/eclipse-tractusx/tractus-x-release/blob/25.03/CHANGELOG.md#2503---2025-03-19)
 
 # Eclipse Tractus-X Umbrella
 
@@ -28,11 +28,12 @@ After the installation, you can refer to the [user guides and tutorials sections
 
 ## Release Compatibility
 
-The versions of the [integrated components](/docs/user/installation/README.md#available-components) correspond to the **overarching [Release 24.08](https://github.com/eclipse-tractusx/tractus-x-release/blob/24.08/CHANGELOG.md#2408---2024-08-05)**.
+The versions of the [integrated components](/docs/user/installation/README.md#available-components) correspond to the **overarching [Release 25.03](https://github.com/eclipse-tractusx/tractus-x-release/blob/25.03/CHANGELOG.md#2503---2025-03-19)**.
 
 ## Purpose
 
 The Umbrella Chart is intended for:
+
 1. **Testing**: Run end-to-end tests for Catena-X services.
 2. **Sandbox Environments**: Create local environments to evaluate and experiment with Catena-X components.
 3. **Development**: Provide a unified setup for contributors and developers working on Tractus-X projects.
@@ -40,8 +41,8 @@ The Umbrella Chart is intended for:
 ## Cluster Setup
 
 - Ensure your cluster meets the updated system requirements:
-    - Kubernetes version `>1.24.x`
-    - Helm version `3.8+`
+  - Kubernetes version `>1.24.x`
+  - Helm version `3.8+`
 
 For detailed setup instructions, refer to the [Setup Guide](/docs/user/setup/README.md).
 
@@ -55,16 +56,9 @@ Assuming you have a running cluster and your `kubectl` context is set to that cl
 > In its current state of development, this chart as well as the following installation guide have been tested on Linux and Mac.
 >
 > **Linux** is the **preferred platform** to install this chart on, as the network setup with Minikube is very straightforward on Linux.
->
-> We are working on testing the chart's reliability on Windows as well and updating the installation guide accordingly.
 
-> **Note**
->
-> In its current state of development, this chart as well as the following installation guide have been tested on Linux and Mac.
->
-> **Linux** is the **preferred platform** to install this chart on, as the network setup with Minikube is very straightforward on Linux.
->
-> We are working on testing the chart's reliability on Windows as well and updating the installation guide accordingly.
+> [!WARNING]
+> As we do not currently test on Windows, we would greatly appreciate any contributions from those who successfully deploy it on Windows.
 
 For detailed setup instructions, refer to the [Setup Guide](/docs/user/setup/README.md).
 

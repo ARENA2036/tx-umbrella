@@ -2,6 +2,8 @@
 
 This guide provides instructions to set up a Kubernetes cluster required for running the Umbrella Chart.
 
+You can also follow the guide with the help of the [tutorial video](https://github.com/eclipse-tractusx/eclipse-tractusx.github.io.largefiles/blob/main/umbrella/video-tutorials/setup.mp4).
+
 ## System Requirements
 
 | CPU (Cores) | Memory (GB) |
@@ -15,11 +17,14 @@ The above specifications are the minimum requirements for a local development se
 > **Note**
 > It is recommended to use Linux or macOS because those two are the most tested platforms with the umbrella.
 
+> [!WARNING]
+> As we do not currently test on Windows, we would greatly appreciate any contributions from those who successfully deploy it on Windows.
+
 - [Linux](#1-linux)
 - [macOS](#2-macos)
   - [using Minikube with Docker Desktop](#option-1-docker-desktop-available)
   - [using K3s with lima](#option-2-no-docker-desktop-available)
-- [Windows](#2-macos)
+- [Windows](#3-windows)
 
 ### 1. Linux
 
@@ -145,11 +150,15 @@ export KUBECONFIG="/Users/YOURUSER/.lima/docker/copied-from-guest/kubeconfig.yam
 
 ### 3. Windows
 
+> [!WARNING]
+> As we do not currently test on Windows, we would greatly appreciate any contributions from those who successfully deploy it on Windows.
+
 For DNS resolution to work correctly on Windows, you have two options:
 
 #### Option 1: Use the Hyper-V Driver
 
 Start Minikube with administrator privileges using the `--driver=hyperv` flag:
+
 ```bash
 minikube start --cpus=4 --memory=6gb --driver=hyperv
 ```
@@ -162,6 +171,7 @@ Alternatively, you can use the native Kubernetes cluster provided by Docker Desk
     - Navigate to **Settings > Kubernetes** and enable the Kubernetes option.
 
 2. Install an NGINX Ingress Controller:
+
    ```bash
    helm upgrade --install ingress-nginx ingress-nginx --repo https://kubernetes.github.io/ingress-nginx --namespace ingress-nginx --create-namespace
    ```
@@ -175,11 +185,13 @@ Alternatively, you can use the native Kubernetes cluster provided by Docker Desk
 After starting Minikube or Docker Desktop Kubernetes, verify the cluster setup:
 
 - Check that your cluster is running:
+
   ```bash
-  kubectl cluster-info
+  minikube kubectl cluster-info
   ```
 
 - Open the Minikube dashboard to monitor resources:
+
   ```bash
   minikube dashboard
   ```
@@ -194,6 +206,6 @@ For networking setup, proceed to the [Network Setup Guide](../network/README.md)
 
 This work is licensed under the [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
 
-* SPDX-License-Identifier: CC-BY-4.0
-* SPDX-FileCopyrightText: 2024 Contributors to the Eclipse Foundation
-* Source URL: <https://github.com/eclipse-tractusx/tractus-x-umbrella>
+- SPDX-License-Identifier: CC-BY-4.0
+- SPDX-FileCopyrightText: 2024 Contributors to the Eclipse Foundation
+- Source URL: <https://github.com/eclipse-tractusx/tractus-x-umbrella>
