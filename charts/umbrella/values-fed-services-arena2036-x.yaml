@@ -915,6 +915,7 @@ iatpmock:
 
 ssi-credential-issuer:
   enabled: true
+  replicaCount: 1
   portalBackendAddress: "https://portal-backend.arena2036-x.de"
   walletAddress: "https://ssi-dim-wallet-stub.arena2036-x.de"
   walletTokenAddress: "https://ssi-dim-wallet-stub.arena2036-x.de/oauth/token"
@@ -968,15 +969,16 @@ ssi-credential-issuer:
       default: "Debug"
   postgresql:
     enabled: true
+    nameOverride: issuer-postgresql
     architecture: standalone
     primary:
       persistence:
         enabled: false
     auth:
       # -- Password for the root username 'postgres'. Secret-key 'postgres-password'.
-      postgrespassword: "rootissuerpassword"
+      postgrespassword: "dbpasswordissuer"
       # -- Password for the non-root username 'issuer'. Secret-key 'password'.
-      password: "issuerpassword"
+      password: "dbpasswordissuer"
 
   centralidp:
     # -- Provide centralidp base address (CX IAM), without trailing '/auth'.
@@ -1787,6 +1789,8 @@ bdrs-server-memory:
 ssi-dim-wallet-stub:
   enabled: true
   wallet:
+    image:
+      tag: "0.0.6"
     replicaCount: 1
     host: ssi-dim-wallet-stub.arena2036-x.de
     nameSpace: "release24-12"
