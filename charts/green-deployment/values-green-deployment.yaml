@@ -1,0 +1,59 @@
+---
+ssi-dim-wallet-stub:
+  version: green
+  enabled: true
+  wallet:
+    image:
+      tag: "0.0.6"
+    replicaCount: 1
+    host: ssi-dim-wallet-stub-demo.arena2036-x.de
+    nameSpace: "blue"
+    appName: "ssi-dim-wallet-stub-green"
+    configName: "ssi-dim-wallet-config"
+    serviceName: "ssi-dim-wallet-service"
+    secretName: "ssi-dim-wallet-secret"
+    ingressName: "ssi-dim-wallet-ingress"
+    seeding:
+      bpnList: "BPNL00000003AZQP,BPNL00000003AYRE"
+    resources:
+      requests:
+        memory: "1.5Gi"
+        cpu: "500m"
+      limits:
+        cpu: 750m
+        memory: 1.5Gi
+    ingress:
+      enabled: false
+      tls:
+        enabled: true
+        name: "ssi-dim-wallet-stub-tx-test-tls"
+      urlPrefix: /
+      className: "webapprouting.kubernetes.azure.com"
+      annotations:
+        # kubernetes.io/ingress.class: addon-http-application-routing
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+    swagger:
+      ui:
+        status: true
+      apiDoc:
+        status: true
+    logLevel: "debug"
+    environment: "default"
+    baseWalletBpn: "BPNL00000003CRHK"
+    didHost: "ssi-dim-wallet-stub-demo.arena2036-x.de"
+    stubUrl: "https://ssi-dim-wallet-stub-demo.arena2036-x.de"
+    statusListVcId: "8a6c7486-1e1f-4555-bdd2-1a178182651e"
+    tokenExpiryTime: "5"
+    portal:
+      waitTime: "60"
+      host: "https://portal-backend.arena2036-x.de"
+      clientId: "sa-cl2-05"
+      clientSecret: "changeme"
+    keycloak:
+      realm: "CX-Central"
+      authServerUrl: "https://centralidp.arena2036-x.de/auth"
+    service:
+      type: ClusterIP
+      port: 8080
+  keycloak:
+    enabled: false
