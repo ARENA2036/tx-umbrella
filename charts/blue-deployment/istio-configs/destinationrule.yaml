@@ -1,0 +1,13 @@
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: ssi-dim-wallet-destination
+spec:
+  host: ssi-dim-wallet-stub-demo.arena2036-x.de
+  subsets:
+    - name: blue
+      labels:
+        app: ssi-dim-wallet-stub-blue
+    - name: green
+      labels:
+        app: ssi-dim-wallet-stub-green
