@@ -4,10 +4,10 @@ ssi-dim-wallet-stub:
   enabled: true
   wallet:
     image:
-      tag: "0.0.6"
+      tag: ""
     replicaCount: 1
-    host: ssi-dim-wallet-stub-demo.arena2036-x.de
-    nameSpace: "blue"
+    host: ssi-dim-wallet-stub-green.arena2036-x.de
+    nameSpace: "green"
     appName: "ssi-dim-wallet-stub-green"
     configName: "ssi-dim-wallet-config"
     serviceName: "ssi-dim-wallet-service"
@@ -23,7 +23,7 @@ ssi-dim-wallet-stub:
         cpu: 750m
         memory: 1.5Gi
     ingress:
-      enabled: false
+      enabled: true
       tls:
         enabled: true
         name: "ssi-dim-wallet-stub-tx-test-tls"
@@ -40,8 +40,8 @@ ssi-dim-wallet-stub:
     logLevel: "debug"
     environment: "default"
     baseWalletBpn: "BPNL00000003CRHK"
-    didHost: "ssi-dim-wallet-stub-demo.arena2036-x.de"
-    stubUrl: "https://ssi-dim-wallet-stub-demo.arena2036-x.de"
+    didHost: "ssi-dim-wallet-stub-green.arena2036-x.de"
+    stubUrl: "https://ssi-dim-wallet-stub-green.arena2036-x.de"
     statusListVcId: "8a6c7486-1e1f-4555-bdd2-1a178182651e"
     tokenExpiryTime: "5"
     portal:
