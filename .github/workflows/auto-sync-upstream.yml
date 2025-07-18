@@ -1,0 +1,49 @@
+name: Auto sync from upstream
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out arena2036-x-infra
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+          ref: arena2036-x-infra
+
+      - name: Set Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Checkout to sync branch
+        run: |
+          git checkout -b sync-upstream origin/arena2036-x-infra
+
+      - name: Add upstream and fetch
+        run: |
+          git remote add upstream https://github.com/eclipse-tractusx/tractus-x-umbrella.git
+          git fetch upstream main
+
+      - name: Merge upstream/main
+        run: |
+          git merge upstream/main
+      
+      - name: Push sync branch to your fork
+        run: |
+          git push origin sync-upstream
+
+      - name: Create PR into arena2036-x-infra
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: arena2036-x-infra
+          branch: sync-upstream
+          title: "Rebase arena2036-x-infra on upstream/main"
+          body: |
+            This PR rebases `arena2036-x-infra` on top of the latest `upstream/main`.
+          commit-message: "Rebase fork branch on upstream/main"
