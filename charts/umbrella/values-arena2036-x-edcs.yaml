@@ -216,7 +216,7 @@ portal:
             # BPN is retrieved from participant id of the dataconsumerOne
             dataconsumerOne:
               name: "BPN_OEM_C"
-              connectorUrl: "http://dataconsumer-1-controlplane.tx.test/api/v1/dsp"
+              connectorUrl: "http://dataconsumer-controlplane.tx.test/api/v1/dsp"
               connectorName: "BPN OEM C Connector"
             # BPN is retrieved from participant id of the tx-data-provider
             tx-data-provider:
@@ -1147,11 +1147,11 @@ bpdm-edc:
 dataconsumerOne:
   enabled: true
   seedTestdata: false
-  nameOverride: dataconsumer-1
+  nameOverride: dataconsumer
   secrets:
     edc-wallet-secret: changeme
   tractusx-connector:
-    nameOverride: dataconsumer-1-edc
+    nameOverride: dataconsumer-edc
     participant:
       id: BPNL00000003AZQP
     iatp:
@@ -1181,7 +1181,7 @@ dataconsumerOne:
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt-prod
             # kubernetes.io/ingress.class: addon-http-application-routing
-          hostname: "dataconsumer-1-controlplane.arena2036-x.de"
+          hostname: "dataconsumer-controlplane.arena2036-x.de"
           endpoints:
             - default
             - protocol
@@ -1198,7 +1198,7 @@ dataconsumerOne:
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt-prod
             # kubernetes.io/ingress.class: addon-http-application-routing
-          hostname: "dataconsumer-1-dataplane.arena2036-x.de"
+          hostname: "dataconsumer-dataplane.arena2036-x.de"
           endpoints:
             - default
             - public
@@ -1211,22 +1211,22 @@ dataconsumerOne:
         verifier:
           publickey_alias: tokenSignerPublicKey
     postgresql:
-      nameOverride: dataconsumer-1-db
-      jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataconsumer-1-db:5432/edc"
+      nameOverride: dataconsumer-db
+      jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataconsumer-db:5432/edc"
       auth:
         password: "dbpassworddataconsumerone"
         postgresPassword: "dbpassworddataconsumerone"
     vault:
       hashicorp:
-        url: http://edc-dataconsumer-1-vault:8200
+        url: http://edc-dataconsumer-vault:8200
       secretNames:
         transferProxyTokenSignerPrivateKey: tokenSignerPrivateKey
         transferProxyTokenSignerPublicKey: tokenSignerPublicKey
         transferProxyTokenEncryptionAesKey: tokenEncryptionAesKey
 
   vault:
-    nameOverride: edc-dataconsumer-1-vault
-    fullnameOverride: edc-dataconsumer-1-vault
+    nameOverride: edc-dataconsumer-vault
+    fullnameOverride: edc-dataconsumer-vault
     enabled: true
     server:
       postStart: []
