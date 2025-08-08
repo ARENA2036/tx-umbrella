@@ -18,7 +18,7 @@
 # #############################################################################
 ---
 portal:
-  enabled: true
+  enabled: false
   replicaCount: 1
   postgresql:
     nameOverride: "portal-backend-postgresql"
@@ -60,7 +60,7 @@ portal:
     portal:
       image:
         name: "constructx.azurecr.io/portal-frontend"
-        portaltag: "latest-v4"
+        portaltag: "latest"
         pullPolicy: "Always"
         pullSecrets: []
       resources:
@@ -73,7 +73,7 @@ portal:
     assets:
       image:
         name: "constructx.azurecr.io/portal-assets"
-        assetstag: "latest-v4"
+        assetstag: "latest"
         pullPolicy: "Always"
         pullSecrets: []
       resources:
@@ -274,10 +274,10 @@ portal:
             encryptionKey:
               "d2e27d71b018cb36029184852f1baa3e26891be94718f77de4c7cc6c882fe317"
     mailing:
-      host: "smtpdev.release25-03.svc.local"
+      host: "smtp.tx.test"
       port: "587"
-      user: "info@arena.com"
-      senderEmail: "info@arena.com"
+      user: "smtp@tx.test"
+      senderEmail: "smtp@tx.test"
       password: "password"
     portalmigrations:
       resources:
@@ -297,12 +297,12 @@ portal:
               # BPN is retrieved from participant id of the dataconsumerOne
               dataconsumerOne:
                 name: "BPN_OEM_C"
-                connectorUrl: "http://dataconsumer-1-controlplane.construct-x.net/api/v1/dsp"
+                connectorUrl: "http://dataconsumer-x-controlplane.construct-x.net/api/v1/dsp"
                 connectorName: "BPN OEM C Connector"
               # BPN is retrieved from participant id of the tx-data-provider
               tx-data-provider:
                 name: "BPN_OEM_A"
-                connectorUrl: "http://dataprovider-controlplane.construct-x.net/api/v1/dsp"
+                connectorUrl: "http://dataprovider-x-controlplane.construct-x.net/api/v1/dsp"
                 connectorName: "BPN OEM A Connector"
               # BPN is retrieved from participant id of the dataconsumerTwo
               dataconsumerTwo:
@@ -404,12 +404,12 @@ portal:
     provisioning:
       sharedRealm:
         smtpServer:
-          host: "smtpdev.release25-03.svc.local"
+          host: "smtp.tx.test"
           port: "587"
-          user: "info@arena.com"
+          user: "smtp@tx.test"
           password: "password"
-          from: "info@arena.com"
-          replyTo: "info@arena.com"
+          from: "smtp@tx.test"
+          replyTo: "smtp@tx.test"
     # -- docs: https://portal-backend.construct-x.net/api/administration/swagger/index.html
     # https://portal-backend.construct-x.net/api/registration/swagger/index.html
     # https://portal-backend.construct-x.net/api/apps/swagger/index.html
@@ -466,7 +466,7 @@ portal:
                 port: 8080
 
 centralidp:
-  enabled: true
+  enabled: false
   keycloak:
     nameOverride: "centralidp"
     replicaCount: 1
@@ -711,7 +711,7 @@ centralidp:
         pullPolicy: IfNotPresent
 
 sharedidp:
-  enabled: true
+  enabled: false
   keycloak:
     nameOverride: "sharedidp"
     auth:
@@ -822,12 +822,12 @@ sharedidp:
           username: "cx-operator@tx.test"
           password: "tractusx-umbr3lla!"
         mailing:
-          host: "smtpdev.release25-03.svc.local"
+          host: "smtp.tx.test"
           port: "587"
-          username: "info@arena.com"
+          username: "smtp@tx.test"
           password: "password"
-          from: "info@arena.com"
-          replyTo: "info@arena.com"
+          from: "smtp@tx.test"
+          replyTo: "smtp@tx.test"
       master:
         serviceAccounts:
           provisioning:
@@ -840,7 +840,7 @@ sharedidp:
         pullPolicy: Always 
 
 bpndiscovery:
-  enabled: true
+  enabled: false
   enablePostgres: true
   bpndiscovery:
     host: semantics.construct-x.net
@@ -890,7 +890,7 @@ bpndiscovery:
       postgresPassword: "dbpasswordbpndiscovery"
 
 discoveryfinder:
-  enabled: true
+  enabled: false
   enablePostgres: true
   discoveryfinder:
     authentication: true
@@ -935,7 +935,7 @@ discoveryfinder:
       postgresPassword: "dbpassworddiscoveryfinder"
 
 selfdescription:
-  enabled: true
+  enabled: false
   sdfactory:
     secret:
       # -- JWK Set URI
@@ -970,7 +970,7 @@ selfdescription:
 
 
 ssi-credential-issuer:
-  enabled: true
+  enabled: false
   replicaCount: 1
   portalBackendAddress: "https://portal-backend.construct-x.net"
   walletAddress: "https://ssi-dim-wallet-stub.construct-x.net"
@@ -1063,7 +1063,7 @@ ssi-credential-issuer:
 # Set up services for a business partner pool, golden record process
 # and a gate with which the Portal and the users can share business partner data
 bpdm:
-  enabled: true
+  enabled: false
   postgres:
     # We use the default name for BPDM postgres
     fullnameOverride: &bpdmPostgresName "bpdm-postgres"
@@ -1269,13 +1269,13 @@ bpdm:
               client-secret: "changeme"
 
 dataconsumerOne:
-  enabled: false
+  enabled: true
   seedTestdata: false
-  nameOverride: dataconsumer-1
+  nameOverride: dataconsumer-x
   secrets:
     edc-wallet-secret: changeme
   tractusx-connector:
-    nameOverride: dataconsumer-1-edc
+    nameOverride: dataconsumer-x-edc
     participant:
       id: BPNL00000003AZQP
     iatp:
@@ -1304,7 +1304,7 @@ dataconsumerOne:
         - enabled: true
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt-prod
-          hostname: "dataconsumer-1-controlplane.construct-x.net"
+          hostname: "dataconsumer-x-controlplane.construct-x.net"
           endpoints:
             - default
             - protocol
@@ -1320,7 +1320,7 @@ dataconsumerOne:
         - enabled: true
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt-prod
-          hostname: "dataconsumer-1-dataplane.construct-x.net"
+          hostname: "dataconsumer-x-dataplane.construct-x.net"
           endpoints:
             - default
             - public
@@ -1333,22 +1333,22 @@ dataconsumerOne:
         verifier:
           publickey_alias: tokenSignerPublicKey
     postgresql:
-      nameOverride: dataconsumer-1-db
-      jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataconsumer-1-db:5432/edc"
+      nameOverride: dataconsumer-x-db
+      jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataconsumer-x-db:5432/edc"
       auth:
         password: "dbpassworddataconsumerone"
         postgresPassword: "dbpassworddataconsumerone"
     vault:
       hashicorp:
-        url: http://edc-dataconsumer-1-vault:8200
+        url: http://edc-dataconsumer-x-vault:8200
       secretNames:
         transferProxyTokenSignerPrivateKey: tokenSignerPrivateKey
         transferProxyTokenSignerPublicKey: tokenSignerPublicKey
         transferProxyTokenEncryptionAesKey: tokenEncryptionAesKey
 
   vault:
-    nameOverride: edc-dataconsumer-1-vault
-    fullnameOverride: edc-dataconsumer-1-vault
+    nameOverride: edc-dataconsumer-x-vault
+    fullnameOverride: edc-dataconsumer-x-vault
     enabled: true
     server:
       postStart: []
@@ -1359,19 +1359,19 @@ dataconsumerOne:
   simple-data-backend:
     enabled: false
 
-dataproviderOne:
-  enabled: false
+tx-data-provider:
+  enabled: true
   seedTestdata: true
-  backendUrl: http://{{ .Release.Name }}-dataprovider-submodelserver:8080
-  registryUrl: http://{{ .Release.Name }}-dataprovider-dtr:8080/api/v3
-  controlplanePublicUrl: http://{{ .Release.Name }}-dataprovider-edc-controlplane:8084
-  controlplaneManagementUrl: http://{{ .Release.Name }}-dataprovider-edc-controlplane:8081
-  dataplaneUrl: http://{{ .Release.Name }}-dataprovider-edc-dataplane:8081
-  nameOverride: dataprovider
+  backendUrl: http://{{ .Release.Name }}-dataprovider-x-submodelserver:8080
+  registryUrl: http://{{ .Release.Name }}-dataprovider-x-dtr:8080/api/v3
+  controlplanePublicUrl: http://{{ .Release.Name }}-dataprovider-x-edc-controlplane:8084
+  controlplaneManagementUrl: http://{{ .Release.Name }}-dataprovider-x-edc-controlplane:8081
+  dataplaneUrl: http://{{ .Release.Name }}-dataprovider-x-edc-dataplane:8081
+  nameOverride: dataprovider-x
   secrets:
     edc-wallet-secret: changeme
   tractusx-connector:
-    nameOverride: dataprovider-edc
+    nameOverride: dataprovider-x-edc
     participant:
       id: BPNL00000003AYRE
     iatp:
@@ -1400,7 +1400,7 @@ dataproviderOne:
         - enabled: true
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt-prod
-          hostname: "dataprovider-controlplane.construct-x.net"
+          hostname: "dataprovider-x-controlplane.construct-x.net"
           endpoints:
             - default
             - protocol
@@ -1416,7 +1416,7 @@ dataproviderOne:
         - enabled: true
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt-prod
-          hostname: "dataprovider-dataplane.construct-x.net"
+          hostname: "dataprovider-x-dataplane.construct-x.net"
           endpoints:
             - default
             - public
@@ -1429,49 +1429,68 @@ dataproviderOne:
         verifier:
           publickey_alias: tokenSignerPublicKey
     postgresql:
-      nameOverride: dataprovider-db
-      jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataprovider-db:5432/edc"
+      nameOverride: dataprovider-x-db
+      jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataprovider-x-db:5432/edc"
       auth:
-        password: "dbpasswordtxdataprovider"
-        postgresPassword: "dbpasswordtxdataprovider"
+        password: "dbpasswordtxdataprovider-x"
+        postgresPassword: "dbpasswordtxdataprovider-x"
     vault:
       hashicorp:
-        url: http://edc-dataprovider-vault:8200
+        url: http://edc-dataprovider-x-vault:8200
       secretNames:
         transferProxyTokenSignerPrivateKey: tokenSignerPrivateKey
         transferProxyTokenSignerPublicKey: tokenSignerPublicKey
         transferProxyTokenEncryptionAesKey: tokenEncryptionAesKey
 
   vault:
-    nameOverride: edc-dataprovider-vault
-    fullnameOverride: edc-dataprovider-vault
+    nameOverride: edc-dataprovider-x-vault
+    fullnameOverride: edc-dataprovider-x-vault
     enabled: true
     server:
       postStart: []
 
   digital-twin-registry:
-    nameOverride: dataprovider-dtr
+    nameOverride: dataprovider-x-dtr
     postgresql:
-      nameOverride: dataprovider-dtr-db
+      nameOverride: dataprovider-x-dtr-db
       auth:
-        password: "dbpassworddtrdataprovider"
-        existingSecret: dataprovider-secret-dtr-postgres-init
+        password: "dbpassworddtrdataprovider-x"
+        existingSecret: dataprovider-x-secret-dtr-postgres-init
     registry:
-      host: dataprovider-dtr.construct-x.net
+      ingress:
+        enabled: true
+        className: ""
+        annotations:
+          # uncomment the following line for tls
+          kubernetes.io/ingress.class: webapprouting.kubernetes.azure.com
+          # nginx.ingress.kubernetes.io/proxy-body-size: 50m
+          nginx.ingress.kubernetes.io/rewrite-target: /$2
+          nginx.ingress.kubernetes.io/x-forwarded-prefix: /semantics/registry
+          cert-manager.io/cluster-issuer: letsencrypt-prod
+        hosts:
+          - host: "dataprovider-x-dtr.construct-x.net"
+            paths:
+              - path: "/semantics/registry(/|$)(.*)"
+                pathType: "Prefix"
+            tls:
+            - secretName: "dataprovider-x-dtr.tx.test-tls"
+              hosts:
+                - "dataprovider-x-dtr.construct-x.net"
+      host: dataprovider-x-dtr.construct-x.net
 
   simple-data-backend:
-    nameOverride: dataprovider-submodelserver
+    nameOverride: dataprovider-x-submodelserver
     ingress:
       enabled: true
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-prod
       className: "webapprouting.kubernetes.azure.com"
       tls:
-        - secretName: "submodelserver.tx.arena2036-tls"
+        - secretName: "submodelserver.tx.constructx-tls"
           hosts:
-            - "dataprovider-submodelserver.construct-x.net"
+            - "dataprovider-x-submodelserver.construct-x.net"
       hosts:
-        - host: "dataprovider-submodelserver.construct-x.net"
+        - host: "dataprovider-x-submodelserver.construct-x.net"
           paths:
             - path: "/"
               pathType: "Prefix"
@@ -1483,14 +1502,6 @@ dataproviderOne:
         cpu: 500m
         memory: 1024Mi
 
-dataproviderTwo:
-  enabled: false
-
-dataproviderThree:
-  enabled: false
-
-dataproviderFour:
-  enabled: false
 
 semantic-hub:
   enabled: false
@@ -1614,14 +1625,8 @@ dataconsumerTwo:
   simple-data-backend:
     enabled: false
 
-dataconsumerThree:
-  enabled: false
-
-dataconsumerFour:
-  enabled: false
-
 pgadmin4:
-  enabled: true
+  enabled: false
   env:
     email: pgadmin4@txtest.org
     password: tractusxpgadmin4
@@ -1645,7 +1650,7 @@ pgadmin4:
 bdrs-server-memory:
   nameOverride: bdrs-server
   fullnameOverride: bdrs-server
-  enabled: true
+  enabled: false
   seeding:
     url: "http://bdrs-server:8081"
     enabled: true
@@ -1716,7 +1721,7 @@ bdrs-server-memory:
           enabled: true
 
 ssi-dim-wallet-stub:
-  enabled: true
+  enabled: false
   wallet:
     replicaCount: 1
     image:
