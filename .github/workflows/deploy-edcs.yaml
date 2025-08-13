@@ -25,8 +25,8 @@ on:
       - 'charts/**'
       - '!**/README.md'
       - '.github/workflows/helm-checks.yaml'
-    # branches:
-    #   - main
+    branches:
+      - arena2036-x-infra
   workflow_dispatch:
     inputs:
       cluster_context:
