@@ -21,9 +21,9 @@ name: Install EDC (Install or Upgrade)
 
 on:
   push:
-    branches:
-      - main
-      - feature/construct-x-infra
+    # branches:
+    #   - main
+    #   - feature/construct-x-infra
   # pull_request:
   #   paths:
   #     - 'charts/**'
