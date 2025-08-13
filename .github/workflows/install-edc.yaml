@@ -70,7 +70,7 @@ on:
         type: string
       namespace:
         description: 'the namespace where the edc is to be deployed'
-        default: 'release25-03'
+        default: 'constructx-edcs'
         required: false
         type: string
 
