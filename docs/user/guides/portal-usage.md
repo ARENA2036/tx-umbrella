@@ -2,6 +2,13 @@
 
 This guide provides instructions for accessing and using the Portal subset of the Umbrella Chart.
 
+You can also follow the guide with the help of the [tutorial video](https://github.com/eclipse-tractusx/eclipse-tractusx.github.io.largefiles/blob/main/umbrella/video-tutorials/portal-Installation.mp4).
+
+https://github.com/user-attachments/assets/49a5e138-d343-4cdc-a57d-5eef19c7df36
+> [!WARNING]
+> The video may not be displayed depending on your browser and browser version, try using different one if you are not able to see it.
+> You can also dowload it from the previus link.
+
 ## Overview
 
 The Portal subset is designed to manage participant onboarding and provide a user-friendly interface for interacting with the Catena-X ecosystem.
@@ -59,22 +66,30 @@ The relevant hosts are the following:
 
 ### URLs
 
-- Portal Frontend:
-  ```
-  http://portal.tx.test
-  ```
+- Portal Frontend: <http://portal.tx.test>
+
 - Backend API Endpoints:
-    - Administration: `http://portal-backend.tx.test/api/administration/swagger/index.html`
-    - Registration: `http://portal-backend.tx.test/api/registration/swagger/index.html`
-    - Apps: `http://portal-backend.tx.test/api/apps/swagger/index.html`
-    - Services: `http://portal-backend.tx.test/api/services/swagger/index.html`
-    - Notifications: `http://portal-backend.tx.test/api/notification/swagger/index.html`
+  - Administration: <http://portal-backend.tx.test/api/administration/swagger/index.html>
+  - Registration: <http://portal-backend.tx.test/api/registration/swagger/index.html>
+  - Apps: <http://portal-backend.tx.test/api/apps/swagger/index.html>
+  - Services: <http://portal-backend.tx.test/api/services/swagger/index.html>
+  - Notifications: <http://portal-backend.tx.test/api/notification/swagger/index.html>
 
 ### Default Credentials
 
 Use the following credentials for the initial login as a CX-Operator:
-- **Username**: `cx-operator@tx.test`
-- **Password**: `tractusx-umbr3lla!`
+
+**Username**:
+
+```text
+cx-operator@tx.test
+```
+
+**Password**:
+
+```text
+tractusx-umbr3lla!
+```
 
 > **Note**
 > In case that you have TLS enabled (see [Self-signed TLS setup (Optional)](../network/tls)), make sure to accept the risk of the self-signed certificates for all the hosts before performing the first login:
@@ -97,18 +112,33 @@ You can access the Keycloak admin consoles using the following URLs:
 
 Use the following credentials to log in to the admin consoles:
 
-- **Username**: `admin`
+- **Username**:
+
+```text
+admin
+```
 
 - **Passwords**:
-  - **CentralIdP**: `adminconsolepwcentralidp`
-  - **SharedIdP**: `adminconsolepwsharedidp`
+
+**CentralIdP**:
+
+```text
+adminconsolepwcentralidp
+```
+
+**SharedIdP**:
+
+```text
+adminconsolepwsharedidp
+```
 
 ## Performing Participant Onboarding
 
 The Portal allows onboarding participants by inviting them to join the network. To send invitations:
+
 1. Log in to the Portal at `http://portal.tx.test`.
 2. Navigate to the participant management section.
-3. When a new request is sent to a new participant, it will be received an email which can be viewed at `http://smtp.tx.test`. 
+3. When a new request is sent to a new participant, it will be received an email which can be viewed at `http://smtp.tx.test`.
 
 > **Note**
 > Since the onboarding process requires the [Clearinghouse](https://github.com/eclipse-tractusx/portal-assets/blob/v2.1.0/docs/developer/Technical%20Documentation/Interface%20Contracts/Clearinghouse.md) to work properly, but ClearingHouse currently isn't available as a FOSS application you can skip the step with the following SQL Script which must be executed against the portal database.
@@ -141,18 +171,13 @@ FROM applications a;
 
 ### Verifying Frontend Access
 
-- Open the Portal frontend in your browser:
-  ```
-  http://portal.tx.test
-  ```
+- Open the Portal frontend in your browser: <http://portal.tx.test>
+
 - Log in using the default credentials provided above.
 
 ### Backend API
 
-- Access the Swagger UI for backend APIs and test endpoints:
-  ```
-  http://portal-backend.tx.test/api/administration/swagger/index.html
-  ```
+- Access the Swagger UI for backend APIs and test endpoints: <http://portal-backend.tx.test/api/administration/swagger/index.html>
 
 ## Notes
 
@@ -165,6 +190,6 @@ For more details on Portal configuration, refer to the [Portal Subset Installati
 
 This work is licensed under the [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
 
-* SPDX-License-Identifier: CC-BY-4.0
-* SPDX-FileCopyrightText: 2024 Contributors to the Eclipse Foundation
-* Source URL: <https://github.com/eclipse-tractusx/tractus-x-umbrella>
+- SPDX-License-Identifier: CC-BY-4.0
+- SPDX-FileCopyrightText: 2024 Contributors to the Eclipse Foundation
+- Source URL: <https://github.com/eclipse-tractusx/tractus-x-umbrella>
