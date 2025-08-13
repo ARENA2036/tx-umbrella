@@ -21,13 +21,14 @@ name: Install EDC (Install or Upgrade)
 
 on:
   push:
+    branches:
+      - arena2036-x-infra
   # pull_request:
   #   paths:
   #     - 'charts/**'
   #     - '!**/README.md'
   #     - '.github/workflows/helm-checks.yaml'
-    # branches:
-    #   - main
+    
   workflow_dispatch:
     inputs:
       cluster_context:
@@ -100,7 +101,7 @@ jobs:
         run: |
           # Set your azure subscription
           az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          az aks get-credentials --resource-group ${{ secrets.EDC_RESOURCE_GROUP }} --name ${{ secrets.EDC_CLUSTER_CONTEXT }} --overwrite-existing 
+          az aks get-credentials --resource-group ${{ vars.EDC_RESOURCE_GROUP }} --name ${{ vars.EDC_CLUSTER_CONTEXT }} --overwrite-existing 
 
       - name: Set up Helm
         uses: azure/setup-helm@b7246b12e77f7134dc2d460a3d5bad15bbe29390 # v4.1.0
@@ -113,8 +114,11 @@ jobs:
           fetch-depth: 0
       
       - name: Deploy EDC
-        with:
-          context: ./hack/
+        working-directory: hack/
         run: |
+          chmod +x ./deploy-edcs.sh
           echo "Running deployment script..."
-          ./deploy-edcs.sh ${{ github.event.inputs.cluster_context }} ${{ github.event.inputs.deployment_name }} ${{ github.event.inputs.deployment_type }} ${{ github.event.inputs.helm_values_file }} ${{ github.event.inputs.namespace }}
+          ./deploy-edcs.sh ${{ vars.EDC_CLUSTER_CONTEXT }} umbrella-edc upgrade values-arena2036-x-edcs.yaml release24-12
+
+
+##  ./deploy-edcs.sh ${{ github.event.inputs.cluster_context }} ${{ github.event.inputs.deployment_name }} ${{ github.event.inputs.deployment_type }} ${{ github.event.inputs.helm_values_file }} ${{ github.event.inputs.namespace }}
