@@ -112,8 +112,7 @@ jobs:
           fetch-depth: 0
       
       - name: Deploy EDC
-        with:
-        context: ./hack/
         run: |
+          cd ./hack/
           echo "Running deployment script..."
           ./deploy-edcs.sh ${{ github.event.inputs.cluster_context }} ${{ github.event.inputs.deployment_name }} ${{ github.event.inputs.deployment_type }} ${{ github.event.inputs.helm_values_file }} ${{ github.event.inputs.namespace }}
