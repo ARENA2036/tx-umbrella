@@ -18,51 +18,70 @@
 # #############################################################################
 ---
 
+portal:
+  enabled: true
+  # -- uncomment the following for SMTP mail mock 
+  # backend:
+      # mailing:
+        # host: "smtp4dev"
+        # port: "25"
+        # user: "portal-user"
+        # senderEmail: "portal-admin@tx.test"
+        # password: "portal-password"
+
+  # -- uncomment the following for persistance
+  # postgresql:
+  #   primary:
+  #     persistence:
+  #       enabled: true
+
 centralidp:
-  enabled: false
-
-# Replace by ssi-dim-wallet-stub
-bdrs-server-memory:
-  enabled: false
-
-dataconsumerOne:
   enabled: true
-    # -- uncomment the following for persistence
-    # postgresql:
-    #   primary:
-    #     persistence:
-    #       enabled: true
-
-tx-data-provider:
-  seedTestdata: true
-  enabled: true
-  # -- uncomment the following for persistence
-    # postgresql:
-    #   primary:
-    #     persistence:
-    #       enabled: true
-  # digital-twin-registry:
+  # -- uncomment the following for persistance
+  # keycloak:
   #   postgresql:
   #     primary:
   #       persistence:
   #         enabled: true
 
-dataconsumerTwo:
-  enabled: false
-    # -- uncomment the following for persistence
-    # postgresql:
-    #   primary:
-    #     persistence:
-    #       enabled: true
+sharedidp:
+  enabled: true
+  # -- uncomment the following for persistance
+  # keycloak:
+  #   postgresql:
+  #     primary:
+  #       persistence:
+  #         enabled: true
 
 pgadmin4:
   enabled: true
-  # -- uncomment the following for persistence
+  # -- uncomment the following for persistance
   # persistentVolume:
   #   enabled: true
 
+# Interfaces are disabled by default (other than IAM)
+
+# Set 'enabled' to true if onboarding is required
+bpdm:
+  enabled: false
+
+bdrs-server-memory:
+  enabled: false
+
+# Set 'enabled' to true if onboarding is required
+selfdescription:
+  enabled: false
+
+bpndiscovery:
+  enabled: false
+
+discoveryfinder:
+  enabled: false
+
+# Set 'enabled' to true if onboarding is required
 ssi-credential-issuer:
   enabled: false
 
-identity-and-trust-bundle:
-  enabled: true
+# Set 'enabled' to true if onboarding is required
+ssi-dim-wallet-stub:
+  enabled: false
