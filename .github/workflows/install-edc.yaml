@@ -17,14 +17,15 @@
 # SPDX-License-Identifier: Apache-2.0
 # #############################################################################
 ---
-name: Deploy EDCs (Install or Upgrade)
+name: Install EDC (Install or Upgrade)
 
 on:
-  pull_request:
-    paths:
-      - 'charts/**'
-      - '!**/README.md'
-      - '.github/workflows/helm-checks.yaml'
+  push:
+  # pull_request:
+  #   paths:
+  #     - 'charts/**'
+  #     - '!**/README.md'
+  #     - '.github/workflows/helm-checks.yaml'
     # branches:
     #   - main
   workflow_dispatch:
@@ -113,7 +114,7 @@ jobs:
       
       - name: Deploy EDC
         with:
-        context: ./hack/
+          context: ./hack/
         run: |
           echo "Running deployment script..."
           ./deploy-edcs.sh ${{ github.event.inputs.cluster_context }} ${{ github.event.inputs.deployment_name }} ${{ github.event.inputs.deployment_type }} ${{ github.event.inputs.helm_values_file }} ${{ github.event.inputs.namespace }}
