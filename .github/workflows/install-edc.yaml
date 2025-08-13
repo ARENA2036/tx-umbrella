@@ -20,7 +20,7 @@
 name: Install EDC (Install or Upgrade)
 
 on:
-  push:
+  # push:
     # branches:
     #   - main
     #   - feature/construct-x-infra
