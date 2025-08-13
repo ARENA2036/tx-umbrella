@@ -86,8 +86,3 @@ fi
 ########## Helm deployment configurations End ###################
 
 echo "Script execution Finished!!"
-
-
-
-
-
