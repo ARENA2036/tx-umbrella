@@ -21,9 +21,9 @@ name: Install EDC (Install or Upgrade)
 
 on:
   # push:
-    # branches:
-    #   - main
-    #   - arena2036-x-infra
+  #   branches:
+  #     - main
+  #     - arena2036-x-infra
   # pull_request:
   #   paths:
   #     - 'charts/**'
