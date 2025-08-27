@@ -1,6 +1,9 @@
 name: Auto sync from upstream
 
 on:
+  push:
+    branches:
+      - arena2036-x-infra
   workflow_dispatch:
 
 jobs:
