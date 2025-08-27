@@ -29,22 +29,22 @@ jobs:
         run: |
           git checkout -b sync-upstream origin/arena2036-x-infra
 
-      - name: Rebase upstream/main
+      - name: Merge upstream main
         run: |
-          git rebase upstream/main
-
+          git merge upstream/main -m "Merge upstream/main into sync-upstream" || echo "Merge conflicts detected; please resolve manually"
+        continue-on-error: true
       - name: Push sync branch to your fork
         run: |
           git push origin sync-upstream --force
 
       # Config to create PR 
-      # - name: Create PR into arena2036-x-infra
-      #   uses: peter-evans/create-pull-request@v6
-      #   with:
-      #     token: ${{ secrets.GITHUB_TOKEN }}
-      #     base: arena2036-x-infra
-      #     branch: sync-upstream
-      #     title: "Rebase arena2036-x-infra on upstream/main"
-      #     body: |
-      #       This PR rebases `arena2036-x-infra` on top of the latest `upstream/main`.
-      #     commit-message: "Rebase fork branch on upstream/main"
+      - name: Create PR into arena2036-x-infra
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: arena2036-x-infra
+          branch: sync-upstream
+          title: "Rebase arena2036-x-infra on upstream/main"
+          body: |
+            This PR rebases `arena2036-x-infra` on top of the latest `upstream/main`.
+          commit-message: "Rebase fork branch on upstream/main"
