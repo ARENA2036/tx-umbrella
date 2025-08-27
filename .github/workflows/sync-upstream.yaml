@@ -6,6 +6,10 @@ on:
       - arena2036-x-infra
   workflow_dispatch:
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -35,7 +39,9 @@ jobs:
       - name: Merge upstream main
         run: |
           git merge upstream/main -m "Merge upstream/main into sync-upstream" || echo "Merge conflicts detected; please resolve manually"
-        continue-on-error: true
+          git add -A 
+          git commit -m "Merge upstream/main into sync-upstream (auto-sync, may contain conflicts)" || echo "No commit created"
+  
       - name: Push sync branch to your fork
         run: |
           git push origin sync-upstream --force
