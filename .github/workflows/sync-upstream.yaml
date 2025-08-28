@@ -1,9 +1,8 @@
 name: Auto sync from upstream
 
 on:
-  push:
-    branches:
-      - arena2036-x-infra
+  schedule:
+    - cron: 0 9 * * 1
   workflow_dispatch:
 
 permissions:
