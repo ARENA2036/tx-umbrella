@@ -150,26 +150,47 @@ jobs:
           # ALL_VALUES_FILES="$VALUE_FILES,$SECRETFILESPATH"
 
 
-          # Build Helm values arguments for multiple files (comma-separated)
+          # Build Helm values arguments
           HELM_VALUES_ARGS=""
-              IFS=',' read -ra FILE_ARRAY <<< "$VALUE_FILES"
-              for f in "${FILE_ARRAY[@]}"; do
-                HELM_VALUES_ARGS="$HELM_VALUES_ARGS --values $f"
-              done
+          IFS=',' read -ra FILE_ARRAY <<< "$VALUE_FILES"
+          for f in "${FILE_ARRAY[@]}"; do
+            HELM_VALUES_ARGS="$HELM_VALUES_ARGS --values $f"
+          done
 
-          # Handle rollback option
+          # Rollback/atomic option
           if [ "$ROLLBACK" = "true" ]; then
             EXTRA_ARGS="--atomic"
           else
             EXTRA_ARGS=""
           fi
-          
+
+          # Pass secrets using --set
+          HELM_SET_ARGS=(
+            --set secretEnv.SHAREDIDP_ADMIN_PASSWORD="$SHAREDIDP_ADMIN_PASSWORD"
+            --set secretEnv.CENTRALIDP_ADMIN_PASSWORD="$CENTRALIDP_ADMIN_PASSWORD"
+            --set secretEnv.SHAREDIDP_PG_PASSWORD="$SHAREDIDP_PG_PASSWORD"
+            --set secretEnv.CENTRALIDP_PG_PASSWORD="$CENTRALIDP_PG_PASSWORD"
+            --set secretEnv.BPDM_PG_PASSWORD="$BPDM_PG_PASSWORD"
+            --set secretEnv.UMBRELLA_ISSUER_POSTGRES_PASSWORD="$UMBRELLA_ISSUER_POSTGRES_PASSWORD"
+            --set secretEnv.UMBRELLA_ISSUER_REPLICATION_PASSWORD="$UMBRELLA_ISSUER_REPLICATION_PASSWORD"
+            --set secretEnv.PORTAL_POSTGRES_PASSWORD="$PORTAL_POSTGRES_PASSWORD"
+            --set secretEnv.PGADMIN_PASSWORD="$PGADMIN_PASSWORD"
+            --set secretEnv.DISCOVERYFINDER_PASSWORD="$DISCOVERYFINDER_PASSWORD"
+            --set secretEnv.BPNDISCOVERY_PASSWORD="$BPNDISCOVERY_PASSWORD"
+            --set secretEnv.DATAPROVIDER_PASSWORD="$DATAPROVIDER_PASSWORD"
+            --set secretEnv.DATACONSUMER1_PASSWORD="$DATACONSUMER1_PASSWORD"
+            --set secretEnv.DATACONSUMER2_PASSWORD="$DATACONSUMER2_PASSWORD"
+            --set secretEnv.DATAPROVIDER_DTR_PASSWORD="$DATAPROVIDER_DTR_PASSWORD"
+            --set secretEnv.CX_USER_PASSWORD="$CX_USER_PASSWORD"
+          )
+
           echo "Building Helm chart dependencies..."
           helm dependency build ./charts/umbrella
           
-          echo "Deploying Umbrella main release..."
+          echo "Deploying Umbrella release with secrets..."
           helm upgrade --install "$RELEASE_NAME" ./charts/umbrella \
             $HELM_VALUES_ARGS \
+            "${HELM_SET_ARGS[@]}" \
             --namespace "$NAMESPACE" \
             $EXTRA_ARGS
 
