@@ -5,10 +5,10 @@
 name: Deploy Construct-X
 
 on:
-  push:
-  #   branches: [ feature/contruct-x-cd ]
-  # pull_request:
-  #   branches: [ feature/contruct-x-cd ]
+  # push:
+  # #   branches: [ feature/contruct-x-cd ]
+  # # pull_request:
+  # #   branches: [ feature/contruct-x-cd ]
     
   workflow_dispatch:
     inputs:

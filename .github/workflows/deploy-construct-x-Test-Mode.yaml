@@ -142,18 +142,22 @@ jobs:
         run: |
           NAMESPACE="test-cd"
           RELEASE_NAME="umbrella"
-          FILES="charts/umbrella/values-aks-secrets-cd.yaml"
+          VALUE_FILES="charts/umbrella/values-aks-secrets-cd.yaml"
           ROLLBACK="true"
           SECRETFILESPATH="charts/umbrella/templates/umbrella-secret.yaml"
 
-          # Build Helm values args for main release
+          # Combine main values files and secret file
+          ALL_VALUES_FILES="$VALUE_FILES,$SECRETFILESPATH"
+
+
+          # Build Helm values arguments for multiple files (comma-separated)
           HELM_VALUES_ARGS=""
-          IFS=',' read -ra FILE_ARRAY <<< "$FILES"
+          IFS=',' read -ra FILE_ARRAY <<< "$ALL_VALUES_FILES"
           for f in "${FILE_ARRAY[@]}"; do
             HELM_VALUES_ARGS="$HELM_VALUES_ARGS --values $f"
           done
 
-          # Rollback / atomic option
+          # Handle rollback option
           if [ "$ROLLBACK" = "true" ]; then
             EXTRA_ARGS="--atomic"
           else
@@ -162,9 +166,8 @@ jobs:
 
           echo "Deploying Umbrella main release with secrets included..."
           helm upgrade --install "$RELEASE_NAME" ./charts/umbrella \
-            --values "$SECRETFILESPATH" \
-            $HELM_VALUES_ARGS \
-            --namespace "$NAMESPACE" \
-            $EXTRA_ARGS
+          $HELM_VALUES_ARGS \
+          --namespace "$NAMESPACE" \
+          $EXTRA_ARGS
 
           echo "Release deployed/upgraded: $RELEASE_NAME in namespace $NAMESPACE"
