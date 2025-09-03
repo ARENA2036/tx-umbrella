@@ -134,9 +134,9 @@ jobs:
           echo "Applying umbrella-secret.yaml..."
           kubectl apply -f charts/umbrella/templates/umbrella-secret.yaml
 
-      # -----------------------------
+      # ----------------------------
       # Deploy Release (TEST MODE)
-      # -----------------------------
+      # ----------------------------
 
       - name: Deploy Release
         run: |
