@@ -163,7 +163,10 @@ jobs:
           else
             EXTRA_ARGS=""
           fi
-
+          
+          echo "Building Helm chart dependencies..."
+          helm dependency build ./charts/umbrella
+          
           echo "Deploying Umbrella main release..."
           helm upgrade --install "$RELEASE_NAME" ./charts/umbrella \
             $HELM_VALUES_ARGS \
