@@ -191,9 +191,7 @@ jobs:
           helm upgrade --install "$RELEASE_NAME" ./charts/umbrella \
             $HELM_VALUES_ARGS \
             "${HELM_SET_ARGS[@]}" \
-            --namespace "$NAMESPACE" \
-            $EXTRA_ARGS \
-            --timeout 10m
-
-
+            --namespace "$NAMESPACE"
+            # $EXTRA_ARGS \
+            # --timeout 10m
           echo "Release deployed/upgraded: $RELEASE_NAME in namespace $NAMESPACE"
