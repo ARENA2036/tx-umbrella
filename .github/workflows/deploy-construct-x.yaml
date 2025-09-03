@@ -1,15 +1,15 @@
 
 # #############################################################################
-# Automatic Deployment for Contract-X
+# Automatic Deployment for Contruct-X
 # #############################################################################
 ---
 name: Deploy Construct-X
 
 on:
-  # push:
-  #   branches: [ construct-x-cd-automation ]
-  # pull_request:
-  #   branches: [ construct-x-cd-automation ]
+  push:
+    branches: [ feature/contruct-x-cd ]
+  pull_request:
+    branches: [ eature/contruct-x-cd ]
     
   workflow_dispatch:
     inputs:
