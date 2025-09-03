@@ -9,7 +9,7 @@ on:
   push:
     branches: [ feature/contruct-x-cd ]
   pull_request:
-    branches: [ eature/contruct-x-cd ]
+    branches: [ feature/contruct-x-cd ]
     
   workflow_dispatch:
     inputs:
@@ -20,6 +20,8 @@ on:
         type: choice
         options:
           - demo-cluster
+          # - arena2036-x-edc-cluster
+          # - arena2036-x-fed-services
       resource_group:
         description: "Select resource group"
         default: 'demo'
@@ -27,6 +29,8 @@ on:
         type: choice
         options:
           - demo
+          # - arena2036-x-edc
+          # - arena2036-x-federated-services
       deployment_name:
         description: 'helm release name e.g, umbrella'
         default: 'umbrella'
@@ -78,20 +82,30 @@ jobs:
           sudo mv kubectl /usr/local/bin/
           # Verify installation
           kubectl version --client
+      
+      # This script work for workflow dispatch 
+      # - name: Connect Azure-AKS
+      #   run: |
+      #     # Set your azure subscription
+      #     az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      #     az aks get-credentials --resource-group ${{ github.event.inputs.resource_group }} --name ${{ github.event.inputs.cluster_context }} --overwrite-existing
 
+      # This is added for testing purpose  
       - name: Connect Azure-AKS
         run: |
-          # Set Azure subscription
+          CLUSTER="${{ github.event.inputs.cluster_context }}"
+          if [ -z "$CLUSTER" ]; then
+            CLUSTER="demo-cluster"
+          fi
+          RG="${{ github.event.inputs.resource_group }}"
+          if [ -z "$RG" ]; then
+            RG="demo"
+          fi
+          echo "Connecting to AKS cluster: $CLUSTER in resource group: $RG"
           az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          az aks get-credentials --resource-group ${{ github.event.inputs.resource_group }} --name ${{ github.event.inputs.cluster_context }} --overwrite-existing
+          az aks get-credentials --resource-group "$RG" --name "$CLUSTER" --overwrite-existing
 
-      
-      - name: Connect Azure-AKS
-        run: |
-          # Set your azure subscription
-          az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          az aks get-credentials --resource-group ${{ github.event.inputs.resource_group }} --name ${{ github.event.inputs.cluster_context }} --overwrite-existing 
-      
+    
       - name: Install Helm
         uses: azure/setup-helm@b7246b12e77f7134dc2d460a3d5bad15bbe29390 # v4.1.0
         with:
