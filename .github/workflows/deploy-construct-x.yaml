@@ -83,9 +83,16 @@ jobs:
           kubectl version --client
 
       # -----------------------------
-      # Connect Azure-AKS (TEST MODE)
+      # Connect Azure-AKS
       # -----------------------------
+      # Workflow dispatch version (commented)
+      # - name: Connect Azure-AKS
+      #   run: |
+      #     # Set your azure subscription
+      #     az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      #     az aks get-credentials --resource-group ${{ github.event.inputs.resource_group }} --name ${{ github.event.inputs.cluster_context }} --overwrite-existing
 
+      # Test Mode
       - name: Connect Azure-AKS
         run: |
           # Hardcoded values for testing without workflow_dispatch
@@ -94,13 +101,6 @@ jobs:
           echo "Connecting to AKS cluster: $CLUSTER in resource group: $RG"
           az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           az aks get-credentials --resource-group "$RG" --name "$CLUSTER" --overwrite-existing
-        
-      # Workflow dispatch version (commented)
-      # - name: Connect Azure-AKS
-      #   run: |
-      #     # Set your azure subscription
-      #     az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      #     az aks get-credentials --resource-group ${{ github.event.inputs.resource_group }} --name ${{ github.event.inputs.cluster_context }} --overwrite-existing
     
       - name: Install Helm
         uses: azure/setup-helm@b7246b12e77f7134dc2d460a3d5bad15bbe29390 # v4.1.0
@@ -112,7 +112,56 @@ jobs:
         with:
           fetch-depth: 0
 
+      # -----------------------------
+      # Ensure Namespace Exists
+      # -----------------------------
+      # Workflow dispatch version (commented)
+      # - name: Ensure Namespace Exists
+      #   if: github.event_name == 'workflow_dispatch'
+      #   run: |
+      #     NAMESPACE="${{ github.event.inputs.namespace }}"
+      #     echo "Ensuring namespace exists: $NAMESPACE"
+      #     kubectl get namespace "$NAMESPACE" || kubectl create namespace "$NAMESPACE"
+
+      # Test Mode
+      - name: Ensure Namespace Exists
+        if: github.event_name != 'workflow_dispatch'
+        run: |
+          NAMESPACE="test-cd"
+          echo "Ensuring namespace exists: $NAMESPACE"
+          kubectl get namespace "$NAMESPACE" || kubectl create namespace "$NAMESPACE"
+
+      # -----------------------------
+      # Apply Umbrella Secrets
+      # -----------------------------
+      # # Workflow dispatch version (commented)
+      # - name: Apply Umbrella Secrets
+      #   if: github.event_name == 'workflow_dispatch'
+      #   env:
+      #     SHAREDIDP_ADMIN_PASSWORD: ${{ secrets.SHAREDIDP_ADMIN_PASSWORD }}
+      #     CENTRALIDP_ADMIN_PASSWORD: ${{ secrets.CENTRALIDP_ADMIN_PASSWORD }}
+      #     SHAREDIDP_PG_PASSWORD: ${{ secrets.SHAREDIDP_PG_PASSWORD }}
+      #     CENTRALIDP_PG_PASSWORD: ${{ secrets.CENTRALIDP_PG_PASSWORD }}
+      #     BPDM_PG_PASSWORD: ${{ secrets.BPDM_PG_PASSWORD }}
+      #     UMBRELLA_ISSUER_POSTGRES_PASSWORD: ${{ secrets.UMBRELLA_ISSUER_POSTGRES_PASSWORD }}
+      #     UMBRELLA_ISSUER_REPLICATION_PASSWORD: ${{ secrets.UMBRELLA_ISSUER_REPLICATION_PASSWORD }}
+      #     PORTAL_POSTGRES_PASSWORD: ${{ secrets.PORTAL_POSTGRES_PASSWORD }}
+      #     PGADMIN_PASSWORD: ${{ secrets.PGADMIN_PASSWORD }}
+      #     DISCOVERYFINDER_PASSWORD: ${{ secrets.DISCOVERYFINDER_PASSWORD }}
+      #     BPNDISCOVERY_PASSWORD: ${{ secrets.BPNDISCOVERY_PASSWORD }}
+      #     DATAPROVIDER_PASSWORD: ${{ secrets.DATAPROVIDER_PASSWORD }}
+      #     DATACONSUMER1_PASSWORD: ${{ secrets.DATACONSUMER1_PASSWORD }}
+      #     DATACONSUMER2_PASSWORD: ${{ secrets.DATACONSUMER2_PASSWORD }}
+      #     DATAPROVIDER_DTR_PASSWORD: ${{ secrets.DATAPROVIDER_DTR_PASSWORD }}
+      #     CX_USER_PASSWORD: ${{ secrets.CX_USER_PASSWORD }}
+      #   run: |
+      #     NAMESPACE="${{ github.event.inputs.namespace }}"
+      #     echo "Applying Umbrella secrets to $NAMESPACE..."
+      #     kubectl apply -f charts/umbrella/templates/umbrella-secret.yaml -n "$NAMESPACE"
+
+      # Test Mode
       - name: Apply Umbrella Secrets
+        if: github.event_name != 'workflow_dispatch'
         env:
           SHAREDIDP_ADMIN_PASSWORD: ${{ secrets.SHAREDIDP_ADMIN_PASSWORD }}
           CENTRALIDP_ADMIN_PASSWORD: ${{ secrets.CENTRALIDP_ADMIN_PASSWORD }}
@@ -131,53 +180,22 @@ jobs:
           DATAPROVIDER_DTR_PASSWORD: ${{ secrets.DATAPROVIDER_DTR_PASSWORD }}
           CX_USER_PASSWORD: ${{ secrets.CX_USER_PASSWORD }}
         run: |
-          echo "Applying umbrella-secret.yaml..."
-          kubectl apply -f charts/umbrella/templates/umbrella-secret.yaml
-
-      # ----------------------------
-      # Deploy Release (TEST MODE)
-      # ----------------------------
-
-      - name: Deploy Release
-        run: |
-          echo "Deploying Helm chart to AKS"
-
-          # Hardcoded values for testing
           NAMESPACE="test-cd"
-          RELEASE_NAME="umbrella"
-          FILES="charts/umbrella/values-aks-secrets-cd.yaml"
-          ROLLBACK="true"
+          echo "Applying Umbrella secrets to $NAMESPACE..."
+          kubectl apply -f charts/umbrella/templates/umbrella-secret.yaml -n "$NAMESPACE"
 
-          kubectl get namespace "$NAMESPACE" || kubectl create namespace "$NAMESPACE"
-
-          # Build Helm values arguments
-          HELM_VALUES_ARGS=""
-          IFS=',' read -ra FILE_ARRAY <<< "$FILES"
-          for f in "${FILE_ARRAY[@]}"; do
-            HELM_VALUES_ARGS="$HELM_VALUES_ARGS --values $f"
-          done
-
-          # Rollback option
-          if [ "$ROLLBACK" = "true" ]; then
-            EXTRA_ARGS="--atomic"
-          else
-            EXTRA_ARGS=""
-          fi
-
-          # Helm deployment
-          helm upgrade --install "$RELEASE_NAME" ./charts/umbrella --namespace "$NAMESPACE" $HELM_VALUES_ARGS $EXTRA_ARGS
-
+      # ----------------------------
+      # Deploy Release
+      # ----------------------------
       # Workflow dispatch version (commented)
       # - name: Deploy Release
+      # if: github.event_name == 'workflow_dispatch'
       #   run: |
       #     echo "Deploying Helm chart to cluster: ${{ github.event.inputs.cluster_context }}"
       #     NAMESPACE="${{ github.event.inputs.namespace }}"
       #     RELEASE_NAME="${{ github.event.inputs.deployment_name }}"
       #     FILES="${{ github.event.inputs.helm_values_file }}"
       #     ROLLBACK="${{ github.event.inputs.rollback_on_failure }}"
-
-      #     # Ensure the namespace exists
-      #     kubectl get namespace "$NAMESPACE" || kubectl create namespace "$NAMESPACE"
 
       #     # Build Helm values arguments for multiple files (comma-separated)
       #     HELM_VALUES_ARGS=""
@@ -210,3 +228,26 @@ jobs:
       #       echo "Unknown deployment_type: ${{ github.event.inputs.deployment_type }}"
       #       exit 1
       #     fi
+      
+      # Test Mode
+      - name: Deploy Release
+        if: github.event_name != 'workflow_dispatch'
+        run: |
+          NAMESPACE="test-cd"
+          RELEASE_NAME="umbrella"
+          FILES="charts/umbrella/values-aks-secrets-cd.yaml"
+          ROLLBACK="true"
+
+          HELM_VALUES_ARGS=""
+          IFS=',' read -ra FILE_ARRAY <<< "$FILES"
+          for f in "${FILE_ARRAY[@]}"; do
+            HELM_VALUES_ARGS="$HELM_VALUES_ARGS --values $f"
+          done
+
+          if [ "$ROLLBACK" = "true" ]; then
+            EXTRA_ARGS="--atomic"
+          else
+            EXTRA_ARGS=""
+          fi
+
+          helm upgrade --install "$RELEASE_NAME" ./charts/umbrella --namespace "$NAMESPACE" $HELM_VALUES_ARGS $EXTRA_ARGS
