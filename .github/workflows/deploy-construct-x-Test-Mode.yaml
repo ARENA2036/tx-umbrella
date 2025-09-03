@@ -2,7 +2,7 @@
 # Automatic Deployment Process for Contruct-X
 # #############################################################################
 ---
-name: Deploy Construct-X
+name: Deploy Construct-X for testing on Demo Cluster
 
 on:
   push:
@@ -192,6 +192,8 @@ jobs:
             $HELM_VALUES_ARGS \
             "${HELM_SET_ARGS[@]}" \
             --namespace "$NAMESPACE" \
-            $EXTRA_ARGS
+            $EXTRA_ARGS \
+            --timeout 10m
+
 
           echo "Release deployed/upgraded: $RELEASE_NAME in namespace $NAMESPACE"
