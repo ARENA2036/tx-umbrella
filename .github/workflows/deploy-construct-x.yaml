@@ -81,29 +81,26 @@ jobs:
           sudo mv kubectl /usr/local/bin/
           # Verify installation
           kubectl version --client
-      
-      # This script work for workflow dispatch 
+
+      # -----------------------------
+      # Connect Azure-AKS (TEST MODE)
+      # -----------------------------
+
+      - name: Connect Azure-AKS
+        run: |
+          # Hardcoded values for testing without workflow_dispatch
+          CLUSTER="demo-cluster"
+          RG="demo"
+          echo "Connecting to AKS cluster: $CLUSTER in resource group: $RG"
+          az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          az aks get-credentials --resource-group "$RG" --name "$CLUSTER" --overwrite-existing
+        
+      # Workflow dispatch version (commented)
       # - name: Connect Azure-AKS
       #   run: |
       #     # Set your azure subscription
       #     az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       #     az aks get-credentials --resource-group ${{ github.event.inputs.resource_group }} --name ${{ github.event.inputs.cluster_context }} --overwrite-existing
-
-      # This is added for testing purpose  
-      - name: Connect Azure-AKS
-        run: |
-          CLUSTER="${{ github.event.inputs.cluster_context }}"
-          if [ -z "$CLUSTER" ]; then
-            CLUSTER="demo-cluster"
-          fi
-          RG="${{ github.event.inputs.resource_group }}"
-          if [ -z "$RG" ]; then
-            RG="demo"
-          fi
-          echo "Connecting to AKS cluster: $CLUSTER in resource group: $RG"
-          az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          az aks get-credentials --resource-group "$RG" --name "$CLUSTER" --overwrite-existing
-
     
       - name: Install Helm
         uses: azure/setup-helm@b7246b12e77f7134dc2d460a3d5bad15bbe29390 # v4.1.0
@@ -137,45 +134,79 @@ jobs:
           echo "Applying umbrella-secret.yaml..."
           kubectl apply -f charts/umbrella/templates/umbrella-secret.yaml
 
+      # -----------------------------
+      # Deploy Release (TEST MODE)
+      # -----------------------------
+
       - name: Deploy Release
         run: |
-          echo "Deploying Helm chart to cluster: ${{ github.event.inputs.cluster_context }}"
-          NAMESPACE="${{ github.event.inputs.namespace }}"
-          RELEASE_NAME="${{ github.event.inputs.deployment_name }}"
-          FILES="${{ github.event.inputs.helm_values_file }}"
-          ROLLBACK="${{ github.event.inputs.rollback_on_failure }}"
+          echo "Deploying Helm chart to AKS"
 
-          # Ensure the namespace exists
+          # Hardcoded values for testing
+          NAMESPACE="test-cd"
+          RELEASE_NAME="umbrella"
+          FILES="charts/umbrella/values-aks-secrets-cd.yaml"
+          ROLLBACK="true"
+
           kubectl get namespace "$NAMESPACE" || kubectl create namespace "$NAMESPACE"
 
-          # Build Helm values arguments for multiple files (comma-separated)
+          # Build Helm values arguments
           HELM_VALUES_ARGS=""
           IFS=',' read -ra FILE_ARRAY <<< "$FILES"
           for f in "${FILE_ARRAY[@]}"; do
             HELM_VALUES_ARGS="$HELM_VALUES_ARGS --values $f"
           done
 
-          # Handle rollback option
+          # Rollback option
           if [ "$ROLLBACK" = "true" ]; then
             EXTRA_ARGS="--atomic"
           else
             EXTRA_ARGS=""
           fi
 
-          # Decide Helm command based on deployment_type
-          if [ "${{ github.event.inputs.deployment_type }}" = "install" ]; then
-            echo "Installing release: $RELEASE_NAME"
-            helm install "$RELEASE_NAME" ./helm --namespace "$NAMESPACE" $HELM_VALUES_ARGS
+          # Helm deployment
+          helm upgrade --install "$RELEASE_NAME" ./charts/umbrella --namespace "$NAMESPACE" $HELM_VALUES_ARGS $EXTRA_ARGS
 
-          elif [ "${{ github.event.inputs.deployment_type }}" = "upgrade" ]; then
-            echo "Upgrading release: $RELEASE_NAME"
-            helm upgrade --install "$RELEASE_NAME" ./helm --namespace "$NAMESPACE" $HELM_VALUES_ARGS $EXTRA_ARGS
+      # Workflow dispatch version (commented)
+      # - name: Deploy Release
+      #   run: |
+      #     echo "Deploying Helm chart to cluster: ${{ github.event.inputs.cluster_context }}"
+      #     NAMESPACE="${{ github.event.inputs.namespace }}"
+      #     RELEASE_NAME="${{ github.event.inputs.deployment_name }}"
+      #     FILES="${{ github.event.inputs.helm_values_file }}"
+      #     ROLLBACK="${{ github.event.inputs.rollback_on_failure }}"
 
-          elif [ "${{ github.event.inputs.deployment_type }}" = "uninstall" ]; then
-            echo "Uninstalling release: $RELEASE_NAME"
-            helm uninstall "$RELEASE_NAME" --namespace "$NAMESPACE"
+      #     # Ensure the namespace exists
+      #     kubectl get namespace "$NAMESPACE" || kubectl create namespace "$NAMESPACE"
 
-          else
-            echo "Unknown deployment_type: ${{ github.event.inputs.deployment_type }}"
-            exit 1
-          fi
+      #     # Build Helm values arguments for multiple files (comma-separated)
+      #     HELM_VALUES_ARGS=""
+      #     IFS=',' read -ra FILE_ARRAY <<< "$FILES"
+      #     for f in "${FILE_ARRAY[@]}"; do
+      #       HELM_VALUES_ARGS="$HELM_VALUES_ARGS --values $f"
+      #     done
+
+      #     # Handle rollback option
+      #     if [ "$ROLLBACK" = "true" ]; then
+      #       EXTRA_ARGS="--atomic"
+      #     else
+      #       EXTRA_ARGS=""
+      #     fi
+
+      #     # Decide Helm command based on deployment_type
+      #     if [ "${{ github.event.inputs.deployment_type }}" = "install" ]; then
+      #       echo "Installing release: $RELEASE_NAME"
+      #       helm install "$RELEASE_NAME" ./helm --namespace "$NAMESPACE" $HELM_VALUES_ARGS
+
+      #     elif [ "${{ github.event.inputs.deployment_type }}" = "upgrade" ]; then
+      #       echo "Upgrading release: $RELEASE_NAME"
+      #       helm upgrade --install "$RELEASE_NAME" ./helm --namespace "$NAMESPACE" $HELM_VALUES_ARGS $EXTRA_ARGS
+
+      #     elif [ "${{ github.event.inputs.deployment_type }}" = "uninstall" ]; then
+      #       echo "Uninstalling release: $RELEASE_NAME"
+      #       helm uninstall "$RELEASE_NAME" --namespace "$NAMESPACE"
+
+      #     else
+      #       echo "Unknown deployment_type: ${{ github.event.inputs.deployment_type }}"
+      #       exit 1
+      #     fi
