@@ -19,8 +19,8 @@ on:
         type: choice
         options:
           - demo-cluster
-          # - arena2036-x-edc-cluster
-          # - arena2036-x-fed-services
+          - arena2036-x-edc-cluster
+          - arena2036-x-fed-services
       resource_group:
         description: "Select resource group"
         default: 'demo'
@@ -28,8 +28,8 @@ on:
         type: choice
         options:
           - demo
-          # - arena2036-x-edc
-          # - arena2036-x-federated-services
+          - arena2036-x-edc
+          - arena2036-x-federated-services
       deployment_name:
         description: 'helm release name e.g, umbrella'
         default: 'umbrella'
@@ -173,7 +173,6 @@ jobs:
             --set secretEnv.CX_USER_PASSWORD="$CX_USER_PASSWORD"
           )
 
-
           # Decide Helm command based on deployment_type
           if [ "${{ github.event.inputs.deployment_type }}" = "install" ]; then
             # Update Helm dependencies before install
@@ -187,7 +186,7 @@ jobs:
             echo "Updating Helm chart dependencies..."
             helm dependency update ./helm
             echo "Upgrading release: $RELEASE_NAME with secrets..."
-            helm upgrade --install "$RELEASE_NAME" ./helm --namespace "$NAMESPACE" $HELM_VALUES_ARGS "${HELM_SET_ARGS[@]}" $EXTRA_ARGS
+            helm upgrade --install "$RELEASE_NAME" ./helm --namespace "$NAMESPACE" $HELM_VALUES_ARGS "${HELM_SET_ARGS[@]}"
 
           elif [ "${{ github.event.inputs.deployment_type }}" = "uninstall" ]; then
             echo "Uninstalling release: $RELEASE_NAME"
