@@ -5,10 +5,10 @@
 name: Deploy Construct-X for testing on Demo Cluster
 
 on:
-  push:
-    branches: [ feature/contruct-x-cd ]
-  pull_request:
-    branches: [ feature/contruct-x-cd ]
+  # push:
+  #   branches: [ feature/contruct-x-cd ]
+  # pull_request:
+  #   branches: [ feature/contruct-x-cd ]
     
   workflow_dispatch:
     inputs:
@@ -46,7 +46,7 @@ on:
           - uninstall
       helm_values_file:
         description: 'Comma-separated list of Helm values files (relative paths: e.g, charts/umbrella/values.yaml,charts/umbrella/another-values.yaml)'
-        default: 'charts/umbrella/values-aks-secrets-cd.yaml'
+        default: 'charts/umbrella/values.yaml'
         required: false
         type: string
       namespace:
