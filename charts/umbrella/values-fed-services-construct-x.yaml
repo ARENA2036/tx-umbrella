@@ -60,7 +60,7 @@ portal:
     portal:
       image:
         name: "constructx.azurecr.io/portal-frontend"
-        portaltag: "latest-v4"
+        portaltag: "10092025"
         pullPolicy: "Always"
         pullSecrets: []
       resources:
@@ -73,7 +73,7 @@ portal:
     assets:
       image:
         name: "constructx.azurecr.io/portal-assets"
-        assetstag: "latest-v4"
+        assetstag: "10092025"
         pullPolicy: "Always"
         pullSecrets: []
       resources:
@@ -489,7 +489,7 @@ centralidp:
         mountPath: /opt/bitnami/keycloak/themes/catenax-central
     initContainers:
       - name: import
-        image: constructx.azurecr.io/portal-iam:latest-v1
+        image: constructx.azurecr.io/portal-iam:15092025-latest
         imagePullPolicy: Always
         command:
           - sh
@@ -737,7 +737,7 @@ sharedidp:
         mountPath: /opt/bitnami/keycloak/themes/catenax-shared-portal
     initContainers:
       - name: import
-        image: constructx.azurecr.io/portal-iam:latest-v1
+        image: constructx.azurecr.io/portal-iam:15092025-latest
         imagePullPolicy: Always
         command:
           - sh
@@ -836,7 +836,7 @@ sharedidp:
             clientSecret: "changeme"
     initContainer:
       image:
-        name: constructx.azurecr.io/portal-iam:latest-v1
+        name: constructx.azurecr.io/portal-iam:15092025-latest
         pullPolicy: Always 
 
 bpndiscovery:
