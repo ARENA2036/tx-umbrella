@@ -1333,6 +1333,11 @@ dataconsumerOne:
         verifier:
           publickey_alias: tokenSignerPublicKey
     postgresql:
+      image:
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        repository: "bitnamilegacy/postgresql"
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        tag: "16.2.0-debian-12-r10"
       nameOverride: dataconsumer-x-db
       jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataconsumer-x-db:5432/edc"
       auth:
@@ -1429,6 +1434,11 @@ tx-data-provider:
         verifier:
           publickey_alias: tokenSignerPublicKey
     postgresql:
+      image:
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        repository: "bitnamilegacy/postgresql"
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        tag: "16.2.0-debian-12-r10"
       nameOverride: dataprovider-x-db
       jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataprovider-x-db:5432/edc"
       auth:
@@ -1452,6 +1462,11 @@ tx-data-provider:
   digital-twin-registry:
     nameOverride: dataprovider-x-dtr
     postgresql:
+      image:
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        repository: "bitnamilegacy/postgresql"
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        tag: "16.2.0-debian-12-r10"
       nameOverride: dataprovider-x-dtr-db
       auth:
         password: "dbpassworddtrdataprovider-x"
@@ -1599,6 +1614,11 @@ dataconsumerTwo:
         verifier:
           publickey_alias: tokenSignerPublicKey
     postgresql:
+      image:
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        repository: "bitnamilegacy/postgresql"
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        tag: "16.2.0-debian-12-r10"
       nameOverride: dataconsumer-2-db
       jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataconsumer-2-db:5432/edc"
       auth:
