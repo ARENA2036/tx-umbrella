@@ -1,7 +1,13 @@
 name: Auto sync from upstream
 
 on:
+  schedule:
+    - cron: 0 9 * * 1
   workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   sync:
@@ -19,31 +25,40 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-      
-      - name: Checkout to sync branch
-        run: |
-          git checkout -b sync-upstream origin/arena2036-x-infra
 
       - name: Add upstream and fetch
         run: |
           git remote add upstream https://github.com/eclipse-tractusx/tractus-x-umbrella.git
           git fetch upstream main
 
-      - name: Merge upstream/main
+      - name: Checkout to sync branch
         run: |
-          git merge upstream/main
-      
+          git checkout -b sync-upstream origin/arena2036-x-infra
+
+      - name: Merge upstream main
+        run: |
+          set +e
+          git merge upstream/main -m "Merge upstream/main into sync-upstream"
+          MERGE_STATUS=$?
+          if [ $MERGE_STATUS != 0 ]; then
+            echo "Conflicts detected"
+            git add -A 
+            git commit -m "Merge upstream/main into sync-upstream (auto-sync, may contain conflicts)"
+          fi
+          exit 0
+
       - name: Push sync branch to your fork
         run: |
-          git push origin sync-upstream
+          git push origin sync-upstream --force
 
+      # Config to create PR 
       - name: Create PR into arena2036-x-infra
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           base: arena2036-x-infra
           branch: sync-upstream
-          title: "Rebase arena2036-x-infra on upstream/main"
+          title: Merge sync-upstream to arena2036-x-infre (Conflicts may be present)
           body: |
             This PR rebases `arena2036-x-infra` on top of the latest `upstream/main`.
-          commit-message: "Rebase fork branch on upstream/main"
+          commit-message: "Sync with upstream/main"
