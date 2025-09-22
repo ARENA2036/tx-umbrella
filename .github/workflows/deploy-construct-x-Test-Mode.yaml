@@ -201,7 +201,7 @@ jobs:
         run: |
           NAMESPACE="test-cd"
           RELEASE_NAME="umbrella"
-          VALUE_FILES="charts/umbrella/values-aks-secrets-cd.yaml"
+          VALUE_FILES="charts/umbrella/values-aks.yaml"
           ROLLBACK="true"
           # SECRETFILESPATH="charts/umbrella/templates/umbrella-secret.yaml"
 
