@@ -21,6 +21,11 @@ portal:
   enabled: true
   replicaCount: 1
   postgresql:
+    image:
+      # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+      repository: "bitnamilegacy/postgresql"
+      # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+      #tag: "16.2.0-debian-12-r10"
     nameOverride: "portal-backend-postgresql"
     architecture: standalone
     auth:
@@ -60,7 +65,7 @@ portal:
     portal:
       image:
         name: "arena2036.azurecr.io/portal-frontend"
-        portaltag: "v1"
+        portaltag: "22092025"
         pullPolicy: "Always"
         pullSecrets: []
       resources:
@@ -73,7 +78,7 @@ portal:
     assets:
       image:
         name: "arena2036.azurecr.io/portal-assets"
-        assetstag: "latest"
+        assetstag: "22092025"
         pullPolicy: "Always"
         pullSecrets: []
       resources:
@@ -274,11 +279,11 @@ portal:
             encryptionKey:
               "d2e27d71b018cb36029184852f1baa3e26891be94718f77de4c7cc6c882fe317"
     mailing:
-      host: "smtp4dev.release24-12.svc.cluster.local"
-      port: "25"
-      user: "myUser"
-      senderEmail: "info@arena2036.com"
-      password: "mysecretpassword"
+      host: ""
+      port: ""
+      user: ""
+      senderEmail: ""
+      password: ""
     portalmigrations:
       resources:
         requests:
@@ -389,12 +394,12 @@ portal:
     provisioning:
       sharedRealm:
         smtpServer:
-          host: "smtp4dev.release24-12.svc.cluster.local"
-          port: "25"
-          user: "myUser"
-          password: "mysecretpassword"
-          from: "info@arena2036.com"
-          replyTo: "info@arena2036.com"
+          host: ""
+          port: ""
+          user: ""
+          password: ""
+          from: ""
+          replyTo: ""
     # -- docs: https://portal-backend.arena2036-x.de/api/administration/swagger/index.html
     # https://portal-backend.arena2036-x.de/api/registration/swagger/index.html
     # https://portal-backend.arena2036-x.de/api/apps/swagger/index.html
@@ -456,11 +461,18 @@ portal:
 centralidp:
   enabled: true
   keycloak:
+    image:
+      repository: bitnamilegacy/keycloak
     nameOverride: "centralidp"
     replicaCount: 1
     auth:
       adminPassword: "adm!n@centr4l!dp"
     postgresql:
+      image:
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        repository: "bitnamilegacy/postgresql"
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        #tag: "16.2.0-debian-12-r10"
       nameOverride: "centralidp-postgresql"
       auth:
         password: "dbpasswordcentralidp"
@@ -469,6 +481,26 @@ centralidp:
       primary:
         persistence:
           enabled: true
+    # extraVolumes:
+    #   - name: themes
+    #     emptyDir: {}
+    extraVolumeMounts:
+      - name: themes
+        mountPath: /opt/bitnami/keycloak/themes/catenax-central
+    initContainers:
+      - name: import
+        image: arena2036.azurecr.io/portal-iam:latest-v2
+        imagePullPolicy: Always
+        command:
+          - sh
+        args:
+          - -c
+          - |
+            echo "Copying themes..."
+            cp -R /import/themes/catenax-central/* /themes
+        volumeMounts:
+          - name: themes
+            mountPath: /themes
     ingress:
       enabled: true
       ingressClassName: "webapprouting.kubernetes.azure.com"
@@ -488,7 +520,7 @@ centralidp:
     # uncomment the following line for tls
     # initContainers:
     #   - name: init-certs
-    #     image: docker.io/bitnami/keycloak:25.0.6-debian-12-r0
+    #     image: docker.io/bitnamilegacy/keycloak:25.0.6-debian-12-r0
     #     imagePullPolicy: IfNotPresent
     #     command: ["/bin/bash"]
     #     args:
@@ -660,10 +692,17 @@ centralidp:
 sharedidp:
   enabled: true
   keycloak:
+    image:
+      repository: bitnamilegacy/keycloak
     nameOverride: "sharedidp"
     auth:
       adminPassword: "adm!n@shar3d!dp"
     postgresql:
+      image:
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        repository: "bitnamilegacy/postgresql"
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        #tag: "16.2.0-debian-12-r10"
       nameOverride: "sharedidp-postgresql"
       auth:
         password: "dbpasswordshared!dp"
@@ -672,6 +711,34 @@ sharedidp:
       primary:
         persistence:
           enabled: true
+    # extraVolumes:
+    #   - name: themes-catenax-shared
+    #     emptyDir: {}
+    #   - name: themes-catenax-shared-portal
+    #     emptyDir: {}
+    extraVolumeMounts:
+      - name: themes-catenax-shared
+        mountPath: /opt/bitnami/keycloak/themes/catenax-shared
+      - name: themes-catenax-shared-portal
+        mountPath: /opt/bitnami/keycloak/themes/catenax-shared-portal
+    initContainers:
+      - name: import
+        image: arena2036.azurecr.io/portal-iam:latest-v2
+        imagePullPolicy: Always
+        command:
+          - sh
+        args:
+          - -c
+          - |
+            echo "Copying themes-catenax-shared..."
+            cp -R /import/themes/catenax-shared/* /themes-catenax-shared
+            echo "Copying themes-catenax-shared-portal..."
+            cp -R /import/themes/catenax-shared-portal/* /themes-catenax-shared-portal
+        volumeMounts:
+          - name: themes-catenax-shared
+            mountPath: /themes-catenax-shared
+          - name: themes-catenax-shared-portal
+            mountPath: /themes-catenax-shared-portal
     ingress:
       enabled: true
       ingressClassName: "webapprouting.kubernetes.azure.com"
@@ -691,7 +758,7 @@ sharedidp:
     # uncomment the following line for tls
     # initContainers:
     #   - name: init-certs
-    #     image: docker.io/bitnami/keycloak:25.0.6-debian-12-r0
+    #     image: docker.io/bitnamilegacy/keycloak:25.0.6-debian-12-r0
     #     imagePullPolicy: IfNotPresent
     #     command: ["/bin/bash"]
     #     args:
@@ -742,18 +809,22 @@ sharedidp:
           username: "cx-operator@arena2036.de"
           password: "ar3na2036-umbr3lla"
         mailing:
-          host: "smtp4dev.release24-12.svc.cluster.local"
-          port: "25"
-          username: "myUser"
-          password: "mysecretpassword"
-          from: "info@arena2036.com"
-          replyTo: "info@arena2036.com"
+          host: ""
+          port: ""
+          username: ""
+          password: ""
+          from: ""
+          replyTo: ""
       master:
         serviceAccounts:
           provisioning:
             clientSecret: "changeme"
           saCxOperator:
             clientSecret: "changeme"
+    initContainer:
+      image:
+        name: arena2036.azurecr.io/portal-iam:latest-v2
+        pullPolicy: Always
 
 bpndiscovery:
   enabled: true
@@ -797,6 +868,11 @@ bpndiscovery:
     readinessProbe:
       initialDelaySeconds: 200
   postgresql:
+    image:
+      # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+      repository: "bitnamilegacy/postgresql"
+      # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+      #tag: "16.2.0-debian-12-r10"
     nameOverride: "bpndiscovery-postgresql"
     primary:
       persistence:
@@ -842,6 +918,11 @@ discoveryfinder:
         nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
         nginx.ingress.kubernetes.io/x-forwarded-prefix: "/discoveryfinder"
   postgresql:
+    image:
+      # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+      repository: "bitnamilegacy/postgresql"
+      # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+      #tag: "16.2.0-debian-12-r10"
     nameOverride: "discoveryfinder-postgresql"
     primary:
       persistence:
@@ -968,6 +1049,11 @@ ssi-credential-issuer:
     logging:
       default: "Debug"
   postgresql:
+    image:
+      # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+      repository: "bitnamilegacy/postgresql"
+      # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+      #tag: "16.2.0-debian-12-r10"
     enabled: true
     nameOverride: issuer-postgresql
     architecture: standalone
@@ -1011,7 +1097,7 @@ ssi-credential-issuer:
 # Set up services for a business partner pool, golden record process
 # and a gate with which the Portal and the users can share business partner data
 bpdm:
-  enabled: true
+  enabled: false
   postgres:
     # We use the default name for BPDM postgres
     fullnameOverride:
@@ -1286,6 +1372,11 @@ bpdm-edc:
         verifier:
           publickey_alias: tokenSignerPublicKey
     postgresql:
+      image:
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        repository: "bitnamilegacy/postgresql"
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        #tag: "16.2.0-debian-12-r10"
       nameOverride: bpdm-provider-db
       jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-bpdm-provider-db:5432/edc"
       auth:
@@ -1309,6 +1400,11 @@ bpdm-edc:
   digital-twin-registry:
     nameOverride: bpdm-provider-dtr
     postgresql:
+      image:
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        repository: "bitnamilegacy/postgresql"
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        #tag: "16.2.0-debian-12-r10"
       nameOverride: bpdm-provider-dtr-db
       auth:
         password: "dbpasswordbpdmproviderdtr"
@@ -1410,6 +1506,11 @@ dataconsumerOne:
         verifier:
           publickey_alias: tokenSignerPublicKey
     postgresql:
+      image:
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        repository: "bitnamilegacy/postgresql"
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        #tag: "16.2.0-debian-12-r10"
       nameOverride: dataconsumer-1-db
       jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataconsumer-1-db:5432/edc"
       auth:
@@ -1508,6 +1609,11 @@ tx-data-provider:
         verifier:
           publickey_alias: tokenSignerPublicKey
     postgresql:
+      image:
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        repository: "bitnamilegacy/postgresql"
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        #tag: "16.2.0-debian-12-r10"
       nameOverride: dataprovider-db
       jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataprovider-db:5432/edc"
       auth:
@@ -1531,6 +1637,11 @@ tx-data-provider:
   digital-twin-registry:
     nameOverride: dataprovider-dtr
     postgresql:
+      image:
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        repository: "bitnamilegacy/postgresql"
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        #tag: "16.2.0-debian-12-r10"
       nameOverride: dataprovider-dtr-db
       auth:
         password: "dbpassworddtrdataprovider"
@@ -1570,6 +1681,11 @@ semantic-hub:
   enableKeycloak: false
   keycloak:
     postgresql:
+      image:
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        repository: "bitnamilegacy/postgresql"
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        #tag: "16.2.0-debian-12-r10"
       architecture: standalone
       primary:
         persistence:
@@ -1667,6 +1783,11 @@ dataconsumerTwo:
         verifier:
           publickey_alias: tokenSignerPublicKey
     postgresql:
+      image:
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        repository: "bitnamilegacy/postgresql"
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        #tag: "16.2.0-debian-12-r10"
       nameOverride: dataconsumer-2-db
       jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataconsumer-2-db:5432/edc"
       auth:
