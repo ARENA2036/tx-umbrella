@@ -24,10 +24,8 @@ portal:
     nameOverride: "portal-backend-postgresql"
     architecture: standalone
     auth:
-      password: "dbpasswordportal"
-      portalPassword: "dbpasswordportal"
-      replicationPassword: "dbpasswordportal"
-      provisioningPassword: "dbpasswordportal"
+      # # # Secrets Mechanism # # # # 
+      existingSecret: portal-postgres
     primary:
       persistence:
         enabled: false
@@ -378,12 +376,13 @@ centralidp:
     nameOverride: "centralidp"
     replicaCount: 1
     auth:
-      adminPassword: "adminconsolepwcentralidp"
+      # # # # Secrets Mechanism # # # #
+      existingSecret: umbrella-centralidp
     postgresql:
       nameOverride: "centralidp-postgresql"
       auth:
-        password: "dbpasswordcentralidp"
-        postgresPassword: "dbpasswordcentralidp"
+        # # # # # Secrets Mechanism # # # #
+        existingSecret: umbrella-centralidp-postgresql
       architecture: standalone
       primary:
         persistence:
@@ -581,12 +580,13 @@ sharedidp:
   keycloak:
     nameOverride: "sharedidp"
     auth:
-      adminPassword: "adminconsolepwsharedidp"
+      # # # Secrets Mechanism # # # # 
+      existingSecret: umbrella-sharedidp
     postgresql:
       nameOverride: "sharedidp-postgresql"
       auth:
-        password: "dbpasswordsharedidp"
-        postgresPassword: "dbpasswordsharedidp"
+        # # # Secrets Mechanism # # # # 
+        existingSecret: umbrella-sharedidp-postgresql
       architecture: standalone
       primary:
         persistence:
@@ -658,8 +658,8 @@ sharedidp:
         sslRequired: "none"
         centralidp: "https://centralidp.arena2036-x.de"
         initialUser:
-          username: "cx-operator@tx.test"
-          password: "tractusx-umbr3lla!"
+          # # # Secrets Mechanism # # # # 
+          existingSecret: umbrella-sharedidp-cx-operator-realm-seeding
         mailing:
           host: "smtp4dev.release24-12.svc.cluster.local"
           port: "25"
@@ -722,8 +722,8 @@ bpndiscovery:
         enabled: false
         size: 8Gi
     auth:
-      password: "dbpasswordbpndiscovery"
-      postgresPassword: "dbpasswordbpndiscovery"
+      # # # Secrets Mechanism # # # # 
+      existingSecret: secret-bpndiscovery-postgres-init
 
 discoveryfinder:
   enabled: false
@@ -767,8 +767,8 @@ discoveryfinder:
         enabled: false
         size: 8Gi
     auth:
-      password: "dbpassworddiscoveryfinder"
-      postgresPassword: "dbpassworddiscoveryfinder"
+      # # # Secrets Mechanism # # # # 
+      existingSecret: secret-discoveryfinder-postgres-init
 
 selfdescription:
   enabled: false
@@ -896,10 +896,12 @@ ssi-credential-issuer:
       persistence:
         enabled: false
     auth:
-      # -- Password for the root username 'postgres'. Secret-key 'postgres-password'.
-      postgrespassword: "rootissuerpassword"
-      # -- Password for the non-root username 'issuer'. Secret-key 'password'.
-      password: "issuerpassword"
+      # # -- Password for the root username 'postgres'. Secret-key 'postgres-password'.
+      # postgrespassword: "rootissuerpassword"
+      # # -- Password for the non-root username 'issuer'. Secret-key 'password'.
+      # password: "issuerpassword"
+      # # # # Secrets Mechanism # # # # 
+      existingSecret: umbrella-issuer-postgres
 
   centralidp:
     # -- Provide centralidp base address (CX IAM), without trailing '/auth'.
@@ -940,8 +942,11 @@ bpdm:
     auth:
       # BPDM can't handle random initial passwords at the moment
       # so need to set a fixed one here and use it in the app configs later
-      password: &bpdmPostgresPassword "dbpasswordbpdm"
+      # password: &bpdmPostgresPassword "dbpasswordbpdm"
+      # # # Secrets Mechanism # # # #
+      password: &bpdmPostgresPassword
       postgresPassword: *bpdmPostgresPassword
+      existingSecret: bpdm-postgres
     architecture: standalone
     primary:
       persistence:
@@ -1219,8 +1224,8 @@ dataconsumerOne:
       nameOverride: dataconsumer-db
       jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataconsumer-db:5432/edc"
       auth:
-        password: "dbpassworddataconsumerone"
-        postgresPassword: "dbpassworddataconsumerone"
+        # # # Secrets Mechanism # # # # 
+        existingSecret: umbrella-dataconsumer-1-db
     vault:
       hashicorp:
         url: http://edc-dataconsumer-vault:8200
@@ -1322,8 +1327,8 @@ tx-data-provider:
       nameOverride: dataprovider-db
       jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataprovider-db:5432/edc"
       auth:
-        password: "dbpasswordtxdataprovider"
-        postgresPassword: "dbpasswordtxdataprovider"
+        # # # Secrets Mechanism # # # # 
+        existingSecret: umbrella-dataprovider-db
     vault:
       hashicorp:
         url: http://edc-dataprovider-vault:8200
@@ -1349,7 +1354,7 @@ tx-data-provider:
         tag: "16.2.0-debian-12-r10"
       nameOverride: dataprovider-dtr-db
       auth:
-        password: "dbpassworddtrdataprovider"
+        # # # Secrets Mechanism # # # # 
         existingSecret: dataprovider-secret-dtr-postgres-init
     registry:
       ingress:
@@ -1510,8 +1515,8 @@ dataconsumerTwo:
       nameOverride: dataconsumer-2-db
       jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataconsumer-2-db:5432/edc"
       auth:
-        password: "dbpassworddataconsumertwo"
-        postgresPassword: "dbpassworddataconsumertwo"
+        # # # Secrets Mechanism # # # # 
+        existingSecret: umbrella-dataconsumer-2-db
     vault:
       hashicorp:
         url: http://edc-dataconsumer-2-vault:8200
@@ -1537,7 +1542,8 @@ pgadmin4:
   enabled: false
   env:
     email: pgadmin4@txtest.org
-    password: tractusxpgdamin4
+    # # # Secrets Mechanism # # # # 
+    existingSecret: umbrella-pgadmin4
   persistentVolume:
     enabled: false
   ingress:
