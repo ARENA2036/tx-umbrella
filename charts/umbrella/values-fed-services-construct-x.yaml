@@ -21,6 +21,11 @@ portal:
   enabled: true
   replicaCount: 1
   postgresql:
+    image:
+      # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+      repository: "bitnamilegacy/postgresql"
+      # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+      #tag: "16.2.0-debian-12-r10"
     nameOverride: "portal-backend-postgresql"
     architecture: standalone
     auth:
@@ -468,11 +473,18 @@ portal:
 centralidp:
   enabled: true
   keycloak:
+    image:
+      repository: bitnamilegacy/keycloak
     nameOverride: "centralidp"
     replicaCount: 1
     auth:
       adminPassword: "adminconsolepwcentralidp"
     postgresql:
+      image:
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        repository: "bitnamilegacy/postgresql"
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        #tag: "16.2.0-debian-12-r10"
       nameOverride: "centralidp-postgresql"
       auth:
         password: "dbpasswordcentralidp"
@@ -519,7 +531,7 @@ centralidp:
     # uncomment the following line for tls
     # initContainers:
     #   - name: init-certs
-    #     image: docker.io/bitnami/keycloak:25.0.6-debian-12-r0
+    #     image: docker.io/bitnamilegacy/keycloak:25.0.6-debian-12-r0
     #     imagePullPolicy: IfNotPresent
     #     command: ["/bin/bash"]
     #     args:
@@ -713,10 +725,17 @@ centralidp:
 sharedidp:
   enabled: true
   keycloak:
+    image:
+      repository: bitnamilegacy/keycloak
     nameOverride: "sharedidp"
     auth:
       adminPassword: "adminconsolepwsharedidp"
     postgresql:
+      image:
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        repository: "bitnamilegacy/postgresql"
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        #tag: "16.2.0-debian-12-r10"
       nameOverride: "sharedidp-postgresql"
       auth:
         password: "dbpasswordsharedidp"
@@ -771,7 +790,7 @@ sharedidp:
     # uncomment the following line for tls
     # initContainers:
     #   - name: init-certs
-    #     image: docker.io/bitnami/keycloak:25.0.6-debian-12-r0
+    #     image: docker.io/bitnamilegacy/keycloak:25.0.6-debian-12-r0
     #     imagePullPolicy: IfNotPresent
     #     command: ["/bin/bash"]
     #     args:
@@ -880,6 +899,11 @@ bpndiscovery:
     readinessProbe:
       initialDelaySeconds: 200
   postgresql:
+    image:
+      # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+      repository: "bitnamilegacy/postgresql"
+      # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+      #tag: "16.2.0-debian-12-r10"
     nameOverride: "bpndiscovery-postgresql"
     primary:
       persistence:
@@ -925,6 +949,11 @@ discoveryfinder:
         nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
         nginx.ingress.kubernetes.io/x-forwarded-prefix: "/discoveryfinder"
   postgresql:
+    image:
+      # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+      repository: "bitnamilegacy/postgresql"
+      # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+      #tag: "16.2.0-debian-12-r10"
     nameOverride: "discoveryfinder-postgresql"
     primary:
       persistence:
@@ -1019,6 +1048,11 @@ ssi-credential-issuer:
     logging:
       default: "Debug"
   postgresql:
+    image:
+      # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+      repository: "bitnamilegacy/postgresql"
+      # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+      #tag: "16.2.0-debian-12-r10"
     enabled: true
     nameOverride: issuer-postgresql
     architecture: standalone
@@ -1065,6 +1099,11 @@ ssi-credential-issuer:
 bpdm:
   enabled: true
   postgres:
+    image:
+      # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+      repository: "bitnamilegacy/postgresql"
+      # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+      #tag: "16.2.0-debian-12-r10"
     # We use the default name for BPDM postgres
     fullnameOverride: &bpdmPostgresName "bpdm-postgres"
     nameOverride:
@@ -1083,6 +1122,11 @@ bpdm:
   # Set up a Gate that acts as the Portal's Gate
   bpdm-gate:
     postgres:
+      image:
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        repository: "bitnamilegacy/postgresql"
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        #tag: "16.2.0-debian-12-r10"
       # App uses BPDM postgres default name to find connection to the Postgres
       fullnameOverride:
       nameOverride: bpdm-postgres
@@ -1152,6 +1196,11 @@ bpdm:
   # Configures the central business partner Pool
   bpdm-pool:
     postgres:
+      image:
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        repository: "bitnamilegacy/postgresql"
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        #tag: "16.2.0-debian-12-r10"
       # App uses BPDM postgres default name to find connection to the Postgres
       fullnameOverride:
       nameOverride: bpdm-postgres
@@ -1228,6 +1277,11 @@ bpdm:
             - path: "/orchestrator(/|$)(.*)"
               pathType: "ImplementationSpecific"
     postgres:
+      image:
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        repository: "bitnamilegacy/postgresql"
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        #tag: "16.2.0-debian-12-r10"
       enabled: true
       fullnameOverride: bpdm-postgres
     applicationConfig:
@@ -1333,6 +1387,11 @@ dataconsumerOne:
         verifier:
           publickey_alias: tokenSignerPublicKey
     postgresql:
+      image:
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        repository: "bitnamilegacy/postgresql"
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        #tag: "16.2.0-debian-12-r10"
       nameOverride: dataconsumer-1-db
       jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataconsumer-1-db:5432/edc"
       auth:
@@ -1429,6 +1488,11 @@ dataproviderOne:
         verifier:
           publickey_alias: tokenSignerPublicKey
     postgresql:
+      image:
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        repository: "bitnamilegacy/postgresql"
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        #tag: "16.2.0-debian-12-r10"
       nameOverride: dataprovider-db
       jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataprovider-db:5432/edc"
       auth:
@@ -1452,6 +1516,11 @@ dataproviderOne:
   digital-twin-registry:
     nameOverride: dataprovider-dtr
     postgresql:
+      image:
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        repository: "bitnamilegacy/postgresql"
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        #tag: "16.2.0-debian-12-r10"
       nameOverride: dataprovider-dtr-db
       auth:
         password: "dbpassworddtrdataprovider"
@@ -1497,6 +1566,11 @@ semantic-hub:
   enableKeycloak: false
   keycloak:
     postgresql:
+      image:
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        repository: "bitnamilegacy/postgresql"
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        #tag: "16.2.0-debian-12-r10"
       architecture: standalone
       primary:
         persistence:
@@ -1588,6 +1662,11 @@ dataconsumerTwo:
         verifier:
           publickey_alias: tokenSignerPublicKey
     postgresql:
+      image:
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        repository: "bitnamilegacy/postgresql"
+        # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
+        #tag: "16.2.0-debian-12-r10"
       nameOverride: dataconsumer-2-db
       jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataconsumer-2-db:5432/edc"
       auth:
