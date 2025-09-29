@@ -1373,9 +1373,9 @@ tx-data-provider:
             - path: "/semantics/registry(/|$)(.*)"
               pathType: "Prefix"
         tls:
-          - secretName: "dataprovider-dtr.tx.test-tls"
-            hosts:
-              - "dataprovider-dtr.arena2036-x.de"
+        - secretName: "dataprovider-dtr.tx.test-tls"
+          hosts:
+            - "dataprovider-dtr.arena2036-x.de"
       host: dataprovider-dtr.arena2036-x.de
 
   simple-data-backend:
