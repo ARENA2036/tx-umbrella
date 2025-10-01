@@ -199,7 +199,7 @@ jobs:
           BPDMORCHESTRATOR: ${{ secrets.BPDMORCHESTRATOR }}
           
         run: |
-          NAMESPACE="test-cd"
+          NAMESPACE="ci-test"
           RELEASE_NAME="test"
           VALUE_FILES="charts/umbrella/values-fed-services-arena2036-x-ci-test.yaml"
           ROLLBACK="true"
