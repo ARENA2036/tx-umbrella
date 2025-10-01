@@ -29,8 +29,10 @@ portal:
     nameOverride: "portal-backend-postgresql"
     architecture: standalone
     auth:
-      # # # Secrets Mechanism # # # # 
-      existingSecret: portal-postgres
+      password: "dbpasswordportal"
+      portalPassword: "dbpasswordportal"
+      replicationPassword: "dbpasswordportal"
+      provisioningPassword: "dbpasswordportal"
     primary:
       persistence:
         enabled: true
@@ -277,12 +279,11 @@ portal:
             encryptionKey:
               "d2e27d71b018cb36029184852f1baa3e26891be94718f77de4c7cc6c882fe317"
     mailing:
-      # host: "smtp4dev.release24-12.svc.cluster.local"
-      host: "smtp4dev.arena2036-test.svc.cluster.local"
-      port: "25"
-      user: "myUser"
-      senderEmail: "info@arena2036.com"
-      password: "mysecretpassword"
+      host: ""
+      port: ""
+      user: ""
+      senderEmail: ""
+      password: ""
     portalmigrations:
       resources:
         requests:
@@ -393,13 +394,12 @@ portal:
     provisioning:
       sharedRealm:
         smtpServer:
-          # host: "smtp4dev.release24-12.svc.cluster.local"
-          host: "smtp4dev.arena2036-test.svc.cluster.local"
-          port: "25"
-          user: "myUser"
-          password: "mysecretpassword"
-          from: "info@arena2036.com"
-          replyTo: "info@arena2036.com"
+          host: ""
+          port: ""
+          user: ""
+          password: ""
+          from: ""
+          replyTo: ""
     # -- docs: https://portal-backend.arena2036-x.de/api/administration/swagger/index.html
     # https://portal-backend.arena2036-x.de/api/registration/swagger/index.html
     # https://portal-backend.arena2036-x.de/api/apps/swagger/index.html
@@ -466,8 +466,7 @@ centralidp:
     nameOverride: "centralidp"
     replicaCount: 1
     auth:
-      # # # # Secrets Mechanism # # # #
-      existingSecret: umbrella-centralidp
+      adminPassword: "adm!n@centr4l!dp"
     postgresql:
       image:
         # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
@@ -476,8 +475,8 @@ centralidp:
         #tag: "16.2.0-debian-12-r10"
       nameOverride: "centralidp-postgresql"
       auth:
-        # # # # # Secrets Mechanism # # # #
-        existingSecret: umbrella-centralidp-postgresql
+        password: "dbpasswordcentralidp"
+        postgresPassword: "dbpasswordcentralidp"
       architecture: standalone
       primary:
         persistence:
@@ -697,8 +696,7 @@ sharedidp:
       repository: bitnamilegacy/keycloak
     nameOverride: "sharedidp"
     auth:
-      # # # Secrets Mechanism # # # # 
-      existingSecret: umbrella-sharedidp
+      adminPassword: "adm!n@shar3d!dp"
     postgresql:
       image:
         # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
@@ -707,8 +705,8 @@ sharedidp:
         #tag: "16.2.0-debian-12-r10"
       nameOverride: "sharedidp-postgresql"
       auth:
-        # # # Secrets Mechanism # # # # 
-        existingSecret: umbrella-sharedidp-postgresql
+        password: "dbpasswordshared!dp"
+        postgresPassword: "dbpasswordshared!dp"
       architecture: standalone
       primary:
         persistence:
@@ -808,16 +806,15 @@ sharedidp:
         sslRequired: "none"
         centralidp: "https://centralidp.arena2036-x.de"
         initialUser:
-          # # # Secrets Mechanism # # # # 
-          existingSecret: umbrella-sharedidp-cx-operator-realm-seeding
+          username: "cx-operator@arena2036.de"
+          password: "ar3na2036-umbr3lla"
         mailing:
-          # host: "smtp4dev.release24-12.svc.cluster.local"
-          host: "smtp4dev.arena2036-test.svc.cluster.local"
-          port: "25"
-          username: "myUser"
-          password: "mysecretpassword"
-          from: "info@arena2036.com"
-          replyTo: "info@arena2036.com"
+          host: ""
+          port: ""
+          username: ""
+          password: ""
+          from: ""
+          replyTo: ""
       master:
         serviceAccounts:
           provisioning:
@@ -882,8 +879,8 @@ bpndiscovery:
         enabled: false
         size: 8Gi
     auth:
-      # # # Secrets Mechanism # # # # 
-      existingSecret: secret-bpndiscovery-postgres-init
+      password: "dbpasswordbpnd!sc0very"
+      postgresPassword: "dbpasswordbpnd!sc0very"
 
 discoveryfinder:
   enabled: true
@@ -932,8 +929,9 @@ discoveryfinder:
         enabled: true
         size: 8Gi
     auth:
-      # # # Secrets Mechanism # # # # 
-      existingSecret: secret-discoveryfinder-postgres-init
+      password: "dbpassworddiscv0eryf!nder"
+      postgresPassword: "dbpassworddisc0veryf!nder"
+
 selfdescription:
   enabled: true
   sdfactory:
@@ -1063,12 +1061,10 @@ ssi-credential-issuer:
       persistence:
         enabled: false
     auth:
-      # # -- Password for the root username 'postgres'. Secret-key 'postgres-password'.
-      # postgrespassword: "dbpasswordissuer"
-      # # -- Password for the non-root username 'issuer'. Secret-key 'password'.
-      # password: "dbpasswordissuer
-      # # # # Secrets Mechanism # # # # 
-      existingSecret: umbrella-issuer-postgres
+      # -- Password for the root username 'postgres'. Secret-key 'postgres-password'.
+      postgrespassword: "dbpasswordissuer"
+      # -- Password for the non-root username 'issuer'. Secret-key 'password'.
+      password: "dbpasswordissuer"
 
   centralidp:
     # -- Provide centralidp base address (CX IAM), without trailing '/auth'.
@@ -1109,11 +1105,8 @@ bpdm:
     auth:
       # BPDM can't handle random initial passwords at the moment
       # so need to set a fixed one here and use it in the app configs later
-      # password: &bpdmPostgresPassword "dbpassw0rdbpdm"
-      # # # Secrets Mechanism # # # #
-      password: &bpdmPostgresPassword
+      password: &bpdmPostgresPassword "dbpassw0rdbpdm"
       postgresPassword: *bpdmPostgresPassword
-      existingSecret: bpdm-postgres
     architecture: standalone
     primary:
       persistence:
@@ -1521,8 +1514,8 @@ dataconsumerOne:
       nameOverride: dataconsumer-1-db
       jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataconsumer-1-db:5432/edc"
       auth:
-        # # # Secrets Mechanism # # # # 
-        existingSecret: umbrella-dataconsumer-1-db
+        password: "dbpassworddataconsumerone"
+        postgresPassword: "dbpassworddataconsumerone"
     vault:
       hashicorp:
         url: http://edc-dataconsumer-1-vault:8200
@@ -1624,8 +1617,8 @@ tx-data-provider:
       nameOverride: dataprovider-db
       jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataprovider-db:5432/edc"
       auth:
-        # # # Secrets Mechanism # # # # 
-        existingSecret: umbrella-dataprovider-db
+        password: "dbpasswordtxdataprovider"
+        postgresPassword: "dbpasswordtxdataprovider"
     vault:
       hashicorp:
         url: http://edc-dataprovider-vault:8200
@@ -1651,7 +1644,7 @@ tx-data-provider:
         #tag: "16.2.0-debian-12-r10"
       nameOverride: dataprovider-dtr-db
       auth:
-        # # # Secrets Mechanism # # # # 
+        password: "dbpassworddtrdataprovider"
         existingSecret: dataprovider-secret-dtr-postgres-init
     registry:
       host: dataprovider-dtr.test
@@ -1798,8 +1791,8 @@ dataconsumerTwo:
       nameOverride: dataconsumer-2-db
       jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataconsumer-2-db:5432/edc"
       auth:
-        # # # Secrets Mechanism # # # # 
-        existingSecret: umbrella-dataconsumer-2-db
+        password: "dbpassworddataconsumertwo"
+        postgresPassword: "dbpassworddataconsumertwo"
     vault:
       hashicorp:
         url: http://edc-dataconsumer-2-vault:8200
@@ -1825,8 +1818,7 @@ pgadmin4:
   enabled: true
   env:
     email: pgadmin4@arena2036.de
-    # # # Secrets Mechanism # # # # 
-    existingSecret: umbrella-pgadmin4
+    password: arena2036-xpgdamin4
   persistentVolume:
     enabled: true
   ingress:
@@ -1922,8 +1914,7 @@ ssi-dim-wallet-stub:
       tag: "0.0.6"
     replicaCount: 1
     host: ssi-dim-wallet-stub.arena2036-x.de
-    # nameSpace: "release24-12"
-    nameSpace: "arena2036-test"
+    nameSpace: "release24-12"
     appName: "ssi-dim-wallet-stub"
     configName: "ssi-dim-wallet-config"
     serviceName: "ssi-dim-wallet-service"
@@ -1976,8 +1967,7 @@ ssi-dim-wallet-stub:
 
 smtp4dev:
   enabled: true
-  # namespace: "release24-12"
-  namespace: "arena2036-test"
+  namespace: "release24-12"
   ingress:
     enabled: true
     className: "webapprouting.kubernetes.azure.com"
