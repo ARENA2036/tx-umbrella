@@ -1,0 +1,314 @@
+# ################################################
+# Automatic Deployment Process for Arena2036-X
+# ################################################
+---
+name: Deploy Arena-X-Testing
+
+on:
+  push:
+    branches: [ feature/arena2036-x-cd ]
+  pull_request:
+    branches: [ feature/arena2036-x-cd ]
+    
+  workflow_dispatch:
+    inputs:
+      cluster_context:
+        description: "Select the environment e.g, (demo-cluster, arena2036-x-edc-cluster, arena2036-x-fed-services)"
+        default: 'demo-cluster'
+        required: false
+        type: choice
+        options:
+          - demo-cluster
+          - arena2036-x-edc-cluster
+          - arena2036-x-fed-services
+      resource_group:
+        description: "Select resource group"
+        default: 'demo'
+        required: false
+        type: choice
+        options:
+          - demo
+          - arena2036-x-edc
+          - arena2036-x-federated-services
+      deployment_name:
+        description: 'helm release name e.g, umbrella'
+        default: 'umbrella'
+        required: false
+        type: string
+      deployment_type:
+        description: "Deployment action e.g, (install release, upgrade release, uninstall release)"
+        default: 'upgrade'
+        required: false
+        type: choice
+        options:
+          - install
+          - upgrade
+          - uninstall
+      helm_values_file:
+        description: 'Comma-separated list of Helm values files (relative paths: e.g, charts/umbrella/values.yaml,charts/umbrella/another-values.yaml)'
+        default: 'charts/umbrella/values.yaml'
+        required: false
+        type: string
+      namespace:
+        description: 'Namespace to deploy the release'
+        default: 'umbrella'
+        required: false
+        type: string
+      rollback_on_failure:
+        description: "Rollback release if deployment fails"
+        required: false
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Install kubectl
+        run: |
+          echo "Installing kubectl..."
+          curl -LO -s "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          # Make it executable
+          chmod +x kubectl
+          # Move to a directory in your PATH
+          sudo mv kubectl /usr/local/bin/
+          # Verify installation
+          kubectl version --client
+
+      # -----------------------------
+      # Connect Azure-AKS
+      # -----------------------------
+      # Test Mode
+      - name: Connect Azure-AKS
+        run: |
+          # Hardcoded values for testing without workflow_dispatch
+          CLUSTER="demo-cluster"
+          RG="demo"
+          echo "Connecting to AKS cluster: $CLUSTER in resource group: $RG"
+          az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          az aks get-credentials --resource-group "$RG" --name "$CLUSTER" --overwrite-existing
+    
+      - name: Install Helm
+        uses: azure/setup-helm@b7246b12e77f7134dc2d460a3d5bad15bbe29390 # v4.1.0
+        with:
+          version: v3.12.1
+      
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # -----------------------------
+      # Ensure Namespace Exists
+      # -----------------------------
+      # Test Mode
+      - name: Ensure Namespace Exists
+        if: github.event_name != 'workflow_dispatch'
+        run: |
+          NAMESPACE="ci-test"
+          echo "Ensuring namespace exists: $NAMESPACE"
+          kubectl get namespace "$NAMESPACE" || kubectl create namespace "$NAMESPACE"
+
+      # -----------------------------
+      # Deploy Release
+      # -----------------------------
+      # Test Mode
+      - name: Deploy Release
+        if: github.event_name != 'workflow_dispatch'
+        env:
+          SHAREDIDP_ADMIN_PASSWORD: ${{ secrets.SHAREDIDP_ADMIN_PASSWORD }}
+          CENTRALIDP_ADMIN_PASSWORD: ${{ secrets.CENTRALIDP_ADMIN_PASSWORD }}
+          SHAREDIDP_PG_PASSWORD: ${{ secrets.SHAREDIDP_PG_PASSWORD }}
+          CENTRALIDP_PG_PASSWORD: ${{ secrets.CENTRALIDP_PG_PASSWORD }}
+          BPDM_PG_PASSWORD: ${{ secrets.BPDM_PG_PASSWORD }}
+          UMBRELLA_ISSUER_POSTGRES_PASSWORD: ${{ secrets.UMBRELLA_ISSUER_POSTGRES_PASSWORD }}
+          UMBRELLA_ISSUER_REPLICATION_PASSWORD: ${{ secrets.UMBRELLA_ISSUER_REPLICATION_PASSWORD }}
+          PORTAL_POSTGRES_PASSWORD: ${{ secrets.PORTAL_POSTGRES_PASSWORD }}
+          PGADMIN_PASSWORD: ${{ secrets.PGADMIN_PASSWORD }}
+          DISCOVERYFINDER_PASSWORD: ${{ secrets.DISCOVERYFINDER_PASSWORD }}
+          BPNDISCOVERY_PASSWORD: ${{ secrets.BPNDISCOVERY_PASSWORD }}
+          DATAPROVIDER_PASSWORD: ${{ secrets.DATAPROVIDER_PASSWORD }}
+          DATACONSUMER1_PASSWORD: ${{ secrets.DATACONSUMER1_PASSWORD }}
+          DATACONSUMER2_PASSWORD: ${{ secrets.DATACONSUMER2_PASSWORD }}
+          DATAPROVIDER_DTR_PASSWORD: ${{ secrets.DATAPROVIDER_DTR_PASSWORD }}
+          CX_USER_PASSWORD: ${{ secrets.CX_USER_PASSWORD }}
+          SA_CL1_REG_2: ${{ secrets.SA_CL1_REG_2 }}
+          SA_CLI2_01: ${{ secrets.SA_CLI2_01 }}
+          SA_CLI2_02: ${{ secrets.SA_CLI2_02 }}
+          SA_CLI2_03: ${{ secrets.SA_CLI2_03 }}
+          SA_CLI2_04: ${{ secrets.SA_CLI2_04 }}
+          SA_CLI2_05: ${{ secrets.SA_CLI2_05 }}
+          SA_CL3_CX_1: ${{ secrets.SA_CL3_CX_1 }}
+          SA_CL5_CUSTODIAN_2: ${{ secrets.SA_CL5_CUSTODIAN_2 }}
+          SA_CL7_CX_1: ${{ secrets.SA_CL7_CX_1 }}
+          SA_CL7_CX_5: ${{ secrets.SA_CL7_CX_5 }}
+          SA_CL7_CX_7: ${{ secrets.SA_CL7_CX_7 }}
+          SA_CL8_CX_1: ${{ secrets.SA_CL8_CX_1 }}
+          SA_CL21_01: ${{ secrets.SA_CL21_01 }}
+          SA_CL22_01: ${{ secrets.SA_CL22_01 }}
+          SA_CL24_01: ${{ secrets.SA_CL24_01 }}
+          SA_CL25_CX_1: ${{ secrets.SA_CL25_CX_1 }}
+          SA_CL25_CX_2: ${{ secrets.SA_CL25_CX_2 }}
+          SA_CL25_CX_3: ${{ secrets.SA_CL25_CX_3 }}
+          SA_SATEST01: ${{ secrets.SA_SATEST01 }}
+          SA_SATEST02: ${{ secrets.SA_SATEST02 }}
+          SA_SATEST03: ${{ secrets.SA_SATEST03 }}
+          SA_SATEST04: ${{ secrets.SA_SATEST04 }}
+          SA_SATEST05: ${{ secrets.SA_SATEST05 }}
+          SA_SATEST06: ${{ secrets.SA_SATEST06 }}
+          SA_SATEST07: ${{ secrets.SA_SATEST07 }}
+          SA_SATEST08: ${{ secrets.SA_SATEST08 }}
+          SA_SATEST09: ${{ secrets.SA_SATEST09 }}
+          SA_SATEST10: ${{ secrets.SA_SATEST10 }}
+          SA_SATEST11: ${{ secrets.SA_SATEST11 }}
+          SA_SATEST12: ${{ secrets.SA_SATEST12 }}
+          SA_SATEST13: ${{ secrets.SA_SATEST13 }}
+          SA_SATEST14: ${{ secrets.SA_SATEST14 }}
+          SA_SATEST15: ${{ secrets.SA_SATEST15 }}
+          SA_SATEST16: ${{ secrets.SA_SATEST16 }}
+          SA_SATEST17: ${{ secrets.SA_SATEST17 }}
+          SA_SATEST18: ${{ secrets.SA_SATEST18 }}
+          SA_SATEST19: ${{ secrets.SA_SATEST19 }}
+          SA_SATEST20: ${{ secrets.SA_SATEST20 }}
+          SA_SATEST21: ${{ secrets.SA_SATEST21 }}
+          SA_SATEST22: ${{ secrets.SA_SATEST22 }}
+          SAME_SA_CL1_REG_2: ${{ secrets.SAME_SA_CL1_REG_2 }}
+          SA_CL1_REG_1: ${{ secrets.SA_CL1_REG_1 }}
+          SA_CX_OPERATOR: ${{ secrets.SA_CX_OPERATOR }}
+          SA_PROVISIONING: ${{ secrets.SA_PROVISIONING }}
+          AUTHORIZATION_GRANT_TYPE: ${{ secrets.AUTHORIZATION_GRANT_TYPE }}
+          PORTAL_CLIENT_SECRET: ${{ secrets.PORTAL_CLIENT_SECRET }}
+          WALLET_CLIENT_SECRET: ${{ secrets.WALLET_CLIENT_SECRET }}
+          SSI_PORTAL_CLIENT_SECRET: ${{ secrets.SSI_PORTAL_CLIENT_SECRET }}
+          PORTAL_BACKEND_CLIENT_SECRET: ${{ secrets.PORTAL_BACKEND_CLIENT_SECRET }}
+          ISSUERCOMPONENT_CLIENT_SECRET: ${{ secrets.ISSUERCOMPONENT_CLIENT_SECRET }}
+          CUSTODIAN_CLIENT_SECRET: ${{ secrets.CUSTODIAN_CLIENT_SECRET }}
+          SDFACTORY_ADDRESS: ${{ secrets.SDFACTORY_ADDRESS }}
+          OFFERPROVIDER_CLIENT_SECRET: ${{ secrets.OFFERPROVIDER_CLIENT_SECRET }}
+          BPDM_CLIENT_SECRET: ${{ secrets.BPDM_CLIENT_SECRET }}
+          MIW: ${{ secrets.MIW }}
+          BPDM: ${{ secrets.BPDM }}
+          BPDMGATE: ${{ secrets.BPDMGATE }}
+          BPDMORCHESTRATOR: ${{ secrets.BPDMORCHESTRATOR }}
+          
+        run: |
+          NAMESPACE="test-cd"
+          RELEASE_NAME="test"
+          VALUE_FILES="charts/umbrella/values-fed-services-arena2036-x-ci-test.yaml"
+          ROLLBACK="true"
+          # SECRETFILESPATH="charts/umbrella/templates/umbrella-secret.yaml"
+
+          # Combine main values files and secret file
+          # ALL_VALUES_FILES="$VALUE_FILES,$SECRETFILESPATH"
+
+
+          # Build Helm values arguments
+          HELM_VALUES_ARGS=""
+          IFS=',' read -ra FILE_ARRAY <<< "$VALUE_FILES"
+          for f in "${FILE_ARRAY[@]}"; do
+            HELM_VALUES_ARGS="$HELM_VALUES_ARGS --values $f"
+          done
+
+          # Rollback/atomic option
+          if [ "$ROLLBACK" = "true" ]; then
+            EXTRA_ARGS="--atomic"
+          else
+            EXTRA_ARGS=""
+          fi
+
+          # Pass secrets using --set
+          HELM_SET_ARGS=(
+            --set secretEnv.SHAREDIDP_ADMIN_PASSWORD="$SHAREDIDP_ADMIN_PASSWORD"
+            --set secretEnv.CENTRALIDP_ADMIN_PASSWORD="$CENTRALIDP_ADMIN_PASSWORD"
+            --set secretEnv.SHAREDIDP_PG_PASSWORD="$SHAREDIDP_PG_PASSWORD"
+            --set secretEnv.CENTRALIDP_PG_PASSWORD="$CENTRALIDP_PG_PASSWORD"
+            --set secretEnv.BPDM_PG_PASSWORD="$BPDM_PG_PASSWORD"
+            --set secretEnv.UMBRELLA_ISSUER_POSTGRES_PASSWORD="$UMBRELLA_ISSUER_POSTGRES_PASSWORD"
+            --set secretEnv.UMBRELLA_ISSUER_REPLICATION_PASSWORD="$UMBRELLA_ISSUER_REPLICATION_PASSWORD"
+            --set secretEnv.PORTAL_POSTGRES_PASSWORD="$PORTAL_POSTGRES_PASSWORD"
+            --set secretEnv.PGADMIN_PASSWORD="$PGADMIN_PASSWORD"
+            --set secretEnv.DISCOVERYFINDER_PASSWORD="$DISCOVERYFINDER_PASSWORD"
+            --set secretEnv.BPNDISCOVERY_PASSWORD="$BPNDISCOVERY_PASSWORD"
+            --set secretEnv.DATAPROVIDER_PASSWORD="$DATAPROVIDER_PASSWORD"
+            --set secretEnv.DATACONSUMER1_PASSWORD="$DATACONSUMER1_PASSWORD"
+            --set secretEnv.DATACONSUMER2_PASSWORD="$DATACONSUMER2_PASSWORD"
+            --set secretEnv.DATAPROVIDER_DTR_PASSWORD="$DATAPROVIDER_DTR_PASSWORD"
+            --set secretEnv.CX_USER_PASSWORD="$CX_USER_PASSWORD"
+            --set secretEnv.SA_CL1_REG_2="$SA_CL1_REG_2"
+            --set secretEnv.SA_CLI2_01="$SA_CLI2_01"
+            --set secretEnv.SA_CLI2_02="$SA_CLI2_02"
+            --set secretEnv.SA_CLI2_03="$SA_CLI2_03"
+            --set secretEnv.SA_CLI2_04="$SA_CLI2_04"
+            --set secretEnv.SA_CLI2_05="$SA_CLI2_05"
+            --set secretEnv.SA_CL3_CX_1="$SA_CL3_CX_1"
+            --set secretEnv.SA_CL5_CUSTODIAN_2="$SA_CL5_CUSTODIAN_2"
+            --set secretEnv.SA_CL7_CX_1="$SA_CL7_CX_1"
+            --set secretEnv.SA_CL7_CX_5="$SA_CL7_CX_5"
+            --set secretEnv.SA_CL7_CX_7="$SA_CL7_CX_7"
+            --set secretEnv.SA_CL8_CX_1="$SA_CL8_CX_1"
+            --set secretEnv.SA_CL21_01="$SA_CL21_01"
+            --set secretEnv.SA_CL22_01="$SA_CL22_01"
+            --set secretEnv.SA_CL24_01="$SA_CL24_01"
+            --set secretEnv.SA_CL25_CX_1="$SA_CL25_CX_1"
+            --set secretEnv.SA_CL25_CX_2="$SA_CL25_CX_2"
+            --set secretEnv.SA_CL25_CX_3="$SA_CL25_CX_3"
+            --set secretEnv.SA_SATEST01="$SA_SATEST01"
+            --set secretEnv.SA_SATEST02="$SA_SATEST02"
+            --set secretEnv.SA_SATEST03="$SA_SATEST03"
+            --set secretEnv.SA_SATEST04="$SA_SATEST04"
+            --set secretEnv.SA_SATEST05="$SA_SATEST05"
+            --set secretEnv.SA_SATEST06="$SA_SATEST06"
+            --set secretEnv.SA_SATEST07="$SA_SATEST07"
+            --set secretEnv.SA_SATEST08="$SA_SATEST08"
+            --set secretEnv.SA_SATEST09="$SA_SATEST09"
+            --set secretEnv.SA_SATEST10="$SA_SATEST10"
+            --set secretEnv.SA_SATEST11="$SA_SATEST11"
+            --set secretEnv.SA_SATEST12="$SA_SATEST12"
+            --set secretEnv.SA_SATEST13="$SA_SATEST13"
+            --set secretEnv.SA_SATEST14="$SA_SATEST14"
+            --set secretEnv.SA_SATEST15="$SA_SATEST15"
+            --set secretEnv.SA_SATEST16="$SA_SATEST16"
+            --set secretEnv.SA_SATEST17="$SA_SATEST17"
+            --set secretEnv.SA_SATEST18="$SA_SATEST18"
+            --set secretEnv.SA_SATEST19="$SA_SATEST19"
+            --set secretEnv.SA_SATEST20="$SA_SATEST20"
+            --set secretEnv.SA_SATEST21="$SA_SATEST21"
+            --set secretEnv.SA_SATEST22="$SA_SATEST22"
+            --set secretEnv.SAME_SA_CL1_REG_2="$SAME_SA_CL1_REG_2"
+            --set secretEnv.SA_CL1_REG_1="$SA_CL1_REG_1"
+            --set secretEnv.SA_CX_OPERATOR="$SA_CX_OPERATOR"
+            --set secretEnv.SA_PROVISIONING="$SA_PROVISIONING"
+            --set secretEnv.AUTHORIZATION_GRANT_TYPE="$AUTHORIZATION_GRANT_TYPE"
+            --set secretEnv.PORTAL_CLIENT_SECRET="$PORTAL_CLIENT_SECRET"
+            --set secretEnv.WALLET_CLIENT_SECRET="$WALLET_CLIENT_SECRET"
+            --set secretEnv.SSI_PORTAL_CLIENT_SECRET="$SSI_PORTAL_CLIENT_SECRET"
+            --set secretEnv.PORTAL_BACKEND_CLIENT_SECRET="$PORTAL_BACKEND_CLIENT_SECRET"
+            --set secretEnv.ISSUERCOMPONENT_CLIENT_SECRET="$ISSUERCOMPONENT_CLIENT_SECRET"
+            --set secretEnv.CUSTODIAN_CLIENT_SECRET="$CUSTODIAN_CLIENT_SECRET"
+            --set secretEnv.SDFACTORY_ADDRESS="$SDFACTORY_ADDRESS"
+            --set secretEnv.OFFERPROVIDER_CLIENT_SECRET="$OFFERPROVIDER_CLIENT_SECRET"
+            --set secretEnv.BPDM_CLIENT_SECRET="$BPDM_CLIENT_SECRET"
+            --set secretEnv.MIW="$MIW"
+            --set secretEnv.BPDM="$BPDM"
+            --set secretEnv.BPDMGATE="$BPDMGATE"
+            --set secretEnv.BPDMORCHESTRATOR="$BPDMORCHESTRATOR"
+          )
+
+          echo "Building Helm chart dependencies..."
+          helm dependency build ./charts/umbrella
+          
+          echo "Deploying Umbrella release with secrets..."
+          helm upgrade --install "$RELEASE_NAME" ./charts/umbrella \
+            $HELM_VALUES_ARGS \
+            "${HELM_SET_ARGS[@]}" \
+            --namespace "$NAMESPACE"
+            # $EXTRA_ARGS \
+            # --timeout 10m
+          echo "Release deployed/upgraded: $RELEASE_NAME in namespace $NAMESPACE"
