@@ -5,10 +5,10 @@
 name: Deploy Arena-X-Testing
 
 on:
-  push:
-    branches: [ feature/arena2036-x-cd ]
-  pull_request:
-    branches: [ feature/arena2036-x-cd ]
+  # push:
+  #   branches: [ feature/arena2036-x-cd ]
+  # pull_request:
+  #   branches: [ feature/arena2036-x-cd ]
     
   workflow_dispatch:
     inputs:

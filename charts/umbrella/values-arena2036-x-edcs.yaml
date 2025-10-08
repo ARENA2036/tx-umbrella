@@ -1352,6 +1352,10 @@ tx-data-provider:
         password: "dbpassworddtrdataprovider"
         existingSecret: dataprovider-secret-dtr-postgres-init
     registry:
+      image:
+        registry:  arena2036.azurecr.io
+        repository: tractusx/sldt-digital-twin-registry
+        version: "0.6.3-patched"
       ingress:
         enabled: true
         className: ""
