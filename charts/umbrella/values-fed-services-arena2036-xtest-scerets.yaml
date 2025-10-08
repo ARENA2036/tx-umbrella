@@ -1914,7 +1914,7 @@ ssi-dim-wallet-stub:
       tag: "0.0.6"
     replicaCount: 1
     host: ssi-dim-wallet-stub-owais.arena2036-x.de
-    nameSpace: "test-secrets"
+    nameSpace: "umbrella-owais"
     appName: "ssi-dim-wallet-stub"
     configName: "ssi-dim-wallet-config"
     serviceName: "ssi-dim-wallet-service"
@@ -1967,7 +1967,7 @@ ssi-dim-wallet-stub:
 
 smtp4dev:
   enabled: true
-  namespace: "test-secrets"
+  namespace: "umbrella-owais"
   ingress:
     enabled: true
     className: "webapprouting.kubernetes.azure.com"
