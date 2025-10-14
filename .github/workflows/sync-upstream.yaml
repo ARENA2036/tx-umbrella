@@ -8,7 +8,6 @@ on:
 permissions:
   contents: write
   pull-requests: write
-  workflows: write
 
 jobs:
   sync:
@@ -16,7 +15,7 @@ jobs:
 
     steps:
       - name: Check out main
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
@@ -25,7 +24,7 @@ jobs:
       - name: Set Git identity
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Add upstream and fetch
         run: |
@@ -50,7 +49,7 @@ jobs:
 
       - name: Push sync branch to your fork
         run: |
-          git push origin sync-upstream --force
+          git push origin sync-upstream
 
       # Config to create PR 
       - name: Create PR into main
@@ -59,7 +58,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           base: main
           branch: sync-upstream
-          title: Merge sync-upstream to arena2036-x-infre (Conflicts may be present)
+          title: Merge sync-upstream to main (Conflicts may be present)
           body: |
             This PR rebases `main` on top of the latest `upstream/main`.
           commit-message: "Sync with upstream/main"
