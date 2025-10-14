@@ -9,5 +9,3 @@ target/
 # ignore secrets file
 values-secrets.yaml
 .DS_Store
-Chart/.DS_Store
-charts/umbrella/.DS_Store
