@@ -14,8 +14,9 @@ CLUSTER_CONTEXT=$1                  ## the current k8s cluster where the edc is 
 DEPLOYMENT_NAME=$2                  ## helm deployment name e.g, umbrella-edc
 DEPLOYMENT_TYPE=$3                  ## install/upgrade
 HELM_VALUES_FILE=$4                 ## the relative path to the helm values.yaml
-NAMESPACE=$5                        ## the namespace where the edc is to be deployed
-# DOMAIN_NAME=$6                    ## the domain name for the public facing ingress
+HELM_ARGS=$5                        ## the custom helm arguments
+NAMESPACE=$6                        ## the namespace where the edc is to be deployed
+# DOMAIN_NAME=$7                    ## the domain name for the public facing ingress
 
 SUB_DIR="charts/umbrella"
 DEFAULT_VALUES_FILE="values.yaml"
@@ -76,12 +77,12 @@ echo "Be patient, will take a while ..."
 if [[ $DEPLOYMENT_TYPE == "install" ]]
 then
     echo "Installing the deployment..."
-    helm $DEPLOYMENT_TYPE $DEPLOYMENT_NAME -f $HELM_VALUES_FILE $HELM_SET_ARGS --namespace $NAMESPACE --debug .
+    helm $DEPLOYMENT_TYPE $DEPLOYMENT_NAME -f $HELM_VALUES_FILE $HELM_ARGS --namespace $NAMESPACE --debug .
 
 elif [[ $DEPLOYMENT_TYPE == "upgrade" ]]
 then
     echo "Upgrading the deployment..."
-    helm $DEPLOYMENT_TYPE -i $DEPLOYMENT_NAME -f $HELM_VALUES_FILE $HELM_SET_ARGS --namespace $NAMESPACE --debug .
+    helm $DEPLOYMENT_TYPE -i $DEPLOYMENT_NAME -f $HELM_VALUES_FILE $HELM_ARGS --namespace $NAMESPACE --debug .
 else
     echo "Invalid deployment type -> accepted types -> (install or upgrade)"
 fi
