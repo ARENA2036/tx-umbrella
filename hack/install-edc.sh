@@ -89,7 +89,7 @@ elif [[ $DEPLOYMENT_TYPE == "upgrade" ]]
 then
     echo $HELM_ARGS
     echo "Upgrading the deployment..."
-    helm upgrade -i $DEPLOYMENT_NAME . \
+    helm $DEPLOYMENT_TYPE $DEPLOYMENT_NAME . \
       --namespace $NAMESPACE \
       -f "$HELM_VALUES_FILE" \
       "${HELM_ARGS[@]}"
