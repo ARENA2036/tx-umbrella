@@ -271,6 +271,7 @@ jobs:
             --set secretEnv.BPDMGATE="$BPDMGATE"
             --set secretEnv.BPDMORCHESTRATOR="$BPDMORCHESTRATOR"
           )
+          echo "print :  HELM_SET_ARGS"
 
           chmod +x ./install-edc.sh
           echo "Running deployment script..."
