@@ -83,7 +83,7 @@ then
     helm $DEPLOYMENT_TYPE $DEPLOYMENT_NAME . \
       --namespace $NAMESPACE \
       -f "$HELM_VALUES_FILE" \
-      "${HELM_ARGS[@]}"
+      "${HELM_ARGS[@]}" \
       --debug
       
 elif [[ $DEPLOYMENT_TYPE == "upgrade" ]]
@@ -92,7 +92,7 @@ then
     helm $DEPLOYMENT_TYPE $DEPLOYMENT_NAME . \
       --namespace $NAMESPACE \
       -f "$HELM_VALUES_FILE" \
-      "${HELM_ARGS[@]}"
+      "${HELM_ARGS[@]}" \
       --debug
 else
     echo "Invalid deployment type -> accepted types -> (install or upgrade)"
