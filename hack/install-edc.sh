@@ -76,12 +76,12 @@ echo "Be patient, will take a while ..."
 if [[ $DEPLOYMENT_TYPE == "install" ]]
 then
     echo "Installing the deployment..."
-    helm $DEPLOYMENT_TYPE $DEPLOYMENT_NAME -f $HELM_VALUES_FILE --namespace $NAMESPACE --debug .
+    helm $DEPLOYMENT_TYPE $DEPLOYMENT_NAME -f $HELM_VALUES_FILE $HELM_SET_ARGS --namespace $NAMESPACE --debug .
 
 elif [[ $DEPLOYMENT_TYPE == "upgrade" ]]
 then
     echo "Upgrading the deployment..."
-    helm $DEPLOYMENT_TYPE -i $DEPLOYMENT_NAME -f $HELM_VALUES_FILE --namespace $NAMESPACE --debug .
+    helm $DEPLOYMENT_TYPE -i $DEPLOYMENT_NAME -f $HELM_VALUES_FILE $HELM_SET_ARGS --namespace $NAMESPACE --debug .
 else
     echo "Invalid deployment type -> accepted types -> (install or upgrade)"
 fi
