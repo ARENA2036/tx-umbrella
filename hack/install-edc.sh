@@ -90,7 +90,6 @@ then
       -f $HELM_VALUES_FILE \
       $HELM_ARGS
 else
-else
     echo "Invalid deployment type -> accepted types -> (install or upgrade)"
 fi
 
