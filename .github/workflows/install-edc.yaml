@@ -275,5 +275,5 @@ jobs:
 
           chmod +x ./install-edc.sh
           echo "Running deployment script..."
-          ./install-edc.sh ${{ github.event.inputs.cluster_context }} ${{ github.event.inputs.deployment_name }} ${{ github.event.inputs.deployment_type }} ${{ github.event.inputs.helm_values_file }} "${HELM_SET_ARGS[*]}" ${{ github.event.inputs.namespace }}
+          ./install-edc.sh ${{ github.event.inputs.cluster_context }} ${{ github.event.inputs.deployment_name }} ${{ github.event.inputs.deployment_type }} ${{ github.event.inputs.helm_values_file }} "${HELM_SET_ARGS[@]}" ${{ github.event.inputs.namespace }}
 
