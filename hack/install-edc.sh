@@ -14,9 +14,12 @@ CLUSTER_CONTEXT=$1                  ## the current k8s cluster where the edc is 
 DEPLOYMENT_NAME=$2                  ## helm deployment name e.g, umbrella-edc
 DEPLOYMENT_TYPE=$3                  ## install/upgrade
 HELM_VALUES_FILE=$4                 ## the relative path to the helm values.yaml
-HELM_ARGS=$5                        ## the custom helm arguments
-NAMESPACE=$6                        ## the namespace where the edc is to be deployed
+# HELM_ARGS=$5                      ## the custom helm arguments
+# NAMESPACE=$6                      ## the namespace where the edc is to be deployed
 # DOMAIN_NAME=$7                    ## the domain name for the public facing ingress
+NAMESPACE=${!#}                     ## Last argument is namespace
+HELM_ARGS=("${@:5:$#-5}")           ## Arguments 5..(n-1) are Helm args
+
 
 SUB_DIR="charts/umbrella"
 DEFAULT_VALUES_FILE="values.yaml"
