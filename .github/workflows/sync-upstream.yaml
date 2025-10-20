@@ -49,6 +49,8 @@ jobs:
       - name: Remove workflow changes (optional safety)
         run: |
           git restore --source=HEAD --staged --worktree .github/workflows/
+          git commit -am "Revert changes to workflow files (GitHub restriction workaround)" || true
+    
       - name: Push sync branch to your fork
         run: |
           git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/ARENA2036/tx-umbrella.git sync-upstream --force
