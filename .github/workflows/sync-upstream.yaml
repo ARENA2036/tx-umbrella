@@ -46,7 +46,9 @@ jobs:
             git commit -m "Merge upstream/main into sync-upstream (auto-sync, may contain conflicts)"
           fi
           exit 0
-
+      - name: Remove workflow changes (optional safety)
+        run: |
+          git restore --source=HEAD --staged --worktree .github/workflows/
       - name: Push sync branch to your fork
         run: |
           git push https://x-access-token:${{ secrets.SYN_UPSTREAM_PAT }}@github.com/ARENA2036/tx-umbrella.git sync-upstream --force
