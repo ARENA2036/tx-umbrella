@@ -51,7 +51,7 @@ jobs:
           git restore --source=HEAD --staged --worktree .github/workflows/
       - name: Push sync branch to your fork
         run: |
-          git push https://x-access-token:${{ secrets.SYN_UPSTREAM_PAT }}@github.com/ARENA2036/tx-umbrella.git sync-upstream --force
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/ARENA2036/tx-umbrella.git sync-upstream --force
 
       # Config to create PR 
       - name: Create PR into main
