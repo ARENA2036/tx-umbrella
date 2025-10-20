@@ -17,7 +17,7 @@ jobs:
       - name: Check out main
         uses: actions/checkout@v5
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.SYNC_UPSTREAM_PAT }}
           fetch-depth: 0
           ref: main
 
@@ -53,13 +53,13 @@ jobs:
     
       - name: Push sync branch to your fork
         run: |
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/ARENA2036/tx-umbrella.git sync-upstream --force
+          git push https://x-access-token:${{ secrets.SYNC_UPSTREAM_PAT }}@github.com/ARENA2036/tx-umbrella.git sync-upstream --force
 
       # Config to create PR 
       - name: Create PR into main
         uses: peter-evans/create-pull-request@v6
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.SYNC_UPSTREAM_PAT }}
           base: main
           branch: sync-upstream
           title: Merge sync-upstream to main (Conflicts may be present)
