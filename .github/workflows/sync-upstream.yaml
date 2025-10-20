@@ -7,7 +7,7 @@ on:
 
 permissions:
   contents: write
-  workflows: write
+  pull-requests: write
 
 jobs:
   sync:
@@ -49,7 +49,7 @@ jobs:
 
       - name: Push sync branch to your fork
         run: |
-          git push origin sync-upstream
+          git push https://x-access-token:${{ secrets.SYN_UPSTREAM_PAT }}@github.com/ARENA2036/tx-umbrella.git sync-upstream --force
 
       # Config to create PR 
       - name: Create PR into main
