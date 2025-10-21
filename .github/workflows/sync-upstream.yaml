@@ -57,9 +57,10 @@ jobs:
       
       - name: Verify branch on remote
         run: |
-          echo "Checking if sync-upstream exists on remote..."
+          echo "Checking if sync-upstream exists and is not empty..."
           git fetch origin sync-upstream
-          git branch -r | grep sync-upstream || (echo "Branch not found!" && exit 1)
+          git rev-parse origin/sync-upstream || (echo "Branch not found!" && exit 1)
+          git ls-tree origin/sync-upstream || (echo "Branch seems empty!" && exit 1)
           
       # Config to create PR 
       - name: Create PR into main
