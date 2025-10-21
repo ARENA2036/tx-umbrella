@@ -54,7 +54,13 @@ jobs:
       - name: Push sync branch to your fork
         run: |
           git push https://x-access-token:${{ secrets.SYNC_UPSTREAM_PAT }}@github.com/ARENA2036/tx-umbrella.git sync-upstream --force
-
+      
+      - name: Verify branch on remote
+        run: |
+          echo "Checking if sync-upstream exists on remote..."
+          git fetch origin sync-upstream
+          git branch -r | grep sync-upstream || (echo "Branch not found!" && exit 1)
+          
       # Config to create PR 
       - name: Create PR into main
         uses: peter-evans/create-pull-request@v6
