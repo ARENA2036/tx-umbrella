@@ -95,5 +95,5 @@ jobs:
       - name: Create Pull Request
         env:
           GITHUB_TOKEN: ${{ secrets.SYNC_UPSTREAM_PAT }}
-        run: gh pr create --base main --head sync-upstream --title "Merge sync-upstream to main" --body "This PR rebases main on top of the latest upstream/main."
+        run: gh pr create --repo ARENA2036/tx-umbrella --base main --head sync-upstream --title "Merge sync-upstream to main" --body "This PR rebases main on top of the latest upstream/main."
 
