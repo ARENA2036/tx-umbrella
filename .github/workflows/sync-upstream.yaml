@@ -82,6 +82,10 @@ jobs:
       #     commit-message: "Sync with upstream/main"
       #     author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
       #     committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+      - name: Verify
+        run: |
+          git status
+          git branch -a
       - name: Create Pull Request
         env:
           GITHUB_TOKEN: ${{ secrets.SYNC_UPSTREAM_PAT }}
