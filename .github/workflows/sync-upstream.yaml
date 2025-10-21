@@ -66,3 +66,6 @@ jobs:
           body: |
             This PR rebases `main` on top of the latest `upstream/main`.
           commit-message: "Sync with upstream/main"
+          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+
