@@ -82,6 +82,8 @@ jobs:
       #     commit-message: "Sync with upstream/main"
       #     author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
       #     committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+      - name: Wait for GitHub to register branch
+        run: sleep 5
       - name: Verify
         run: |
           git status
