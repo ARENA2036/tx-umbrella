@@ -30,6 +30,10 @@ jobs:
         run: |
           git remote add upstream https://github.com/eclipse-tractusx/tractus-x-umbrella.git
           git fetch upstream main
+      
+      - name: Set origin remote with token
+        run: |
+          git remote set-url origin https://x-access-token:${{ secrets.SYNC_UPSTREAM_PAT }}@github.com/ARENA2036/tx-umbrella.git
 
       - name: Checkout to sync branch
         run: |
