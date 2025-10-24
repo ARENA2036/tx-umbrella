@@ -73,6 +73,6 @@ jobs:
           --head sync-upstream \
           --title "Merge sync-upstream to main" \
           --body "This PR rebases main on top of the latest upstream/main." \
-          --reviewer saudkhan116 \
-          --reviewer khanowaisarena
+          --reviewer "saudkhan116" \
+          --reviewer "khanowaisarena"
 
