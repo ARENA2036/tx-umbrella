@@ -50,10 +50,6 @@ jobs:
             git commit -m "Merge upstream/main into sync-upstream (auto-sync, may contain conflicts)"
           fi
           exit 0
-      - name: Remove workflow changes (optional safety)
-        run: |
-          git restore --source=HEAD --staged --worktree .github/workflows/
-          git commit -am "Revert changes to workflow files (GitHub restriction workaround)" || true
     
       - name: Push sync branch to your fork
         run: |
@@ -62,38 +58,22 @@ jobs:
       - name: Install GitHub CLI
         run: sudo apt-get install -y gh
 
-      - name: Authenticate gh CLI
-        env:
-          GITHUB_TOKEN: ${{ secrets.SYNC_UPSTREAM_PAT }}
-        run: gh auth setup-git
-      # - name: Verify branch on remote
-      #   run: |
-      #     echo "Checking if sync-upstream exists and is not empty..."
-      #     git fetch origin sync-upstream
-      #     git rev-parse origin/sync-upstream || (echo "Branch not found!" && exit 1)
-      #     git ls-tree origin/sync-upstream || (echo "Branch seems empty!" && exit 1)
-          
-      # Config to create PR 
-      # - name: Create PR into main
-      #   uses: peter-evans/create-pull-request@v6
-      #   with:
-      #     token: ${{ secrets.SYNC_UPSTREAM_PAT }}
-      #     base: main
-      #     branch: sync-upstream
-      #     title: Merge sync-upstream to main (Conflicts may be present)
-      #     body: |
-      #       This PR rebases `main` on top of the latest `upstream/main`.
-      #     commit-message: "Sync with upstream/main"
-      #     author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-      #     committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
       - name: Wait for GitHub to register branch
         run: sleep 5
+
       - name: Verify
         run: |
           git status
           git branch -a
+
       - name: Create Pull Request
         env:
-          GITHUB_TOKEN: ${{ secrets.SYNC_UPSTREAM_PAT }}
-        run: gh pr create --repo ARENA2036/tx-umbrella --base main --head sync-upstream --title "Merge sync-upstream to main" --body "This PR rebases main on top of the latest upstream/main."
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr create \
+          --repo ARENA2036/tx-umbrella \
+          --base main \
+          --head sync-upstream \
+          --title "Merge sync-upstream to main" \
+          --body "This PR rebases main on top of the latest upstream/main." \
+          --reviewer saudkhan116,khanowaisarena
 
