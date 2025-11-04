@@ -104,8 +104,8 @@ dependencies:
     repository: https://eclipse-tractusx.github.io/charts/dev
     version: 0.5.2
     condition: bdrs-server-memory.enabled
-    # ssi-dim-wallet-stub
+    # ssi-dim-wallet-stub ( a quick fix to use the wallet version 0.1.10, it was before 0.1.8)
   - name: ssi-dim-wallet-stub
     repository: https://eclipse-tractusx.github.io/charts/dev
-    version: 0.1.8
+    version: 0.1.10
     condition: ssi-dim-wallet-stub.enabled
