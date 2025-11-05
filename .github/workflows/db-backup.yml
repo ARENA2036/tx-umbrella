@@ -43,5 +43,5 @@ jobs:
 
       - name: Run Database Backup Script
         run: |
-          chmod +x db-backup.sh
+          chmod +x ./db-backup.sh
           ./db-backup.sh
