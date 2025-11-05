@@ -1,17 +1,43 @@
 name: Database Backup
 
 on:
-  push:
-    branches:
-      - backup-db
+  # push:
+  #   branches:
+  #     - backup-db
+
+  workflow_dispatch:
+      inputs:
+        cluster_context:
+          description: "Select the AKS environment"
+          default: "demo-cluster"
+          required: true
+          type: choice
+          options:
+            - demo-cluster
+            - arena2036-x-edc-cluster
+            - arena2036-x-fed-services
+        resource_group:
+          description: "Select Azure resource group"
+          default: "demo"
+          required: true
+          type: choice
+          options:
+            - demo
+            - arena2036-x-edc
+            - arena2036-x-federated-services
+        namespace:
+          description: "Kubernetes namespace to back up"
+          required: true
+          default: "umbrella-owais"
 
 jobs:
   db-backup:
+    name: Run PostgreSQL Backups
     runs-on: ubuntu-latest
 
     env:
-      TARGET_CONTEXT: "demo-cluster"
-      NAMESPACE: "umbrella-owais"
+      TARGET_CONTEXT: ${{ github.event.inputs.cluster_context }}
+      NAMESPACE: ${{ github.event.inputs.namespace }}
       AZURE_ACCOUNT: "arena2036"
       AZURE_CONTAINER: "database-backup"
 
@@ -19,12 +45,11 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Show Environment Variables
+      - name: Show Workflow Inputs
         run: |
-          echo "Cluster context: $TARGET_CONTEXT"
-          echo "Namespace:       $NAMESPACE"
-          echo "Azure Account:   $AZURE_ACCOUNT"
-          echo "Azure Container: $AZURE_CONTAINER"
+          echo "Cluster context: ${{ github.event.inputs.cluster_context }}"
+          echo "Resource group: ${{ github.event.inputs.resource_group }}"
+          echo "Namespace:      ${{ github.event.inputs.namespace }}"
 
       - name: Log in to Azure
         uses: azure/login@v1
@@ -35,8 +60,8 @@ jobs:
         run: |
           az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           az aks get-credentials \
-            --resource-group "demo" \
-            --name "$TARGET_CONTEXT" \
+            --resource-group ${{ github.event.inputs.resource_group }} \
+            --name ${{ github.event.inputs.cluster_context }} \
             --overwrite-existing
           kubectl config use-context "$TARGET_CONTEXT"
           kubectl config current-context
@@ -45,3 +70,19 @@ jobs:
         run: |
           chmod +x ./hack/db-backup.sh
             ./hack/db-backup.sh
+
+      - name: Upload Backup Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-logs
+          path: ./logs/**/*.log
+          retention-days: 7
+
+      - name: Upload Backup Files
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-files
+          path: ./backup/**/*.sql
+          retention-days: 7
