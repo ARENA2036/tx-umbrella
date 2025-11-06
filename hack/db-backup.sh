@@ -15,6 +15,7 @@ set -euo pipefail
 # --- Required Environment Variables (from GitHub Actions) ---
 # TARGET_CONTEXT     = Kubernetes context name
 # NAMESPACE          = Kubernetes namespace
+# RELEASE_NAME       = Kubernetes release name
 # AZURE_ACCOUNT      = Azure storage account name
 # AZURE_CONTAINER    = Azure blob container name
 
@@ -51,21 +52,21 @@ echo "----------------------------------------"
 
 # --- Databases to back up ---
 DBS=(
-  "sharedidp-postgresql:fed-services-sharedidp-postgresql-0:kcshared:dbpasswordshared!dp:iamsharedidp"
-  "postgresql:fed-services-postgresql-0:issuer:dbpasswordissuer:issuer"
-  "portal-backend:fed-services-portal-backend-postgresql-0:postgres:dbpasswordportal:postgres"
-  "issuer-postgresql:fed-services-issuer-postgresql-0:issuer:dbpasswordissuer:issuer"
-  "discoveryfinder:fed-services-discoveryfinder-postgresql-0:catenax:dbpassworddiscv0eryf!nder:discoveryfinder"
-  "dataconsumer-1-db:fed-services-dataconsumer-1-db-0:testuser:dbpassworddataconsumerone:edc"
-  "centralidp-postgresql:fed-services-centralidp-postgresql-0:kccentral:dbpasswordcentralidp:iamcentralidp"
-  "bpndiscovery-postgresql:fed-services-bpndiscovery-postgresql-0:default-user:dbpasswordbpnd!sc0very:bpndiscovery"
+  "sharedidp-postgresql:${RELEASE_NAME}-sharedidp-postgresql-0:kcshared:${SHAREDIDP_DB_PASSWORD}:iamsharedidp"
+  "postgresql:${RELEASE_NAME}-postgresql-0:issuer:${POSTGRESQL_DB}:issuer"
+  "portal-backend:${RELEASE_NAME}-portal-backend-postgresql-0:postgres:${PORTAL_DB_PASSWORD}:postgres"
+  "issuer-postgresql:${RELEASE_NAME}-issuer-postgresql-0:issuer:${ISSUER_DB_PASSWORD}:issuer"
+  "discoveryfinder:${RELEASE_NAME}-discoveryfinder-postgresql-0:catenax:${DISCOVERYFINDER_DB_PASSWORD}:discoveryfinder"
+  "dataconsumer-1-db:${RELEASE_NAME}-dataconsumer-1-db-0:testuser:${DATACONSUMER_DB_PASSWORD}:edc"
+  "centralidp-postgresql:${RELEASE_NAME}-centralidp-postgresql-0:kccentral:${CENTRALIDP_DB_PASSWORD}:iamcentralidp"
+  "bpndiscovery-postgresql:${RELEASE_NAME}-bpndiscovery-postgresql-0:default-user:${BPNDISCOVERY_DB_PASSWORD}:bpndiscovery"
 )
 
 # --- Step 1: Take backups ---
 echo "Step 1: Taking backups..."
 for ENTRY in "${DBS[@]}"; do
   IFS=":" read -r DB_NAME POD USER PASSWORD DATABASE <<< "$ENTRY"
-  BACKUP_FILE="$BACKUP_DIR/${DB_NAME}_full_backup.sql"
+  BACKUP_FILE="$BACKUP_DIR/${DB_NAME}_full_backup_${TIMESTAMP}.sql"
 
   echo "Backing up $DB_NAME from pod $POD..."
   if [[ -z "$USER" || -z "$PASSWORD" || -z "$DATABASE" ]]; then
