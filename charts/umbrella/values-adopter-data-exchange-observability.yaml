@@ -27,100 +27,186 @@ bdrs-server-memory:
 
 dataconsumerOne:
   enabled: true
-  tractusx-connector:
-    dataplane:
-      env:
-        EDC_METRICS_ENABLED: true
-        OTEL_SERVICE_NAME: dataconsumer-1-edc-dataplane
-      opentelemetry: |-
-        otel.javaagent.enabled=true
-        otel.javaagent.debug=false
-        otel.traces.exporter=otlp
-        otel.exporter.jaeger.endpoint=http://umbrella-jaeger-collector.umbrella:4318
-        otel.metrics.exporter=prometheus
-        otel.metrics.protocol=http/protobuf
-        otel.exporter.prometheus.port=9090
-        edc.metrics.enabled=true
-        edc.metrics.system.enabled=true
-        otel.instrumentation.micrometer.enabled=true
-        otel.logs.exporter=otlp
-        otel.exporter.otlp.endpoint=http://umbrella-opentelemetry-collector.umbrella:4318
-    controlplane:
-      env:
-        OTEL_SERVICE_NAME: dataconsumer-1-edc-controlplane
-        EDC_METRICS_ENABLED: true
-      opentelemetry: |-
-        otel.javaagent.enabled=true
-        otel.javaagent.debug=false
-        otel.traces.exporter=otlp
-        otel.exporter.jaeger.endpoint=http://umbrella-jaeger-collector.umbrella:4318
-        otel.metrics.exporter=prometheus
-        otel.metrics.protocol=http/protobuf
-        otel.exporter.prometheus.port=9090
-        edc.metrics.enabled=true
-        edc.metrics.system.enabled=true
-        otel.instrumentation.micrometer.enabled=true
-        otel.logs.exporter=otlp
-        otel.exporter.otlp.endpoint=http://umbrella-opentelemetry-collector.umbrella:4318
-    # -- uncomment the following for persistence
-    # postgresql:
-    #   primary:
-    #     persistence:
-  #       enabled: true
+  dataspace-connector-bundle:
+    tractusx-connector:
+      log4j2:
+        # -- Whether to enable the json log config in log4j2.config
+        enableJsonLogs: true
+        # -- Log4j2 configuration for json log formatting.
+        config: |-
+          Packages: io.opentelemetry.instrumentation.log4j.appender.v2_17,org.apache.log4j.ConsoleAppender
+          Appenders:
+            OpenTelemetry:
+              name: OpenTelemetryAppender
+            Console:
+              name: ConsoleAppender
+              target: SYSTEM_OUT
+              JsonTemplateLayout:
+                eventTemplate: |-
+                  {
+                    "timestamp": {
+                      "$resolver": "timestamp",
+                      "pattern": {
+                        "format": "yyyy-MM-dd'T'HH:mm:ss.SSSSSSS",
+                        "timeZone": "UTC"
+                      }
+                    },
+                    "level": {
+                      "$resolver": "level",
+                      "field": "severity",
+                      "severity": {
+                        "field": "keyword"
+                      }
+                    },
+                    "message": {
+                      "$resolver": "message"
+                    }
+                  }
+          Loggers:
+            Root:
+              level: "OFF"
+            Logger:
+              name: org.eclipse.edc.monitor.logger
+              level: DEBUG
+              AppenderRef:
+                - ref: OpenTelemetryAppender
+                - ref: ConsoleAppender
+      dataplane:
+        env:
+          EDC_METRICS_ENABLED: true
+          OTEL_SERVICE_NAME: dataconsumer-1-edc-dataplane
+        opentelemetry: |-
+          otel.javaagent.enabled=true
+          otel.javaagent.debug=false
+          otel.traces.exporter=otlp
+          otel.exporter.jaeger.endpoint=http://umbrella-jaeger-collector.umbrella:4318
+          otel.metrics.exporter=prometheus
+          otel.metrics.protocol=http/protobuf
+          otel.exporter.prometheus.port=9090
+          edc.metrics.enabled=true
+          edc.metrics.system.enabled=true
+          otel.instrumentation.micrometer.enabled=true
+          otel.logs.exporter=otlp
+          otel.exporter.otlp.endpoint=http://umbrella-opentelemetry-collector.umbrella:4318
+      controlplane:
+        env:
+          OTEL_SERVICE_NAME: dataconsumer-1-edc-controlplane
+          EDC_METRICS_ENABLED: true
+        opentelemetry: |-
+          otel.javaagent.enabled=true
+          otel.javaagent.debug=false
+          otel.traces.exporter=otlp
+          otel.exporter.jaeger.endpoint=http://umbrella-jaeger-collector.umbrella:4318
+          otel.metrics.exporter=prometheus
+          otel.metrics.protocol=http/protobuf
+          otel.exporter.prometheus.port=9090
+          edc.metrics.enabled=true
+          edc.metrics.system.enabled=true
+          otel.instrumentation.micrometer.enabled=true
+          otel.logs.exporter=otlp
+          otel.exporter.otlp.endpoint=http://umbrella-opentelemetry-collector.umbrella:4318
+      # -- uncomment the following for persistence
+      # postgresql:
+      #   primary:
+      #     persistence:
+    #       enabled: true
 
 tx-data-provider:
   seedTestdata: true
   enabled: true
-  tractusx-connector:
-    dataplane:
-      env:
-        OTEL_SERVICE_NAME: dataprovider-edc-dataplane
-      opentelemetry: |-
-        otel.javaagent.enabled=true
-        otel.javaagent.debug=false
-        otel.traces.exporter=otlp
-        otel.exporter.jaeger.endpoint=http://umbrella-jaeger-collector.umbrella:4318
-        otel.metrics.exporter=prometheus
-        otel.metrics.protocol=http/protobuf
-        otel.exporter.prometheus.port=9090
-        edc.metrics.enabled=true
-        edc.metrics.system.enabled=true
-        otel.instrumentation.micrometer.enabled=true
-        otel.logs.exporter=otlp
-        otel.exporter.otlp.endpoint=http://umbrella-opentelemetry-collector.umbrella:4318
-    controlplane:
-      env:
-        OTEL_SERVICE_NAME: dataprovider-edc-controlplane
-      opentelemetry: |-
-        otel.javaagent.enabled=true
-        otel.javaagent.debug=false
-        otel.traces.exporter=otlp
-        otel.exporter.jaeger.endpoint=http://umbrella-jaeger-collector.umbrella:4318
-        otel.metrics.exporter=prometheus
-        otel.metrics.protocol=http/protobuf
-        otel.exporter.prometheus.port=9090
-        edc.metrics.enabled=true
-        edc.metrics.system.enabled=true
-        otel.instrumentation.micrometer.enabled=true
-        otel.logs.exporter=otlp
-        otel.exporter.otlp.endpoint=http://umbrella-opentelemetry-collector.umbrella:4318
-    # -- uncomment the following for persistence
-    # postgresql:
-    #   primary:
-    #     persistence:
-  #       enabled: true
-  # digital-twin-registry:
-  #   postgresql:
-  #     primary:
-  #       persistence:
-  #         enabled: true
+  dataspace-connector-bundle:
+    tractusx-connector:
+      log4j2:
+        # -- Whether to enable the json log config in log4j2.config
+        enableJsonLogs: true
+        # -- Log4j2 configuration for json log formatting.
+        config: |-
+          Packages: io.opentelemetry.instrumentation.log4j.appender.v2_17,org.apache.log4j.ConsoleAppender
+          Appenders:            
+            OpenTelemetry:
+              name: OpenTelemetryAppender
+            Console:
+              name: ConsoleAppender
+              target: SYSTEM_OUT
+              JsonTemplateLayout:
+                eventTemplate: |-
+                  {
+                    "timestamp": {
+                      "$resolver": "timestamp",
+                      "pattern": {
+                        "format": "yyyy-MM-dd'T'HH:mm:ss.SSSSSSS",
+                        "timeZone": "UTC"
+                      }
+                    },
+                    "level": {
+                      "$resolver": "level",
+                      "field": "severity",
+                      "severity": {
+                        "field": "keyword"
+                      }
+                    },
+                    "message": {
+                      "$resolver": "message"
+                    }
+                  }
+          Loggers:
+            Root:
+              level: "OFF"
+            Logger:
+              name: org.eclipse.edc.monitor.logger
+              level: DEBUG
+              AppenderRef:
+                - ref: OpenTelemetryAppender
+                - ref: ConsoleAppender
+      dataplane:
+        env:
+          OTEL_SERVICE_NAME: dataprovider-edc-dataplane
+        opentelemetry: |-
+          otel.javaagent.enabled=true
+          otel.javaagent.debug=false
+          otel.traces.exporter=otlp
+          otel.exporter.jaeger.endpoint=http://umbrella-jaeger-collector.umbrella:4318
+          otel.metrics.exporter=prometheus
+          otel.metrics.protocol=http/protobuf
+          otel.exporter.prometheus.port=9090
+          edc.metrics.enabled=true
+          edc.metrics.system.enabled=true
+          otel.instrumentation.micrometer.enabled=true
+          otel.logs.exporter=otlp
+          otel.exporter.otlp.endpoint=http://umbrella-opentelemetry-collector.umbrella:4318
+      controlplane:
+        env:
+          OTEL_SERVICE_NAME: dataprovider-edc-controlplane
+        opentelemetry: |-
+          otel.javaagent.enabled=true
+          otel.javaagent.debug=false
+          otel.traces.exporter=otlp
+          otel.exporter.jaeger.endpoint=http://umbrella-jaeger-collector.umbrella:4318
+          otel.metrics.exporter=prometheus
+          otel.metrics.protocol=http/protobuf
+          otel.exporter.prometheus.port=9090
+          edc.metrics.enabled=true
+          edc.metrics.system.enabled=true
+          otel.instrumentation.micrometer.enabled=true
+          otel.logs.exporter=otlp
+          otel.exporter.otlp.endpoint=http://umbrella-opentelemetry-collector.umbrella:4318
+      # -- uncomment the following for persistence
+      # postgresql:
+      #   primary:
+      #     persistence:
+    #       enabled: true
+    # digital-twin-registry:
+    #   postgresql:
+    #     primary:
+    #       persistence:
+    #         enabled: true
 
 dataconsumerTwo:
   enabled: false
     # -- uncomment the following for persistence
     # postgresql:
     #   primary:
-    #     persistence:
+  #     persistence:
   #       enabled: true
 
 pgadmin4:
@@ -132,7 +218,7 @@ pgadmin4:
 ssi-credential-issuer:
   enabled: false
 
-ssi-dim-wallet-stub:
+identity-and-trust-bundle:
   enabled: true
 
 jaeger:
