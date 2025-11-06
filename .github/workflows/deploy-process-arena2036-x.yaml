@@ -191,6 +191,10 @@ jobs:
           BPDM: ${{ secrets.BPDM }}
           BPDMGATE: ${{ secrets.BPDMGATE }}
           BPDMORCHESTRATOR: ${{ secrets.BPDMORCHESTRATOR }}
+          EDC_PROVIDER_API_KEY: ${{ secrets.EDC_PROVIDER_API_KEY }}
+          EDC_CONSUMER1_API_KEY: ${{ secrets.EDC_CONSUMER1_API_KEY }}
+          EDC_CONSUMER2_API_KEY: ${{ secrets.EDC_CONSUMER2_API_KEY }}
+          BDRS_API_AUTH_KEY: ${{ secrets.BDRS_API_AUTH_KEY }}
           
         run: |
           NAMESPACE="${{ github.event.inputs.namespace }}"
@@ -288,6 +292,10 @@ jobs:
             --set secretEnv.BPDM="$BPDM"
             --set secretEnv.BPDMGATE="$BPDMGATE"
             --set secretEnv.BPDMORCHESTRATOR="$BPDMORCHESTRATOR"
+            --set secretEnv.EDC_PROVIDER_API_KEY="$EDC_PROVIDER_API_KEY"
+            --set secretEnv.EDC_CONSUMER1_API_KEY="$EDC_CONSUMER1_API_KEY"
+            --set secretEnv.EDC_CONSUMER2_API_KEY="$EDC_CONSUMER2_API_KEY"
+            --set secretEnv.BDRS_API_AUTH_KEY="$BDRS_API_AUTH_KEY"
           )
 
           # Decide Helm command based on deployment_type
