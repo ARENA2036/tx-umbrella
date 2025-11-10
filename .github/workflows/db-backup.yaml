@@ -62,9 +62,10 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      TARGET_CONTEXT: ${{ github.event.inputs.cluster_context }}
-      NAMESPACE: ${{ github.event.inputs.namespace }}
-      RELEASE_NAME: ${{ github.event.inputs.release_name }}
+      TARGET_CONTEXT: ${{ github.event.inputs.cluster_context || 'arena2036-x-fed-services' }}
+      RESOURCE_GROUP: ${{ github.event.inputs.resource_group || 'arena2036-x-federated-services' }}
+      NAMESPACE: ${{ github.event.inputs.namespace || 'release24-12' }}
+      RELEASE_NAME: ${{ github.event.inputs.release_name || 'fed-services' }}
       AZURE_ACCOUNT: "arena2036"
       AZURE_CONTAINER: "database-backup"
 
