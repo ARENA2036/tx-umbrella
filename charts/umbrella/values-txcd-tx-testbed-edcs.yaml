@@ -18,7 +18,7 @@
 # #############################################################################
 ---
 portal:
-  enabled: true
+  enabled: false
   replicaCount: 1
   postgresql:
     ## TEMPORALY UNTIL NEW PORTAL UPDATE
@@ -45,9 +45,9 @@ portal:
   sharedidpAddress: "https://sharedidp-txcd.arena2036-x.de"
   semanticsAddress: "https://semantics-txcd.arena2036-x.de"
   bpdm:
-    poolAddress: "https://partners-pool-txcd.arena2036-x.de"
+    poolAddress: "https://business-partners-txcd.arena2036-x.de"
     poolApiPath: "/pool/v6"
-    portalGateAddress: "https://partners-gate-txcd.arena2036-x.de"
+    portalGateAddress: "https://business-partners-txcd.arena2036-x.de"
     portalGateApiPath: "/gate/v6"
   custodianAddress: "https://ssi-dim-wallet-stub-txcd.arena2036-x.de"
   dimWrapper:
@@ -280,11 +280,11 @@ portal:
             encryptionKey:
               "d2e27d71b018cb36029184852f1baa3e26891be94718f77de4c7cc6c882fe317"
     mailing:
-      host: "smtp.office365.com"
+      host: ""
       port: "587"
-      user: "support@arena2036.de"
-      senderEmail: "support@arena2036.de"
-      password: "R.964500852465uc"
+      user: ""
+      senderEmail: ""
+      password: ""
     portalmigrations:
       resources:
         requests:
@@ -385,12 +385,12 @@ portal:
     provisioning:
       sharedRealm:
         smtpServer:
-          host: "smtp.office365.com"
+          host: ""
           port: "587"
-          user: "support@arena2036.de"
-          password: "R.964500852465uc"
-          from: "support@arena2036.de"
-          replyTo: "support@arena2036.de"
+          user: ""
+          password: ""
+          from: ""
+          replyTo: ""
     # -- docs: http://portal-backend.tx.test/api/administration/swagger/index.html
     # http://portal-backend.tx.test/api/registration/swagger/index.html
     # http://portal-backend.tx.test/api/apps/swagger/index.html
@@ -447,7 +447,7 @@ portal:
                 port: 8080
 
 centralidp:
-  enabled: true
+  enabled: false
   keycloak:
     image:
       registry: docker.io
@@ -679,7 +679,7 @@ centralidp:
         pullPolicy: IfNotPresent
 
 sharedidp:
-  enabled: true
+  enabled: false
   keycloak:
     nameOverride: "sharedidp"
     # TEMPORARY UNTIL PORTAL-IAM VERSION IS UPDATED
@@ -800,12 +800,12 @@ sharedidp:
           username: "cx-operator@arena2036-x.de"
           password: "Ar3na2036-umbr3lla"
         mailing:
-          host: "smtp.office365.com"
+          host: ""
           port: "587"
-          username: "support@arena2036.de"
-          password: "R.964500852465uc"
-          from: "support@arena2036.de"
-          replyTo: "support@arena2036.de"
+          username: ""
+          password: ""
+          from: ""
+          replyTo: ""
       master:
         serviceAccounts:
           provisioning:
@@ -818,7 +818,7 @@ sharedidp:
         pullPolicy: Always
 
 bpndiscovery:
-  enabled: true
+  enabled: false
   enablePostgres: true
   bpndiscovery:
     host: semantics-txcd.arena2036-x.de
@@ -826,7 +826,7 @@ bpndiscovery:
       enabled: true
       tls: true
       urlPrefix: "/bpndiscovery"
-      className: "webapprouting.kubernetes.azure.com"
+      ingressClassName: "webapprouting.kubernetes.azure.com"
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-prod
         nginx.ingress.kubernetes.io/rewrite-target: "/$2"
@@ -873,7 +873,7 @@ bpndiscovery:
       postgresPassword: "dbpasswordbpndiscovery"
 
 discoveryfinder:
-  enabled: true
+  enabled: false
   enablePostgres: true
   discoveryfinder:
     authentication: true
@@ -899,7 +899,7 @@ discoveryfinder:
       enabled: true
       tls: true
       urlPrefix: "/discoveryfinder"
-      className: "webapprouting.kubernetes.azure.com"
+      ingressClassName: "webapprouting.kubernetes.azure.com"
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-prod
         nginx.ingress.kubernetes.io/rewrite-target: "/$2"
@@ -923,7 +923,7 @@ discoveryfinder:
       postgresPassword: "dbpassworddiscoveryfinder"
 
 selfdescription:
-  enabled: true
+  enabled: false
   sdfactory:
     secret:
       # -- JWK Set URI
@@ -970,7 +970,7 @@ selfdescription:
       cert-manager.io/cluster-issuer: letsencrypt-prod
 
 ssi-credential-issuer:
-  enabled: true
+  enabled: false
   replicaCount: 1
   portalBackendAddress: "https://portal-backend-txcd.arena2036-x.de"
   walletAddress: "https://ssi-dim-wallet-stub-txcd.arena2036-x.de"
@@ -1065,7 +1065,7 @@ ssi-credential-issuer:
 # Set up services for a business partner pool, golden record process
 # and a gate with which the Portal and the users can share business partner data
 bpdm:
-  enabled: true
+  enabled: false
   postgres:
     # We use the default name for BPDM postgres
     fullnameOverride: &bpdmPostgresName "bpdm-postgres"
@@ -1103,10 +1103,10 @@ bpdm:
       tls:
         - secretName: "partners-gate.txcd.test-tls"
           hosts:
-            - "partners-gate-txcd.arena2036-x.de"
+            - "business-partners-txcd.arena2036-x.de"
       # The Portal expects its Gate on that specific url path so we provide it here through ingress
       hosts:
-        - host: "partners-gate-txcd.arena2036-x.de"
+        - host: "business-partners-txcd.arena2036-x.de"
           paths:
             - path: "/gate(/|$)(.*)"
               pathType: "ImplementationSpecific"
@@ -1168,14 +1168,14 @@ bpdm:
         nginx.ingress.kubernetes.io/use-regex: "true"
         nginx.ingress.kubernetes.io/x-forwarded-prefix: "/pool"
       hosts:
-        - host: "partners-pool-txcd.arena2036-x.de"
+        - host: "business-partners-txcd.arena2036-x.de"
           paths:
             - path: "/pool(/|$)(.*)"
               pathType: "ImplementationSpecific"
       tls:
-        - secretName: "partners-pool.txcd.test-tls"
+        - secretName: "business-partners.txcd.test-tls"
           hosts:
-            - "partners-pool-txcd.arena2036-x.de"
+            - "business-partners-txcd.arena2036-x.de"
     applicationConfig:
       server:
         # App should take the x-forward-header-prefix into account for Swagger-UI and redirects to work correctly
@@ -1220,16 +1220,16 @@ bpdm:
         nginx.ingress.kubernetes.io/use-regex: "true"
         nginx.ingress.kubernetes.io/x-forwarded-prefix: "/orchestrator"
       hosts:
-        - host: "partners-orchestrator-txcd.arena2036-x.de"
+        - host: "business-partners-txcd.arena2036-x.de"
           paths:
             - path: "/orchestrator(/|$)(.*)"
               pathType: "ImplementationSpecific"
       tls:
         - secretName: "partners-orchestrator.txcd.test-tls"
           hosts:
-            - "partners-orchestrator-txcd.arena2036-x.de"
+            - "business-partners-txcd.arena2036-x.de"
     postgres:
-      enabled: true
+      enabled: false
       fullnameOverride: bpdm-postgres
     applicationConfig:
       server:
@@ -1271,17 +1271,24 @@ bpdm:
 
 dataconsumerOne:
   enabled: true
-  seedTestdata: false
-  nameOverride: dataconsumer-1
+  seedTestdata: true
+  backendUrl: http://{{ .Release.Name }}-tx-submodelserver-2:8080
+  registryUrl: http://{{ .Release.Name }}-tx-dtr-2:8080/api/v3
+  controlplanePublicUrl: http://{{ .Release.Name }}-tx-edc-2-controlplane:8084
+  controlplaneManagementUrl: http://{{ .Release.Name }}-tx-edc-2-controlplane:8081
+  dataplaneUrl: http://{{ .Release.Name }}-tx-edc-2-dataplane:8081
+  fullnameOverride: tx-edc-1
+  nameOverride: tx-edc-1
   secrets:
     edc-wallet-secret: changeme
   dataspace-connector-bundle:
     tractusx-connector:
-      nameOverride: dataconsumer-1-edc
+      fullnameOverride: tx-edc-1
+      nameOverride: tx-edc-1
       participant:
-        id: BPNL00000003AZQP
+        id: BPNLA3600000TX01
       iatp:
-        id: did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNL00000003AZQP
+        id: did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNLA3600000TX01
         trustedIssuers:
           - did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNL00000003CRHK
         sts:
@@ -1290,7 +1297,7 @@ dataconsumerOne:
           oauth:
             token_url: https://ssi-dim-wallet-stub-txcd.arena2036-x.de/oauth/token
             client:
-              id: BPNL00000003AZQP
+              id: BPNLA3600000TX01
               secret_alias: edc-wallet-secret
       controlplane:
         env:
@@ -1301,10 +1308,10 @@ dataconsumerOne:
             url: https://ssi-dim-wallet-stub-txcd.arena2036-x.de/api/v1/directory
         endpoints:
           management:
-            authKey: TEST1
+            authKey: BPNLA3600000TX01
         ingresses:
           - enabled: true
-            hostname: "dataconsumer-1-controlplane-txcd.arena2036-x.de"
+            hostname: "tx-edc-1-controlplane-txcd.arena2036-x.de"
             endpoints:
               - default
               - protocol
@@ -1320,7 +1327,7 @@ dataconsumerOne:
           EDC_IAM_DID_WEB_USE_HTTPS: false
         ingresses:
           - enabled: true
-            hostname: "dataconsumer-1-dataplane-txcd.arena2036-x.de"
+            hostname: "tx-edc-1-dataplane-txcd.arena2036-x.de"
             endpoints:
               - default
               - public
@@ -1335,125 +1342,30 @@ dataconsumerOne:
           verifier:
             publickey_alias: tokenSignerPublicKey
       postgresql:
-        jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataconsumer-1-db:5432/edc"
+        jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-tx-db-1:5432/edc"
         auth:
           password: "dbpassworddataconsumerone"
           postgresPassword: "dbpassworddataconsumerone"
       vault:
         hashicorp:
-          url: http://{{ .Release.Name }}-edc-dataconsumer-1-vault:8200
+          url: http://{{ .Release.Name }}-tx-edc-1-vault:8200
 
     postgresql:
-      nameOverride: dataconsumer-1-db
+      nameOverride: tx-db-1
       auth:
         password: "dbpassworddataconsumerone"
         postgresPassword: "dbpassworddataconsumerone"
 
     vault:
-      nameOverride: edc-dataconsumer-1-vault
-      enabled: true
-
-  data-persistence-layer-bundle:
-    enabled: false
-
-  digital-twin-bundle:
-    enabled: false
-
-tx-data-provider:
-  enabled: true
-  seedTestdata: true
-  backendUrl: http://{{ .Release.Name }}-dataprovider-submodelserver:8080
-  registryUrl: http://{{ .Release.Name }}-dataprovider-dtr:8080/api/v3
-  controlplanePublicUrl: http://{{ .Release.Name }}-dataprovider-edc-controlplane:8084
-  controlplaneManagementUrl: http://{{ .Release.Name }}-dataprovider-edc-controlplane:8081
-  dataplaneUrl: http://{{ .Release.Name }}-dataprovider-edc-dataplane:8081
-  nameOverride: dataprovider
-  secrets:
-    edc-wallet-secret: changeme
-  dataspace-connector-bundle:
-    tractusx-connector:
-      nameOverride: dataprovider-edc
-      participant:
-        id: BPNL00000003AYRE
-      iatp:
-        id: did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNL00000003AYRE
-        trustedIssuers:
-          - did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNL00000003CRHK
-        sts:
-          dim:
-            url: https://ssi-dim-wallet-stub-txcd.arena2036-x.de/api/sts
-          oauth:
-            token_url: https://ssi-dim-wallet-stub-txcd.arena2036-x.de/oauth/token
-            client:
-              id: BPNL00000003AYRE
-              secret_alias: edc-wallet-secret
-      controlplane:
-        env:
-          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub-txcd.arena2036-x.de/api
-          EDC_IAM_DID_WEB_USE_HTTPS: false
-        bdrs:
-          server:
-            url: https://ssi-dim-wallet-stub-txcd.arena2036-x.de/api/v1/directory
-        endpoints:
-          management:
-            authKey: TEST2
-        ingresses:
-          - enabled: true
-            hostname: "dataprovider-controlplane-txcd.arena2036-x.de"
-            endpoints:
-              - default
-              - protocol
-              - management
-            className: "webapprouting.kubernetes.azure.com"
-            annotations:
-              cert-manager.io/cluster-issuer: letsencrypt-prod
-            tls:
-              enabled: true
-      dataplane:
-        env:
-          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub-txcd.arena2036-x.de/api
-          EDC_IAM_DID_WEB_USE_HTTPS: false
-        ingresses:
-          - enabled: true
-            hostname: "dataprovider-dataplane-txcd.arena2036-x.de"
-            endpoints:
-              - default
-              - public
-            className: "webapprouting.kubernetes.azure.com"
-            annotations:
-              cert-manager.io/cluster-issuer: letsencrypt-prod
-            tls:
-              enabled: true
-        token:
-          signer:
-            privatekey_alias: tokenSignerPrivateKey
-          verifier:
-            publickey_alias: tokenSignerPublicKey
-      postgresql:
-        jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataprovider-db:5432/edc"
-        auth:
-          user: "dbusertxdataprovider"
-          password: "dbpasswordtxdataprovider"
-          postgresPassword: "dbpasswordtxdataprovider"
-      vault:
-        hashicorp:
-          url: http://{{ .Release.Name }}-edc-dataprovider-vault:8200
-
-    postgresql:
-      nameOverride: dataprovider-db
-      auth:
-        user: "dbusertxdataprovider"
-        password: "dbpasswordtxdataprovider"
-        postgresPassword: "dbpasswordtxdataprovider"
-
-    vault:
-      nameOverride: edc-dataprovider-vault
+      nameOverride: tx-edc-1-vault
       enabled: true
 
   data-persistence-layer-bundle:
     enabled: true
     simple-data-backend:
-      nameOverride: dataprovider-submodelserver
+      fullnameOverride: tx-submodelserver-1
+      nameOverride: tx-submodelserver-1
+      host: "tx-submodelserver-1-txcd.arena2036-x.de"
       ingress:
         enabled: true
         className: "webapprouting.kubernetes.azure.com"
@@ -1463,14 +1375,14 @@ tx-data-provider:
           # nginx.ingress.kubernetes.io/proxy-body-size: 50m
           cert-manager.io/cluster-issuer: letsencrypt-prod
         hosts:
-        - host: "dataprovider-submodelserver-txcd.arena2036-x.de"
+        - host: "tx-submodelserver-1-txcd.arena2036-x.de"
           paths:
             - path: "/"
               pathType: "Prefix"
         tls:
-          - secretName: "submodelserver.txcd-tls"
+          - secretName: "tx-submodelserver-1.txcd-tls"
             hosts:
-              - "dataprovider-submodelserver-txcd.arena2036-x.de"
+              - "tx-submodelserver-1-txcd.arena2036-x.de"
     resources:
       limits:
         cpu: 500m
@@ -1482,20 +1394,19 @@ tx-data-provider:
   digital-twin-bundle:
     enabled: true
     digital-twin-registry:
-      nameOverride: dataprovider-dtr
+      fullnameOverride: tx-dtr-1
+      nameOverride: tx-dtr-1
       registry:
-        image:
-          registry: docker.io
-          repository: tractusx/sldt-digital-twin-registry
-          version: "0.8.1"
+        nameOverride: tx-dtr-1
         authentication: false
-        host: dataprovider-dtr-txcd.arena2036-x.de
+        host: tx-dtr-1-txcd.arena2036-x.de
         dataSource:
-          url: "jdbc:postgresql://dataprovider-digital-twin-db:5432/dtr"
+          url: "jdbc:postgresql://digital-twin-tx-db-1:5432/dtr"
         ingress:
           enabled: true
           tls:
             enabled: true
+            secretName: tx-dtr-1-tls
           className: "webapprouting.kubernetes.azure.com"
           annotations:
             # nginx.ingress.kubernetes.io/proxy-body-size: 50m
@@ -1503,16 +1414,176 @@ tx-data-provider:
             nginx.ingress.kubernetes.io/x-forwarded-prefix: /semantics/registry
             cert-manager.io/cluster-issuer: letsencrypt-prod
           hosts:
-          - host: "dataprovider-dtr-txcd.arena2036-x.de"
+          - host: "tx-dtr-1-txcd.arena2036-x.de"
             paths:
               - path: "/semantics/registry(/|$)(.*)"
                 pathType: "Prefix"
 
     postgresql:
-      fullnameOverride: "dataprovider-digital-twin-db"
+      fullnameOverride: "digital-twin-tx-db-1"
+      nameOverride: "digital-twin-tx-db-1"
       primary:
         persistence:
-          enabled: false
+          enabled: true
+
+tx-data-provider:
+  enabled: true
+  seedTestdata: true
+  backendUrl: http://{{ .Release.Name }}-tx-submodelserver-2:8080
+  registryUrl: http://{{ .Release.Name }}-tx-dtr-2:8080/api/v3
+  controlplanePublicUrl: http://{{ .Release.Name }}-tx-edc-2-controlplane:8084
+  controlplaneManagementUrl: http://{{ .Release.Name }}-tx-edc-2-controlplane:8081
+  dataplaneUrl: http://{{ .Release.Name }}-tx-edc-2-dataplane:8081
+  fullnameOverride: tx-edc-2
+  nameOverride: tx-edc-2
+  secrets:
+    edc-wallet-secret: changeme
+  dataspace-connector-bundle:
+    tractusx-connector:
+      fullnameOverride: tx-edc-2
+      nameOverride: tx-edc-2
+      participant:
+        id: BPNLA3600000TX02
+      iatp:
+        id: did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNLA3600000TX02
+        trustedIssuers:
+          - did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNL00000003CRHK
+        sts:
+          dim:
+            url: https://ssi-dim-wallet-stub-txcd.arena2036-x.de/api/sts
+          oauth:
+            token_url: https://ssi-dim-wallet-stub-txcd.arena2036-x.de/oauth/token
+            client:
+              id: BPNLA3600000TX02
+              secret_alias: edc-wallet-secret
+      controlplane:
+        env:
+          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub-txcd.arena2036-x.de/api
+          EDC_IAM_DID_WEB_USE_HTTPS: false
+        bdrs:
+          server:
+            url: https://ssi-dim-wallet-stub-txcd.arena2036-x.de/api/v1/directory
+        endpoints:
+          management:
+            authKey: BPNLA3600000TX02
+        ingresses:
+          - enabled: true
+            hostname: "tx-edc-2-controlplane-txcd.arena2036-x.de"
+            endpoints:
+              - default
+              - protocol
+              - management
+            className: "webapprouting.kubernetes.azure.com"
+            annotations:
+              cert-manager.io/cluster-issuer: letsencrypt-prod
+            tls:
+              enabled: true
+      dataplane:
+        env:
+          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub-txcd.arena2036-x.de/api
+          EDC_IAM_DID_WEB_USE_HTTPS: false
+        ingresses:
+          - enabled: true
+            hostname: "tx-edc-2-dataplane-txcd.arena2036-x.de"
+            endpoints:
+              - default
+              - public
+            className: "webapprouting.kubernetes.azure.com"
+            annotations:
+              cert-manager.io/cluster-issuer: letsencrypt-prod
+            tls:
+              enabled: true
+        token:
+          signer:
+            privatekey_alias: tokenSignerPrivateKey
+          verifier:
+            publickey_alias: tokenSignerPublicKey
+      postgresql:
+        jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-tx-db-2:5432/edc"
+        auth:
+          user: "dbusertxdataprovider"
+          password: "dbpasswordtxdataprovider"
+          postgresPassword: "dbpasswordtxdataprovider"
+      vault:
+        hashicorp:
+          url: http://{{ .Release.Name }}-tx-edc-2-vault:8200
+
+    postgresql:
+      nameOverride: tx-db-2
+      auth:
+        user: "dbusertxdataprovider"
+        password: "dbpasswordtxdataprovider"
+        postgresPassword: "dbpasswordtxdataprovider"
+
+    vault:
+      nameOverride: tx-edc-2-vault
+      enabled: true
+
+  data-persistence-layer-bundle:
+    enabled: true
+    simple-data-backend:
+      fullnameOverride: tx-submodelserver-2
+      nameOverride: tx-submodelserver-2
+      host: "tx-submodelserver-2-txcd.arena2036-x.de"
+      ingress:
+        enabled: true
+        className: "webapprouting.kubernetes.azure.com"
+        annotations:
+          # uncomment the following line for tls
+          # kubernetes.io/ingress.class: addon-http-application-routing
+          # nginx.ingress.kubernetes.io/proxy-body-size: 50m
+          cert-manager.io/cluster-issuer: letsencrypt-prod
+        hosts:
+        - host: "tx-submodelserver-2-txcd.arena2036-x.de"
+          paths:
+            - path: "/"
+              pathType: "Prefix"
+        tls:
+          - secretName: "tx-submodelserver-2.txcd-tls"
+            hosts:
+              - "tx-submodelserver-2-txcd.arena2036-x.de"
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1024Mi
+      requests:
+        cpu: 500m
+        memory: 1024Mi
+
+  digital-twin-bundle:
+    enabled: true
+    digital-twin-registry:
+      fullnameOverride: tx-dtr-2
+      nameOverride: tx-dtr-2
+      registry:
+        nameOverride: tx-dtr-2
+        authentication: false
+        host: tx-dtr-2-txcd.arena2036-x.de
+        dataSource:
+          url: "jdbc:postgresql://digital-twin-tx-db-2:5432/dtr"
+        ingress:
+          enabled: true
+          tls:
+            enabled: true
+            secretName: tx-dtr-2-tls
+          className: "webapprouting.kubernetes.azure.com"
+          annotations:
+            # nginx.ingress.kubernetes.io/proxy-body-size: 50m
+            nginx.ingress.kubernetes.io/rewrite-target: /$2
+            nginx.ingress.kubernetes.io/x-forwarded-prefix: /semantics/registry
+            cert-manager.io/cluster-issuer: letsencrypt-prod
+          hosts:
+          - host: "tx-dtr-2-txcd.arena2036-x.de"
+            paths:
+              - path: "/semantics/registry(/|$)(.*)"
+                pathType: "Prefix"
+
+    postgresql:
+      fullnameOverride: "digital-twin-tx-db-2"
+      nameOverride: "digital-twin-tx-db-2"
+      primary:
+        persistence:
+          enabled: true
 
 semantic-hub:
   enabled: false
@@ -1550,110 +1621,25 @@ semantic-hub:
     storageSize: 8Gi
 
 dataconsumerTwo:
-  enabled: false
-  seedTestdata: false
-  nameOverride: dataconsumer-2
-  secrets:
-    edc-wallet-secret: changeme
-  dataspace-connector-bundle:
-    tractusx-connector:
-      nameOverride: dataconsumer-2-edc
-      participant:
-        id: BPNL00000003AVTH
-      iatp:
-        id: did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNL00000003AVTH
-        trustedIssuers:
-          - did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNL00000003CRHK
-        sts:
-          dim:
-            url: https://ssi-dim-wallet-stub-txcd.arena2036-x.de/api/sts
-          oauth:
-            token_url: https://ssi-dim-wallet-stub-txcd.arena2036-x.de/oauth/token
-            client:
-              id: BPNL00000003AVTH
-              secret_alias: edc-wallet-secret
-      controlplane:
-        env:
-          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub-txcd.arena2036-x.de/api
-          EDC_IAM_DID_WEB_USE_HTTPS: false
-        bdrs:
-          server:
-            url: https://ssi-dim-wallet-stub-txcd.arena2036-x.de/api/v1/directory
-        endpoints:
-          management:
-            authKey: TEST3
-        ingresses:
-          - enabled: true
-            hostname: "dataconsumer-2-controlplane-txcd.arena2036-x.de"
-            endpoints:
-              - default
-              - protocol
-              - management
-            className: "nginx"
-            tls:
-              enabled: false
-      dataplane:
-        env:
-          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub-txcd.arena2036-x.de/api
-          EDC_IAM_DID_WEB_USE_HTTPS: false
-        ingresses:
-          - enabled: true
-            hostname: "dataconsumer-2-dataplane-txcd.arena2036-x.de"
-            endpoints:
-              - default
-              - public
-            className: "nginx"
-            tls:
-              enabled: false
-        token:
-          signer:
-            privatekey_alias: tokenSignerPrivateKey
-          verifier:
-            publickey_alias: tokenSignerPublicKey
-      postgresql:
-        jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataconsumer-2-db:5432/edc"
-        auth:
-          password: "dbpassworddataconsumertwo"
-          postgresPassword: "dbpassworddataconsumertwo"
-      vault:
-        hashicorp:
-          url: http://{{ .Release.Name }}-edc-dataconsumer-2-vault:8200
-
-    postgresql:
-      nameOverride: dataconsumer-2-db
-      auth:
-        password: "dbpassworddataconsumertwo"
-        postgresPassword: "dbpassworddataconsumertwo"
-
-    vault:
-      nameOverride: edc-dataconsumer-2-vault
-      fullnameOverride: edc-dataconsumer-2-vault
-      enabled: false
-
-    digital-twin-bundle:
-      enabled: false
-
-    data-persistence-layer-bundle:
-      enabled: false
-
-dataconsumerThree:
-  enabled: false
+  enabled: true
   seedTestdata: true
-  backendUrl: http://{{ .Release.Name }}-dataprovider-submodelserver:8080
-  registryUrl: http://{{ .Release.Name }}-dataprovider-dtr:8080/api/v3
-  controlplanePublicUrl: http://{{ .Release.Name }}-dataprovider-edc-controlplane:8084
-  controlplaneManagementUrl: http://{{ .Release.Name }}-dataprovider-edc-controlplane:8081
-  dataplaneUrl: http://{{ .Release.Name }}-dataprovider-edc-dataplane:8081
-  nameOverride: dataprovider
+  backendUrl: http://{{ .Release.Name }}-tx-submodelserver-4:8080
+  registryUrl: http://{{ .Release.Name }}-tx-dtr-4:8080/api/v3
+  controlplanePublicUrl: http://{{ .Release.Name }}-tx-edc-4-controlplane:8084
+  controlplaneManagementUrl: http://{{ .Release.Name }}-tx-edc-4-controlplane:8081
+  dataplaneUrl: http://{{ .Release.Name }}-tx-edc-4-dataplane:8081
+  fullnameOverride: tx-edc-4
+  nameOverride: tx-edc-4
   secrets:
     edc-wallet-secret: changeme
   dataspace-connector-bundle:
     tractusx-connector:
-      nameOverride: dataprovider-edc
+      fullnameOverride: tx-edc-4
+      nameOverride: tx-edc-4
       participant:
-        id: BPNL00000003AYRE
+        id: BPNLA3600000TX04
       iatp:
-        id: did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNL00000003AYRE
+        id: did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNLA3600000TX04
         trustedIssuers:
           - did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNL00000003CRHK
         sts:
@@ -1662,7 +1648,7 @@ dataconsumerThree:
           oauth:
             token_url: https://ssi-dim-wallet-stub-txcd.arena2036-x.de/oauth/token
             client:
-              id: BPNL00000003AYRE
+              id: BPNLA3600000TX04
               secret_alias: edc-wallet-secret
       controlplane:
         env:
@@ -1673,10 +1659,10 @@ dataconsumerThree:
             url: https://ssi-dim-wallet-stub-txcd.arena2036-x.de/api/v1/directory
         endpoints:
           management:
-            authKey: TEST2
+            authKey: BPNLA3600000TX04
         ingresses:
           - enabled: true
-            hostname: "dataprovider-controlplane-txcd.arena2036-x.de"
+            hostname: "tx-edc-4-controlplane-txcd.arena2036-x.de"
             endpoints:
               - default
               - protocol
@@ -1692,7 +1678,7 @@ dataconsumerThree:
           EDC_IAM_DID_WEB_USE_HTTPS: false
         ingresses:
           - enabled: true
-            hostname: "dataprovider-dataplane-txcd.arena2036-x.de"
+            hostname: "tx-edc-4-dataplane-txcd.arena2036-x.de"
             endpoints:
               - default
               - public
@@ -1707,30 +1693,32 @@ dataconsumerThree:
           verifier:
             publickey_alias: tokenSignerPublicKey
       postgresql:
-        jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataprovider-db:5432/edc"
+        jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-tx-db-4:5432/edc"
         auth:
           user: "dbusertxdataprovider"
           password: "dbpasswordtxdataprovider"
           postgresPassword: "dbpasswordtxdataprovider"
       vault:
         hashicorp:
-          url: http://{{ .Release.Name }}-edc-dataprovider-vault:8200
+          url: http://{{ .Release.Name }}-tx-edc-4-vault:8200
 
     postgresql:
-      nameOverride: dataprovider-db
+      nameOverride: tx-db-4
       auth:
         user: "dbusertxdataprovider"
         password: "dbpasswordtxdataprovider"
         postgresPassword: "dbpasswordtxdataprovider"
 
     vault:
-      nameOverride: edc-dataprovider-vault
+      nameOverride: tx-edc-4-vault
       enabled: true
 
   data-persistence-layer-bundle:
     enabled: true
     simple-data-backend:
-      nameOverride: dataprovider-submodelserver
+      fullnameOverride: tx-submodelserver-4
+      nameOverride: tx-submodelserver-4
+      host: "tx-submodelserver-4-txcd.arena2036-x.de"
       ingress:
         enabled: true
         className: "webapprouting.kubernetes.azure.com"
@@ -1740,14 +1728,14 @@ dataconsumerThree:
           # nginx.ingress.kubernetes.io/proxy-body-size: 50m
           cert-manager.io/cluster-issuer: letsencrypt-prod
         hosts:
-        - host: "dataprovider-submodelserver-txcd.arena2036-x.de"
+        - host: "tx-submodelserver-4-txcd.arena2036-x.de"
           paths:
             - path: "/"
               pathType: "Prefix"
         tls:
-          - secretName: "submodelserver.txcd-tls"
+          - secretName: "tx-submodelserver-4.txcd-tls"
             hosts:
-              - "dataprovider-submodelserver-txcd.arena2036-x.de"
+              - "tx-submodelserver-4-txcd.arena2036-x.de"
     resources:
       limits:
         cpu: 500m
@@ -1759,20 +1747,19 @@ dataconsumerThree:
   digital-twin-bundle:
     enabled: true
     digital-twin-registry:
-      nameOverride: dataprovider-dtr
+      fullnameOverride: tx-dtr-4
+      nameOverride: tx-dtr-4
       registry:
-        image:
-          registry: docker.io
-          repository: tractusx/sldt-digital-twin-registry
-          version: "0.8.1"
+        nameOverride: tx-dtr-4
         authentication: false
-        host: dataprovider-dtr-txcd.arena2036-x.de
+        host: tx-dtr-4-txcd.arena2036-x.de
         dataSource:
-          url: "jdbc:postgresql://dataprovider-digital-twin-db:5432/dtr"
+          url: "jdbc:postgresql://digital-twin-tx-db-4:5432/dtr"
         ingress:
           enabled: true
           tls:
             enabled: true
+            secretName: tx-dtr-4-tls
           className: "webapprouting.kubernetes.azure.com"
           annotations:
             # nginx.ingress.kubernetes.io/proxy-body-size: 50m
@@ -1780,16 +1767,174 @@ dataconsumerThree:
             nginx.ingress.kubernetes.io/x-forwarded-prefix: /semantics/registry
             cert-manager.io/cluster-issuer: letsencrypt-prod
           hosts:
-          - host: "dataprovider-dtr-txcd.arena2036-x.de"
+          - host: "tx-dtr-4-txcd.arena2036-x.de"
             paths:
               - path: "/semantics/registry(/|$)(.*)"
                 pathType: "Prefix"
 
     postgresql:
-      fullnameOverride: "dataprovider-digital-twin-db"
+      fullnameOverride: "digital-twin-tx-db-4"
+      nameOverride: "digital-twin-tx-db-4"
       primary:
         persistence:
-          enabled: false
+          enabled: true
+
+dataconsumerThree:
+  enabled: true
+  seedTestdata: true
+  backendUrl: http://{{ .Release.Name }}-tx-submodelserver-3:8080
+  registryUrl: http://{{ .Release.Name }}-tx-dtr-3:8080/api/v3
+  controlplanePublicUrl: http://{{ .Release.Name }}-tx-edc-3-controlplane:8084
+  controlplaneManagementUrl: http://{{ .Release.Name }}-tx-edc-3-controlplane:8081
+  dataplaneUrl: http://{{ .Release.Name }}-tx-edc-3-dataplane:8081
+  fullnameOverride: tx-edc-3
+  nameOverride: tx-edc-3
+  secrets:
+    edc-wallet-secret: changeme
+  dataspace-connector-bundle:
+    tractusx-connector:
+      fullnameOverride: tx-edc-3
+      nameOverride: tx-edc-3
+      participant:
+        id: BPNLA3600000TX03
+      iatp:
+        id: did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNLA3600000TX03
+        trustedIssuers:
+          - did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNL00000003CRHK
+        sts:
+          dim:
+            url: https://ssi-dim-wallet-stub-txcd.arena2036-x.de/api/sts
+          oauth:
+            token_url: https://ssi-dim-wallet-stub-txcd.arena2036-x.de/oauth/token
+            client:
+              id: BPNLA3600000TX03
+              secret_alias: edc-wallet-secret
+      controlplane:
+        env:
+          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub-txcd.arena2036-x.de/api
+          EDC_IAM_DID_WEB_USE_HTTPS: false
+        bdrs:
+          server:
+            url: https://ssi-dim-wallet-stub-txcd.arena2036-x.de/api/v1/directory
+        endpoints:
+          management:
+            authKey: BPNLA3600000TX03
+        ingresses:
+          - enabled: true
+            hostname: "tx-edc-3-controlplane-txcd.arena2036-x.de"
+            endpoints:
+              - default
+              - protocol
+              - management
+            className: "webapprouting.kubernetes.azure.com"
+            annotations:
+              cert-manager.io/cluster-issuer: letsencrypt-prod
+            tls:
+              enabled: true
+      dataplane:
+        env:
+          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub-txcd.arena2036-x.de/api
+          EDC_IAM_DID_WEB_USE_HTTPS: false
+        ingresses:
+          - enabled: true
+            hostname: "tx-edc-3-dataplane-txcd.arena2036-x.de"
+            endpoints:
+              - default
+              - public
+            className: "webapprouting.kubernetes.azure.com"
+            annotations:
+              cert-manager.io/cluster-issuer: letsencrypt-prod
+            tls:
+              enabled: true
+        token:
+          signer:
+            privatekey_alias: tokenSignerPrivateKey
+          verifier:
+            publickey_alias: tokenSignerPublicKey
+      postgresql:
+        jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-tx-db-3:5432/edc"
+        auth:
+          password: "dbpassworddataconsumerone"
+          postgresPassword: "dbpassworddataconsumerone"
+      vault:
+        hashicorp:
+          url: http://{{ .Release.Name }}-tx-edc-3-vault:8200
+
+    postgresql:
+      nameOverride: tx-db-3
+      auth:
+        password: "dbpassworddataconsumerone"
+        postgresPassword: "dbpassworddataconsumerone"
+
+    vault:
+      nameOverride: tx-edc-3-vault
+      enabled: true
+
+  data-persistence-layer-bundle:
+    enabled: true
+    simple-data-backend:
+      fullnameOverride: tx-submodelserver-3
+      nameOverride: tx-submodelserver-3
+      host: "tx-submodelserver-3-txcd.arena2036-x.de"
+      ingress:
+        enabled: true
+        className: "webapprouting.kubernetes.azure.com"
+        annotations:
+          # uncomment the following line for tls
+          # kubernetes.io/ingress.class: addon-http-application-routing
+          # nginx.ingress.kubernetes.io/proxy-body-size: 50m
+          cert-manager.io/cluster-issuer: letsencrypt-prod
+        hosts:
+        - host: "tx-submodelserver-3-txcd.arena2036-x.de"
+          paths:
+            - path: "/"
+              pathType: "Prefix"
+        tls:
+          - secretName: "tx-submodelserver-3.txcd-tls"
+            hosts:
+              - "tx-submodelserver-3-txcd.arena2036-x.de"
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1024Mi
+      requests:
+        cpu: 500m
+        memory: 1024Mi
+
+  digital-twin-bundle:
+    enabled: true
+    digital-twin-registry:
+      fullnameOverride: tx-dtr-3
+      nameOverride: tx-dtr-3
+      registry:
+        nameOverride: tx-dtr-3
+        authentication: false
+        host: tx-dtr-3-txcd.arena2036-x.de
+        dataSource:
+          url: "jdbc:postgresql://digital-twin-tx-db-3:5432/dtr"
+        ingress:
+          enabled: true
+          tls:
+            enabled: true
+            secretName: tx-dtr-3-tls
+          className: "webapprouting.kubernetes.azure.com"
+          annotations:
+            # nginx.ingress.kubernetes.io/proxy-body-size: 50m
+            nginx.ingress.kubernetes.io/rewrite-target: /$2
+            nginx.ingress.kubernetes.io/x-forwarded-prefix: /semantics/registry
+            cert-manager.io/cluster-issuer: letsencrypt-prod
+          hosts:
+          - host: "tx-dtr-3-txcd.arena2036-x.de"
+            paths:
+              - path: "/semantics/registry(/|$)(.*)"
+                pathType: "Prefix"
+
+    postgresql:
+      fullnameOverride: "digital-twin-tx-db-3"
+      nameOverride: "digital-twin-tx-db-3"
+      primary:
+        persistence:
+          enabled: true
 
 dataproviderTwo:
   enabled: false
@@ -1798,7 +1943,7 @@ dataproviderThree:
   enabled: false
 
 pgadmin4:
-  enabled: true
+  enabled: false
   env:
     email: pgadmin4@arena2036.de
     password: arena2036xpgadmin4
@@ -1816,7 +1961,7 @@ pgadmin4:
 bdrs-server-memory:
   nameOverride: bdrs-server
   fullnameOverride: bdrs-server
-  enabled: true
+  enabled: false
   seeding:
     url: "http://bdrs-server:8081"
     enabled: true
@@ -1855,40 +2000,6 @@ bdrs-server-memory:
         did: "did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNL00000003CNKC"
       - bpn: "BPNS00000008BDFH"
         did: "did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNS00000008BDFH"
-      - bpn: "BPNLA360COMPANY1"
-        did: "did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNLA360COMPANY1"
-      - bpn: "BPNLA360COMPANY2"
-        did: "did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNLA360COMPANY2"
-      - bpn: "BPNLA360COMPANY3"
-        did: "did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNLA360COMPANY3"
-      - bpn: "BPNLA360COMPANY4"
-        did: "did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNLA360COMPANY4"
-      - bpn: "BPNLA360COMPANY5"
-        did: "did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNLA360COMPANY5"
-      - bpn: "BPNLA360COMPANY6"
-        did: "did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNLA360COMPANY6"
-      - bpn: "BPNLA360COMPANY7"
-        did: "did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNLA360COMPANY7"
-      - bpn: "BPNLA360COMPANY8"
-        did: "did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNLA360COMPANY8"
-      - bpn: "BPNLA360COMPANY9"
-        did: "did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNLA360COMPANY9"
-      - bpn: "BPNLA36COMPANY10"
-        did: "did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNLA36COMPANY10"
-      - bpn: "BPNLA3600000ICH1"
-        did: "did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNLA3600000ICH1"
-      - bpn: "BPNLA3600000ICH2"
-        did: "did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNLA3600000ICH2"
-      - bpn: "BPNLA3600000ICH3"
-        did: "did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNLA3600000ICH3"
-      - bpn: "BPNLA3600000ICH4"
-        did: "did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNLA3600000ICH4"
-      - bpn: "BPNLA3600000TX01"
-        did: "did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNLA3600000TX01"
-      - bpn: "BPNLA3600000TX02"
-        did: "did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNLA3600000TX02"
-      - bpn: "BPNLA3600000TX03"
-        did: "did:web:ssi-dim-wallet-stub-txcd.arena2036-x.de:BPNLA3600000TX03"
 
   server:
     trustedIssuers:
@@ -1911,7 +2022,7 @@ bdrs-server-memory:
           enabled: true
 
 identity-and-trust-bundle:
-  enabled: true
+  enabled: false
   ssi-dim-wallet-stub:
     wallet:
       replicaCount: 1
@@ -1923,7 +2034,7 @@ identity-and-trust-bundle:
       secretName: "ssi-dim-wallet-secret"
       ingressName: "ssi-dim-wallet-ingress"
       seeding:
-        bpnList: "BPNL00000003AZQP,BPNL00000003AYRE,BPNLA360COMPANY1,BPNLA360COMPANY2,BPNLA360COMPANY3,BPNLA360COMPANY4,BPNLA360COMPANY5,BPNLA360COMPANY6,BPNLA360COMPANY7,BPNLA360COMPANY8,BPNLA360COMPANY9,BPNLA36COMPANY10,BPNLA3600000ICH1,BPNLA3600000ICH2,BPNLA3600000ICH3,BPNLA3600000ICH4,BPNLA3600000TX01,BPNLA3600000TX02,BPNLA3600000TX03"
+        bpnList: "BPNL00000003AZQP,BPNL00000003AYRE"
       ingress:
         enabled: true
         tls:
@@ -1944,7 +2055,7 @@ identity-and-trust-bundle:
       didHost: "ssi-dim-wallet-stub-txcd.arena2036-x.de"
       stubUrl: "https://ssi-dim-wallet-stub-txcd.arena2036-x.de"
       statusListVcId: "8a6c7486-1e1f-4555-bdd2-1a178182651e"
-      tokenExpiryTime: "1"
+      tokenExpiryTime: "5"
       portal:
         waitTime: "60"
         host: "https://portal-backend-txcd.arena2036-x.de"
@@ -1956,7 +2067,6 @@ identity-and-trust-bundle:
       postgresql:
         username: "postgres"
         password: "postgrespassword"
-        url: jdbc:postgresql://wallet-postgres:5432/postgres
     service:
       type: ClusterIP
       port: 8080
