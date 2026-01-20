@@ -34,26 +34,26 @@ on:
   workflow_dispatch:
     inputs:
       cluster_context:
-        default: 'arena2036-x-edc-cluster'
+        default: 'arena2036-x-fed-services'
         required: false
         description: "Select the environment"
         type: choice
         options:
-        - arena2036-x-edc-cluster
+        - arena2036-x-fed-services
         - construct-x-fed-services
         - demo-cluster
       resource_group:
-        default: 'arena2036-x-edc'
+        default: 'arena2036-x-federated-services'
         required: false
         description: "Select resource group"
         type: choice
         options:
-        - arena2036-x-edc
+        - arena2036-x-federated-services
         - rg_construct-x
         - demo
       deployment_name:
         description: 'helm deployment name e.g, umbrella-edc'
-        default: 'umbrella-edc'
+        default: 'a36-edc'
         required: false
         type: string
       deployment_type:
@@ -71,7 +71,7 @@ on:
         type: string
       namespace:
         description: 'the namespace where the edc is to be deployed'
-        default: 'release24-12'
+        default: 'edcs'
         required: false
         type: string
 
