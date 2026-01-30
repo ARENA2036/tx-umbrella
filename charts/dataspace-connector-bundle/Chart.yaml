@@ -34,7 +34,7 @@ version: 1.2.0
 
 dependencies:
   - name: tractusx-connector
-    version: 0.11.1
+    version: 0.10.1         # The original EDC version is 0.11.1, the purpose of using v0.10.1 is to test the sde app.
     repository: https://eclipse-tractusx.github.io/charts/dev
     condition: tractusx-connector.enabled
 
