@@ -18,7 +18,7 @@
 # #############################################################################
 ---
 portal:
-  enabled: true
+  enabled: false
   replicaCount: 1
   postgresql:
     ## TEMPORALY UNTIL NEW PORTAL UPDATE
@@ -406,7 +406,7 @@ portal:
                 port: 8080
 
 centralidp:
-  enabled: true
+  enabled: false
   keycloak:
     nameOverride: "centralidp"
     replicaCount: 1
@@ -623,7 +623,7 @@ centralidp:
         pullPolicy: IfNotPresent
 
 sharedidp:
-  enabled: true
+  enabled: false
   keycloak:
     nameOverride: "sharedidp"
     auth:
@@ -742,7 +742,7 @@ sharedidp:
             clientSecret: "changeme"
 
 bpndiscovery:
-  enabled: true
+  enabled: false
   enablePostgres: true
   bpndiscovery:
     host: semantics.staging.arena2036-x.de
@@ -796,7 +796,7 @@ bpndiscovery:
       postgresPassword: "dbpasswordbpndiscovery"
 
 discoveryfinder:
-  enabled: true
+  enabled: false
   enablePostgres: true
   discoveryfinder:
     authentication: true
@@ -845,7 +845,7 @@ discoveryfinder:
       postgresPassword: "dbpassworddiscoveryfinder"
 
 selfdescription:
-  enabled: true
+  enabled: false
   sdfactory:
     secret:
       # -- JWK Set URI
@@ -878,7 +878,7 @@ selfdescription:
           cert-manager.io/cluster-issuer: letsencrypt-prod
 
 ssi-credential-issuer:
-  enabled: true
+  enabled: false
   replicaCount: 1
   portalBackendAddress: "https://portal-backend.staging.arena2036-x.de"
   walletAddress: "https://ssi-dim-wallet-stub.staging.arena2036-x.de"
@@ -1178,12 +1178,12 @@ bpdm:
 dataconsumerOne:
   enabled: true
   seedTestdata: false
-  nameOverride: dataconsumer-1
+  nameOverride: dataconsumer
   secrets:
     edc-wallet-secret: changeme
   dataspace-connector-bundle:
     tractusx-connector:
-      nameOverride: dataconsumer-1-edc
+      nameOverride: dataconsumer-edc
       participant:
         id: BPNL00000003AZQP
       iatp:
@@ -1210,7 +1210,7 @@ dataconsumerOne:
             authKey: TEST1
         ingresses:
           - enabled: true
-            hostname: "dataconsumer-1-controlplane.staging.arena2036-x.de"
+            hostname: "dataconsumer-controlplane.staging.arena2036-x.de"
             endpoints:
               - default
               - protocol
@@ -1226,7 +1226,7 @@ dataconsumerOne:
           EDC_IAM_DID_WEB_USE_HTTPS: false
         ingresses:
           - enabled: true
-            hostname: "dataconsumer-1-dataplane.staging.arena2036-x.de"
+            hostname: "dataconsumer-dataplane.staging.arena2036-x.de"
             endpoints:
               - default
               - public
@@ -1241,22 +1241,22 @@ dataconsumerOne:
           verifier:
             publickey_alias: tokenSignerPublicKey
       postgresql:
-        jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataconsumer-1-db:5432/edc"
+        jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataconsumer-db:5432/edc"
         auth:
           password: "dbpassworddataconsumerone"
           postgresPassword: "dbpassworddataconsumerone"
       vault:
         hashicorp:
-          url: http://{{ .Release.Name }}-edc-dataconsumer-1-vault:8200
+          url: http://{{ .Release.Name }}-edc-dataconsumer-vault:8200
 
     postgresql:
-      nameOverride: dataconsumer-1-db
+      nameOverride: dataconsumer-db
       auth:
         password: "dbpassworddataconsumerone"
         postgresPassword: "dbpassworddataconsumerone"
 
     vault:
-      nameOverride: edc-dataconsumer-1-vault
+      nameOverride: edc-dataconsumer-vault
       enabled: true
 
   data-persistence-layer-bundle:
@@ -1268,8 +1268,8 @@ dataconsumerOne:
 tx-data-provider:
   enabled: true
   seedTestdata: true
-  backendUrl: http://{{ .Release.Name }}-dataprovider-submodelserver:8080
-  registryUrl: http://{{ .Release.Name }}-dataprovider-dtr:8080/api/v3
+  backendUrl: http://{{ .Release.Name }}-submodelserver:8080
+  registryUrl: http://{{ .Release.Name }}-dtr:8080/api/v3
   controlplanePublicUrl: http://{{ .Release.Name }}-dataprovider-edc-controlplane:8084
   controlplaneManagementUrl: http://{{ .Release.Name }}-dataprovider-edc-controlplane:8081
   dataplaneUrl: http://{{ .Release.Name }}-dataprovider-edc-dataplane:8081
@@ -1305,7 +1305,7 @@ tx-data-provider:
             authKey: TEST2
         ingresses:
           - enabled: true
-            hostname: "dataprovider-controlplane.staging.arena2036-x.de"
+            hostname: "dataprovider-edc-controlplane.staging.arena2036-x.de"
             endpoints:
               - default
               - protocol
@@ -1321,7 +1321,7 @@ tx-data-provider:
           EDC_IAM_DID_WEB_USE_HTTPS: false
         ingresses:
           - enabled: true
-            hostname: "dataprovider-dataplane.staging.arena2036-x.de"
+            hostname: "dataprovider-edc-dataplane.staging.arena2036-x.de"
             endpoints:
               - default
               - public
@@ -1336,55 +1336,55 @@ tx-data-provider:
           verifier:
             publickey_alias: tokenSignerPublicKey
       postgresql:
-        jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataprovider-db:5432/edc"
+        jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataprovider-edc-db:5432/edc"
         auth:
           user: "dbusertxdataprovider"
           password: "dbpasswordtxdataprovider"
           postgresPassword: "dbpasswordtxdataprovider"
       vault:
         hashicorp:
-          url: http://{{ .Release.Name }}-edc-dataprovider-vault:8200
+          url: http://{{ .Release.Name }}-dataprovider-vault:8200
 
     postgresql:
-      nameOverride: dataprovider-db
+      nameOverride: dataprovider-edc-db
       auth:
         user: "dbusertxdataprovider"
         password: "dbpasswordtxdataprovider"
         postgresPassword: "dbpasswordtxdataprovider"
 
     vault:
-      nameOverride: edc-dataprovider-vault
+      nameOverride: dataprovider-vault
       enabled: true
 
   data-persistence-layer-bundle:
     enabled: true
     simple-data-backend:
-      nameOverride: dataprovider-submodelserver
+      nameOverride: submodelserver
       ingress:
         enabled: true
         className: "nginx"
         annotations:
           cert-manager.io/cluster-issuer: letsencrypt-prod
         hosts:
-          - host: "dataprovider-submodelserver.staging.arena2036-x.de"
+          - host: "submodelserver.staging.arena2036-x.de"
             paths:
               - path: "/"
                 pathType: "Prefix"
         tls:
-          - secretName: "dataprovider-submodelserver.staging-tls"
+          - secretName: "submodelserver.staging-tls"
             hosts:
-              - "dataprovider-submodelserver.staging.arena2036-x.de"
+              - "submodelserver.staging.arena2036-x.de"
             
 
   digital-twin-bundle:
     enabled: true
     digital-twin-registry:
-      nameOverride: dataprovider-dtr
+      nameOverride: dtr
       registry:
         authentication: false
-        host: dataprovider-dtr.staging.arena2036-x.de
+        host: dtr.staging.arena2036-x.de
         dataSource:
-          url: "jdbc:postgresql://dataprovider-digital-twin-db:5432/dtr"
+          url: "jdbc:postgresql://digital-twin-db:5432/dtr"
         ingress:
           enabled: true
           tls:
@@ -1396,16 +1396,16 @@ tx-data-provider:
             nginx.ingress.kubernetes.io/x-forwarded-prefix: /semantics/registry
             cert-manager.io/cluster-issuer: letsencrypt-prod
           hosts:
-          - host: "dataprovider-dtr.staging.arena2036-x.de"
+          - host: "dtr.staging.arena2036-x.de"
             paths:
               - path: "/semantics/registry(/|$)(.*)"
                 pathType: "Prefix"
 
     postgresql:
-      fullnameOverride: "dataprovider-digital-twin-db"
+      fullnameOverride: "digital-twin-db"
 
 semantic-hub:
-  enabled: true
+  enabled: false
   enableKeycloak: false
   keycloak:
     postgresql:
@@ -1534,7 +1534,7 @@ dataconsumerTwo:
     enabled: false
 
 pgadmin4:
-  enabled: true
+  enabled: false
   env:
     email: pgadmin4@txtest.org
     password: tractusxpgadmin4
@@ -1554,7 +1554,7 @@ pgadmin4:
 bdrs-server-memory:
   nameOverride: bdrs-server
   fullnameOverride: bdrs-server
-  enabled: true
+  enabled: false
   seeding:
     url: "http://bdrs-server:8081"
     enabled: true
@@ -1615,7 +1615,7 @@ bdrs-server-memory:
           enabled: true
 
 identity-and-trust-bundle:
-  enabled: true
+  enabled: false
   ssi-dim-wallet-stub:
     wallet:
       replicaCount: 1
