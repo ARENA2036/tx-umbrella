@@ -1181,14 +1181,25 @@ dataconsumerOne:
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt-prod
             # kubernetes.io/ingress.class: addon-http-application-routing
-          hostname: "dataconsumer-controlplane.arena2036-x.de"
+          hostname: "dataconsumer-controlplane.staging.arena2036-x.de"
           endpoints:
             - default
             - protocol
             - management
-          className: "webapprouting.kubernetes.azure.com"
+          className: "nginx"
           tls:
             enabled: true
+      resources:
+        limits:
+          # -- Maximum CPU limit
+          cpu: 500m
+          # -- Maximum memory limit
+          memory: 1024Mi
+        requests:
+          # -- Initial CPU request
+          cpu: 250m
+          # -- Initial memory request
+          memory: 1024Mi
     dataplane:
       env:
         TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.arena2036-x.de/api
@@ -1198,11 +1209,11 @@ dataconsumerOne:
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt-prod
             # kubernetes.io/ingress.class: addon-http-application-routing
-          hostname: "dataconsumer-dataplane.arena2036-x.de"
+          hostname: "dataconsumer-dataplane.staging.arena2036-x.de"
           endpoints:
             - default
             - public
-          className: "webapprouting.kubernetes.azure.com"
+          className: "nginx"
           tls:
             enabled: true
       token:
@@ -1210,6 +1221,17 @@ dataconsumerOne:
           privatekey_alias: tokenSignerPrivateKey
         verifier:
           publickey_alias: tokenSignerPublicKey
+      resources:
+        limits:
+          # -- Maximum CPU limit
+          cpu: 500m
+          # -- Maximum memory limit
+          memory: 1024Mi
+        requests:
+          # -- Initial CPU request
+          cpu: 250m
+          # -- Initial memory request
+          memory: 1024Mi
     postgresql:
       image:
         # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
@@ -1284,14 +1306,25 @@ tx-data-provider:
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt-prod
             # kubernetes.io/ingress.class: addon-http-application-routing
-          hostname: "dataprovider-controlplane.arena2036-x.de"
+          hostname: "sde-dataprovider-controlplane.staging.arena2036-x.de"
           endpoints:
             - default
             - protocol
             - management
-          className: "webapprouting.kubernetes.azure.com"
+          className: "nginx"
           tls:
             enabled: true
+      resources:
+        limits:
+          # -- Maximum CPU limit
+          cpu: 500m
+          # -- Maximum memory limit
+          memory: 1024Mi
+        requests:
+          # -- Initial CPU request
+          cpu: 250m
+          # -- Initial memory request
+          memory: 1024Mi
     dataplane:
       env:
         TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.arena2036-x.de/api
@@ -1301,11 +1334,11 @@ tx-data-provider:
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt-prod
             # kubernetes.io/ingress.class: addon-http-application-routing
-          hostname: "dataprovider-dataplane.arena2036-x.de"
+          hostname: "sde-dataprovider-dataplane.staging.arena2036-x.de"
           endpoints:
             - default
             - public
-          className: "webapprouting.kubernetes.azure.com"
+          className: "nginx"
           tls:
             enabled: true
       token:
@@ -1313,6 +1346,17 @@ tx-data-provider:
           privatekey_alias: tokenSignerPrivateKey
         verifier:
           publickey_alias: tokenSignerPublicKey
+      resources:
+        limits:
+          # -- Maximum CPU limit
+          cpu: 500m
+          # -- Maximum memory limit
+          memory: 1024Mi
+        requests:
+          # -- Initial CPU request
+          cpu: 250m
+          # -- Initial memory request
+          memory: 1024Mi
     postgresql:
       image:
         # -- workaround to use bitnamilegacy chart for version 12.12.x till committers align on new postgresql charts
@@ -1353,49 +1397,51 @@ tx-data-provider:
         existingSecret: dataprovider-secret-dtr-postgres-init
     registry:
       image:
-        registry:  arena2036.azurecr.io
-        repository: tractusx/sldt-digital-twin-registry
+        registry: harbor-hub-shared.arena.3ascloud.de
+        repository: arena2036-x/sldt-digital-twin-registry
         version: "0.6.3-patched"
+      imagePullSecrets:
+        - name: registry-creds
       ingress:
         enabled: true
-        className: ""
+        className: "nginx"
         annotations:
           # uncomment the following line for tls
-          kubernetes.io/ingress.class: webapprouting.kubernetes.azure.com
+          kubernetes.io/ingress.class: nginx
           # nginx.ingress.kubernetes.io/proxy-body-size: 50m
           nginx.ingress.kubernetes.io/rewrite-target: /$2
           nginx.ingress.kubernetes.io/x-forwarded-prefix: /semantics/registry
           cert-manager.io/cluster-issuer: letsencrypt-prod
         hosts:
-        - host: "dataprovider-dtr.arena2036-x.de"
+        - host: "sde-dataprovider-dtr.staging.arena2036-x.de"
           paths:
             - path: "/semantics/registry(/|$)(.*)"
               pathType: "Prefix"
         tls:
         - secretName: "dataprovider-dtr.tx.test-tls"
           hosts:
-            - "dataprovider-dtr.arena2036-x.de"
-      host: dataprovider-dtr.arena2036-x.de
+            - "sde-dataprovider-dtr.staging.arena2036-x.de"
+      host: sde-dataprovider-dtr.staging.arena2036-x.de
 
   simple-data-backend:
     nameOverride: dataprovider-submodelserver
     ingress:
       enabled: true
-      className: "webapprouting.kubernetes.azure.com"
+      className: "nginx"
       annotations:
         # uncomment the following line for tls
         # kubernetes.io/ingress.class: addon-http-application-routing
         # nginx.ingress.kubernetes.io/proxy-body-size: 50m
         cert-manager.io/cluster-issuer: letsencrypt-prod
       hosts:
-      - host: "dataprovider-submodelserver.arena2036-x.de"
+      - host: "sde-dataprovider-submodelserver.staging.arena2036-x.de"
         paths:
           - path: "/"
             pathType: "Prefix"
       tls:
         - secretName: "submodelserver.tx.test-tls"
           hosts:
-            - "dataprovider-submodelserver.arena2036-x.de"
+            - "sde-dataprovider-submodelserver.staging.arena2036-x.de"
     resources:
       limits:
         cpu: 500m
