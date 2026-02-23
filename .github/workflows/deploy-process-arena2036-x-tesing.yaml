@@ -2,7 +2,7 @@
 # Staging-Only Deployment for Arena2036-X
 # ##############################################
 ---
-name: Continuous Deployment Arena-X (Staging Test)
+name: Continuous Deployment Arena-X on (Staging Test)
 
 on:
   push:
