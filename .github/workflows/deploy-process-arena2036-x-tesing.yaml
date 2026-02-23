@@ -77,7 +77,7 @@ jobs:
           mkdir -p $HOME/.kube
 
           # Fetch kubeconfig
-          vault kv get -field=config staging/infra/cluster > $HOME/.kube/config
+          vault kv get -field=config staging/infra/cluster-staging > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
 
           # Use the context from the kubeconfig directly
