@@ -84,7 +84,7 @@ jobs:
       - name: Connect Cluster
         run: |
           mkdir -p $HOME/.kube
-          echo "${{ steps.vault.outputs.staging }}" > $HOME/.kube/config
+          echo "${{ steps.vault.outputs.config }}" > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
           echo "Testing staging cluster connection..."
           kubectl cluster-info
