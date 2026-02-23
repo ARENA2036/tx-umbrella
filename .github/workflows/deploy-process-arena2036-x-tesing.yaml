@@ -78,8 +78,13 @@ jobs:
           vault kv get -field=config staging/infra/cluster > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
           echo "Testing staging cluster connection..."
-          kubectl --context=<context-name-from-kubeconfig> cluster-info
-          kubectl --context=<context-name-from-kubeconfig> get nodes
+          # Get the first context name from kubeconfig
+          CONTEXT=$(kubectl config get-contexts -o name | head -n1)
+          echo "Using context: $CONTEXT"
+
+          # Test cluster connection
+          kubectl --context=$CONTEXT cluster-info
+          kubectl --context=$CONTEXT get nodes
         env:
           VAULT_ADDR: ${{ secrets.VAULT_ADDR_STAGING }}
           VAULT_TOKEN: ${{ secrets.VAULT_TOKEN_STAGING }}
