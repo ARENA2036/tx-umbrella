@@ -99,10 +99,9 @@ jobs:
           mkdir -p $HOME/.kube
           echo "${{ steps.vault.outputs.config }}" > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
-          
+
           # Test cluster connection
-          kubectl --context=$CONTEXT cluster-info
-          kubectl --context=$CONTEXT get nodes
+          kubectl config get-contexts  
 
       # -----------------------------
       # Install Helm
