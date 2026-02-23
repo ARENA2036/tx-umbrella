@@ -16,9 +16,8 @@ on:
         description: 'Helm release name'
         default: 'umbrella'
         required: false
-        type: string
       deployment_type:
-        description: "Deployment action (install, upgrade, uninstall)"
+        description: "Deployment action"
         default: 'install'
         required: false
         type: choice
@@ -27,15 +26,13 @@ on:
           - upgrade
           - uninstall
       helm_values_file:
-        description: 'Comma-separated list of Helm values files'
-        default: 'charts/umbrella/values-staging-testing.yaml'
+        description: 'Comma-separated Helm values files'
+        default: 'charts/umbrella/values.yaml'
         required: false
-        type: string
       namespace:
         description: 'Namespace to deploy'
         default: 'umbrella'
         required: false
-        type: string
       rollback_on_failure:
         description: "Rollback release if deployment fails"
         required: false
@@ -43,6 +40,7 @@ on:
         options:
           - 'true'
           - 'false'
+
 
 jobs:
   deploy:
@@ -61,23 +59,25 @@ jobs:
           kubectl version --client
 
       # -----------------------------
-      # Fetch Staging Cluster Access from Vault
+      # Fetch Staging Cluster Access from Vault using CLI
       # -----------------------------
       - name: Set Vault Env for Staging
         run: |
           echo "VAULT_ADDR=${{ secrets.VAULT_ADDR_STAGING }}" >> $GITHUB_ENV
           echo "VAULT_TOKEN=${{ secrets.VAULT_TOKEN_STAGING }}" >> $GITHUB_ENV
 
-      - name: Fetch Cluster Config from Vault
-        id: vault
-        uses: hashicorp/vault-action@79632e33d6953d190b940ffa440bf97821cabd80
-        with:
-          url: ${{ env.VAULT_ADDR }}
-          method: token
-          token: ${{ env.VAULT_TOKEN }}
-          secrets: |
-            staging/infra/cluster config | config
-            
+      - name: Fetch kubeconfig from Vault using CLI
+        run: |
+          mkdir -p $HOME/.kube
+          vault kv get -field=config staging/infra/cluster > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+          echo "Testing staging cluster connection..."
+          kubectl cluster-info
+          kubectl get nodes
+        env:
+          VAULT_ADDR: ${{ secrets.VAULT_ADDR_STAGING }}
+          VAULT_TOKEN: ${{ secrets.VAULT_TOKEN_STAGING }}
+
       # -----------------------------
       # Connect to Staging Cluster
       # -----------------------------
@@ -86,10 +86,8 @@ jobs:
           mkdir -p $HOME/.kube
           echo "${{ steps.vault.outputs.config }}" > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
-          echo "Testing staging cluster connection..."
           kubectl cluster-info
           kubectl get nodes
-
       # -----------------------------
       # Install Helm
       # -----------------------------
