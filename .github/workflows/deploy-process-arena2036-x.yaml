@@ -5,10 +5,10 @@
 name: Continuous Deployment Arena-X
 
 on:
-  push:
-    branches: [ feature/deploy-process-arena2036-x ]
-  pull_request:
-    branches: [ feature/deploy-process-arena2036-x ]
+  # push:
+  #   branches: [ feature/deploy-process-arena2036-x ]
+  # pull_request:
+  #   branches: [ feature/deploy-process-arena2036-x ]
 
   workflow_dispatch:
     inputs:
