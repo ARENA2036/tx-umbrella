@@ -124,7 +124,10 @@ jobs:
       # -----------------------------
       - name: Ensure Namespace Exists
         run: |
-          NAMESPACE="${{ github.event.inputs.namespace }}"
+          # Use input if provided, otherwise default to "umbrella"
+          NAMESPACE="${{ github.event.inputs.namespace || 'umbrella' }}"
+          
+          echo "Using namespace: $NAMESPACE"
           kubectl get namespace "$NAMESPACE" || kubectl create namespace "$NAMESPACE"
 
       # -----------------------------
