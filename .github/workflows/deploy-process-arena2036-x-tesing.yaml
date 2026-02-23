@@ -91,17 +91,17 @@ jobs:
           VAULT_ADDR: ${{ secrets.VAULT_ADDR_STAGING }}
           VAULT_TOKEN: ${{ secrets.VAULT_TOKEN_STAGING }}
 
-      # -----------------------------
-      # Connect to Staging Cluster
-      # -----------------------------
-      - name: Connect Cluster
-        run: |
-          mkdir -p $HOME/.kube
-          echo "${{ steps.vault.outputs.config }}" > $HOME/.kube/config
-          chmod 600 $HOME/.kube/config
+      # # -----------------------------
+      # # Connect to Staging Cluster
+      # # -----------------------------
+      # - name: Connect Cluster
+      #   run: |
+      #     mkdir -p $HOME/.kube
+      #     echo "${{ steps.vault.outputs.config }}" > $HOME/.kube/config
+      #     chmod 600 $HOME/.kube/config
 
-          # Test cluster connection
-          kubectl config get-contexts  
+      #     # Test cluster connection
+      #     kubectl config get-contexts  
 
       # -----------------------------
       # Install Helm
