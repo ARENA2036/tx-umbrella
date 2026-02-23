@@ -1,0 +1,157 @@
+# ##############################################
+# Staging-Only Deployment for Arena2036-X
+# ##############################################
+---
+name: Continuous Deployment Arena-X (Staging Test)
+
+on:
+  push:
+    branches: [ feature/deploy-process-arena2036-x ]
+  pull_request:
+    branches: [ feature/deploy-process-arena2036-x ]
+
+  workflow_dispatch:
+    inputs:
+      deployment_name:
+        description: 'Helm release name'
+        default: 'umbrella'
+        required: false
+        type: string
+      deployment_type:
+        description: "Deployment action (install, upgrade, uninstall)"
+        default: 'install'
+        required: false
+        type: choice
+        options:
+          - install
+          - upgrade
+          - uninstall
+      helm_values_file:
+        description: 'Comma-separated list of Helm values files'
+        default: 'charts/umbrella/values-staging-testing.yaml'
+        required: false
+        type: string
+      namespace:
+        description: 'Namespace to deploy'
+        default: 'umbrella'
+        required: false
+        type: string
+      rollback_on_failure:
+        description: "Rollback release if deployment fails"
+        required: false
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # -----------------------------
+      # Install kubectl
+      # -----------------------------
+      - name: Install kubectl
+        run: |
+          echo "Installing kubectl..."
+          curl -LO -s "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+          kubectl version --client
+
+      # -----------------------------
+      # Fetch Staging Cluster Access from Vault
+      # -----------------------------
+      - name: Set Vault Env for Staging
+        run: |
+          echo "VAULT_ADDR=${{ secrets.VAULT_ADDR_STAGING }}" >> $GITHUB_ENV
+          echo "VAULT_TOKEN=${{ secrets.VAULT_TOKEN_STAGING }}" >> $GITHUB_ENV
+
+      - name: Fetch Cluster Config from Vault
+        id: vault
+        uses: hashicorp/vault-action@79632e33d6953d190b940ffa440bf97821cabd80
+        with:
+          url: ${{ env.VAULT_ADDR }}
+          method: token
+          token: ${{ env.VAULT_TOKEN }}
+          secrets: |
+            infra/cluster config=cluster
+
+      # -----------------------------
+      # Connect to Staging Cluster
+      # -----------------------------
+      - name: Connect Cluster
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ steps.vault.outputs.staging }}" > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+          echo "Testing staging cluster connection..."
+          kubectl cluster-info
+          kubectl get nodes
+
+      # -----------------------------
+      # Install Helm
+      # -----------------------------
+      - name: Install Helm
+        uses: azure/setup-helm@b7246b12e77f7134dc2d460a3d5bad15bbe29390
+        with:
+          version: v3.12.1
+
+      # -----------------------------
+      # Checkout Code
+      # -----------------------------
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # -----------------------------
+      # Ensure Namespace Exists
+      # -----------------------------
+      - name: Ensure Namespace Exists
+        run: |
+          NAMESPACE="${{ github.event.inputs.namespace }}"
+          kubectl get namespace "$NAMESPACE" || kubectl create namespace "$NAMESPACE"
+
+      # -----------------------------
+      # Deploy Release to Staging
+      # -----------------------------
+      - name: Deploy Release
+        run: |
+          NAMESPACE="${{ github.event.inputs.namespace }}"
+          RELEASE_NAME="${{ github.event.inputs.deployment_name }}"
+          VALUE_FILES="${{ github.event.inputs.helm_values_file }}"
+          TYPE="${{ github.event.inputs.deployment_type }}"
+          ROLLBACK="${{ github.event.inputs.rollback_on_failure }}"
+
+          # Build Helm values arguments
+          HELM_VALUES_ARGS=""
+          IFS=',' read -ra FILE_ARRAY <<< "$VALUE_FILES"
+          for f in "${FILE_ARRAY[@]}"; do
+            HELM_VALUES_ARGS="$HELM_VALUES_ARGS --values $f"
+          done
+
+          # Rollback/atomic option
+          if [ "$ROLLBACK" = "true" ]; then
+            EXTRA_ARGS="--atomic"
+          else
+            EXTRA_ARGS=""
+          fi
+
+          # Deploy using Helm
+          if [ "$TYPE" = "install" ]; then
+            helm dependency update ./helm
+            helm install "$RELEASE_NAME" ./helm --namespace "$NAMESPACE" $HELM_VALUES_ARGS $EXTRA_ARGS
+
+          elif [ "$TYPE" = "upgrade" ]; then
+            helm dependency update ./helm
+            helm upgrade --install "$RELEASE_NAME" ./helm --namespace "$NAMESPACE" $HELM_VALUES_ARGS $EXTRA_ARGS
+
+          elif [ "$TYPE" = "uninstall" ]; then
+            helm uninstall "$RELEASE_NAME" --namespace "$NAMESPACE"
+
+          else
+            echo "Unknown deployment_type: $TYPE"
+            exit 1
+          fi
