@@ -57,6 +57,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # -----------------------------
+      # Install kubectl
+      # -----------------------------
       - name: Install kubectl
         run: |
           echo "Installing kubectl..."
@@ -66,59 +69,60 @@ jobs:
           kubectl version --client
 
       # -----------------------------
-      # Fetch Cluster Access from Vault
+      # Install Vault CLI
       # -----------------------------
-      - name: Select Vault Environment
-        id: vault-env
+      - name: Install Vault CLI
         run: |
-          if [ "${{ github.event.inputs.cluster_context }}" = "staging" ]; then
-            echo "VAULT_ADDR=${{ secrets.VAULT_ADDR_STAGING }}" >> $GITHUB_ENV
-            echo "VAULT_TOKEN=${{ secrets.VAULT_TOKEN_STAGING }}" >> $GITHUB_ENV
-          elif [ "${{ github.event.inputs.cluster_context }}" = "prod" ]; then
-            echo "VAULT_ADDR=${{ secrets.VAULT_ADDR_PROD }}" >> $GITHUB_ENV
-            echo "VAULT_TOKEN=${{ secrets.VAULT_TOKEN_PROD }}" >> $GITHUB_ENV
-          else
-            echo "Invalid cluster_context"
-            exit 1
-          fi
-
-      - name: Fetch Cluster Config from Vault
-        id: vault
-        uses: hashicorp/vault-action@79632e33d6953d190b940ffa440bf97821cabd80        
-        with:
-          url: ${{ env.VAULT_ADDR }}
-          method: token
-          token: ${{ env.VAULT_TOKEN }}
-          secrets: |
-            infra/cluster config=cluster
+          curl -sSL https://releases.hashicorp.com/vault/1.21.2/vault_1.21.2_linux_amd64.zip -o vault.zip
+          unzip vault.zip
+          chmod +x vault
+          sudo mv vault /usr/local/bin/
+          vault --version
 
       # -----------------------------
-      # Connect Cluster
+      # Fetch kubeconfig from Vault
       # -----------------------------
-      - name: Connect Cluster
+      - name: Fetch kubeconfig from Vault
         run: |
           mkdir -p $HOME/.kube
 
+          # Select Vault secrets based on cluster_context
           if [ "${{ github.event.inputs.cluster_context }}" = "staging" ]; then
-            echo "${{ steps.vault.outputs.staging }}" > $HOME/.kube/config
+            export VAULT_ADDR="${{ secrets.VAULT_ADDR_STAGING }}"
+            export VAULT_TOKEN="${{ secrets.VAULT_TOKEN_STAGING }}"
+            CLUSTER_PATH="staging/infra/cluster-staging"
           elif [ "${{ github.event.inputs.cluster_context }}" = "prod" ]; then
-            echo "${{ steps.vault.outputs.prod }}" > $HOME/.kube/config
+            export VAULT_ADDR="${{ secrets.VAULT_ADDR_PROD }}"
+            export VAULT_TOKEN="${{ secrets.VAULT_TOKEN_PROD }}"
+            CLUSTER_PATH="prod/infra/cluster-prod"
           else
-            echo "Invalid cluster_context"
+            echo "Invalid cluster_context: ${{ github.event.inputs.cluster_context }}"
             exit 1
           fi
 
+          # Fetch kubeconfig
+          vault kv get -field=config $CLUSTER_PATH > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
 
-          echo "Testing cluster connection..."
-          kubectl cluster-info
-          kubectl get nodes
+          # Extract current context
+          CONTEXT=$(yq e '.current-context' $HOME/.kube/config)
+          echo "Using context: $CONTEXT"
 
+          # Test cluster connection
+          kubectl --context=$CONTEXT cluster-info
+          kubectl --context=$CONTEXT get nodes
+
+      # -----------------------------
+      # Install Helm
+      # -----------------------------
       - name: Install Helm
         uses: azure/setup-helm@b7246b12e77f7134dc2d460a3d5bad15bbe29390 # v4.1.0
         with:
           version: v3.12.1
-
+    
+      # -----------------------------
+      # Checkout Code
+      # -----------------------------
       - name: Checkout
         uses: actions/checkout@v4
         with:
