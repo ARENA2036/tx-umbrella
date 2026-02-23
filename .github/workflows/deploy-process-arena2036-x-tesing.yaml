@@ -94,7 +94,7 @@ jobs:
           chmod 600 $HOME/.kube/config
           kubectl cluster-info
           kubectl get nodes
-          
+
       # -----------------------------
       # Install Helm
       # -----------------------------
