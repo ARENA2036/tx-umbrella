@@ -75,11 +75,13 @@ jobs:
       - name: Fetch kubeconfig from Vault
         run: |
           mkdir -p $HOME/.kube
+
+          # Fetch kubeconfig
           vault kv get -field=config staging/infra/cluster > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
-          echo "Testing staging cluster connection..."
-          # Get the first context name from kubeconfig
-          CONTEXT=$(kubectl config get-contexts -o name | head -n1)
+
+          # Use the context from the kubeconfig directly
+          CONTEXT=$(yq e '.current-context' $HOME/.kube/config)
           echo "Using context: $CONTEXT"
 
           # Test cluster connection
