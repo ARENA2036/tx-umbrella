@@ -76,7 +76,7 @@ jobs:
           method: token
           token: ${{ env.VAULT_TOKEN }}
           secrets: |
-            infra/cluster config=cluster
+            staging/infra/cluster config=cluster
 
       # -----------------------------
       # Connect to Staging Cluster
