@@ -57,16 +57,22 @@ jobs:
           chmod +x kubectl
           sudo mv kubectl /usr/local/bin/
           kubectl version --client
-
+  
       # -----------------------------
-      # Fetch Staging Cluster Access from Vault using CLI
+      # Install Vault CLI
       # -----------------------------
-      - name: Set Vault Env for Staging
+      - name: Install Vault CLI
         run: |
-          echo "VAULT_ADDR=${{ secrets.VAULT_ADDR_STAGING }}" >> $GITHUB_ENV
-          echo "VAULT_TOKEN=${{ secrets.VAULT_TOKEN_STAGING }}" >> $GITHUB_ENV
+          curl -sSL https://releases.hashicorp.com/vault/1.21.2/vault_1.21.2_linux_amd64.zip -o vault.zip
+          unzip vault.zip
+          chmod +x vault
+          sudo mv vault /usr/local/bin/
+          vault --version
 
-      - name: Fetch kubeconfig from Vault using CLI
+      # -----------------------------
+      # Fetch kubeconfig from Vault using CLI
+      # -----------------------------
+      - name: Fetch kubeconfig from Vault
         run: |
           mkdir -p $HOME/.kube
           vault kv get -field=config staging/infra/cluster > $HOME/.kube/config
@@ -88,6 +94,7 @@ jobs:
           chmod 600 $HOME/.kube/config
           kubectl cluster-info
           kubectl get nodes
+          
       # -----------------------------
       # Install Helm
       # -----------------------------
