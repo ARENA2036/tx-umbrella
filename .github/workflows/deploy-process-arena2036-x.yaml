@@ -1,0 +1,170 @@
+# ##############################################
+# Automatic Deployment Process for Arena2036-X
+# ##############################################
+---
+name: Continuous Deployment Arena-X
+
+on:
+  workflow_dispatch:
+    inputs:
+      cluster_context:
+        description: "Select the environment e.g, (staging, prod)"
+        default: 'staging'
+        required: false
+        type: choice
+        options:
+          - staging
+          - prod
+      deployment_name:
+        description: 'Helm release name e.g, umbrella'
+        default: 'umbrella'
+        required: false
+        type: string
+      deployment_type:
+        description: "Deployment action e.g, (install release, upgrade release, uninstall release)"
+        default: 'upgrade'
+        required: false
+        type: choice
+        options:
+          - install
+          - upgrade
+          - uninstall
+      helm_values_file:
+        description: 'Comma-separated list of Helm values files (relative paths)'
+        default: 'charts/umbrella/values.yaml'
+        required: false
+        type: string
+      namespace:
+        description: 'Namespace to deploy the release'
+        default: 'umbrella'
+        required: false
+        type: string
+      rollback_on_failure:
+        description: "Rollback release if deployment fails"
+        required: false
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install kubectl
+        run: |
+          echo "Installing kubectl..."
+          curl -LO -s "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+          kubectl version --client
+
+      # -----------------------------
+      # Fetch Cluster Access from Vault
+      # -----------------------------
+      - name: Select Vault Environment
+        id: vault-env
+        run: |
+          if [ "${{ github.event.inputs.cluster_context }}" = "staging" ]; then
+            echo "VAULT_ADDR=${{ secrets.VAULT_ADDR_STAGING }}" >> $GITHUB_ENV
+            echo "VAULT_TOKEN=${{ secrets.VAULT_TOKEN_STAGING }}" >> $GITHUB_ENV
+          elif [ "${{ github.event.inputs.cluster_context }}" = "prod" ]; then
+            echo "VAULT_ADDR=${{ secrets.VAULT_ADDR_PROD }}" >> $GITHUB_ENV
+            echo "VAULT_TOKEN=${{ secrets.VAULT_TOKEN_PROD }}" >> $GITHUB_ENV
+          else
+            echo "Invalid cluster_context"
+            exit 1
+          fi
+
+      - name: Fetch Cluster Config from Vault
+        id: vault
+        uses: hashicorp/vault-action@79632e33d6953d190b940ffa440bf97821cabd80        
+        with:
+          url: ${{ env.VAULT_ADDR }}
+          method: token
+          token: ${{ env.VAULT_TOKEN }}
+          secrets: |
+            infra/cluster config=cluster
+
+      # -----------------------------
+      # Connect Cluster
+      # -----------------------------
+      - name: Connect Cluster
+        run: |
+          mkdir -p $HOME/.kube
+
+          if [ "${{ github.event.inputs.cluster_context }}" = "staging" ]; then
+            echo "${{ steps.vault.outputs.staging }}" > $HOME/.kube/config
+          elif [ "${{ github.event.inputs.cluster_context }}" = "prod" ]; then
+            echo "${{ steps.vault.outputs.prod }}" > $HOME/.kube/config
+          else
+            echo "Invalid cluster_context"
+            exit 1
+          fi
+
+          chmod 600 $HOME/.kube/config
+
+          echo "Testing cluster connection..."
+          kubectl cluster-info
+          kubectl get nodes
+
+      - name: Install Helm
+        uses: azure/setup-helm@b7246b12e77f7134dc2d460a3d5bad15bbe29390 # v4.1.0
+        with:
+          version: v3.12.1
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # -----------------------------
+      # Ensure Namespace Exists
+      # -----------------------------
+      - name: Ensure Namespace Exists
+        run: |
+          NAMESPACE="${{ github.event.inputs.namespace }}"
+          kubectl get namespace "$NAMESPACE" || kubectl create namespace "$NAMESPACE"
+
+      # -----------------------------
+      # Deploy Release
+      # -----------------------------
+      - name: Deploy Release
+        run: |
+          NAMESPACE="${{ github.event.inputs.namespace }}"
+          RELEASE_NAME="${{ github.event.inputs.deployment_name }}"
+          VALUE_FILES="${{ github.event.inputs.helm_values_file }}"
+          TYPE="${{ github.event.inputs.deployment_type }}"
+          ROLLBACK="${{ github.event.inputs.rollback_on_failure }}"
+
+          # Build Helm values arguments
+          HELM_VALUES_ARGS=""
+          IFS=',' read -ra FILE_ARRAY <<< "$VALUE_FILES"
+          for f in "${FILE_ARRAY[@]}"; do
+            HELM_VALUES_ARGS="$HELM_VALUES_ARGS --values $f"
+          done
+
+          # Rollback/atomic option
+          if [ "$ROLLBACK" = "true" ]; then
+            EXTRA_ARGS="--atomic"
+          else
+            EXTRA_ARGS=""
+          fi
+
+          # Deploy using Helm
+          if [ "${{ github.event.inputs.deployment_type }}" = "install" ]; then
+            helm dependency update ./helm
+            helm install "$RELEASE_NAME" ./helm --namespace "$NAMESPACE" $HELM_VALUES_ARGS $EXTRA_ARGS
+
+          elif [ "${{ github.event.inputs.deployment_type }}" = "upgrade" ]; then
+            helm dependency update ./helm
+            helm upgrade --install "$RELEASE_NAME" ./helm --namespace "$NAMESPACE" $HELM_VALUES_ARGS $EXTRA_ARGS
+
+          elif [ "${{ github.event.inputs.deployment_type }}" = "uninstall" ]; then
+            helm uninstall "$RELEASE_NAME" --namespace "$NAMESPACE"
+
+          else
+            echo "Unknown deployment_type: ${{ github.event.inputs.deployment_type }}"
+            exit 1
+          fi
