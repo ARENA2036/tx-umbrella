@@ -1181,7 +1181,7 @@ dataconsumerOne:
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt-prod
             # kubernetes.io/ingress.class: addon-http-application-routing
-          hostname: "dataconsumer-controlplane.staging.arena2036-x.de"
+          hostname: "dataconsumer-controlplane.prod.arena2036-x.de"
           endpoints:
             - default
             - protocol
@@ -1209,7 +1209,7 @@ dataconsumerOne:
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt-prod
             # kubernetes.io/ingress.class: addon-http-application-routing
-          hostname: "dataconsumer-dataplane.staging.arena2036-x.de"
+          hostname: "dataconsumer-dataplane.prod.arena2036-x.de"
           endpoints:
             - default
             - public
@@ -1306,7 +1306,7 @@ tx-data-provider:
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt-prod
             # kubernetes.io/ingress.class: addon-http-application-routing
-          hostname: "sde-dataprovider-controlplane.staging.arena2036-x.de"
+          hostname: "sde-dataprovider-controlplane.prod.arena2036-x.de"
           endpoints:
             - default
             - protocol
@@ -1334,7 +1334,7 @@ tx-data-provider:
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt-prod
             # kubernetes.io/ingress.class: addon-http-application-routing
-          hostname: "sde-dataprovider-dataplane.staging.arena2036-x.de"
+          hostname: "sde-dataprovider-dataplane.prod.arena2036-x.de"
           endpoints:
             - default
             - public
@@ -1413,15 +1413,15 @@ tx-data-provider:
           nginx.ingress.kubernetes.io/x-forwarded-prefix: /semantics/registry
           cert-manager.io/cluster-issuer: letsencrypt-prod
         hosts:
-        - host: "sde-dataprovider-dtr.staging.arena2036-x.de"
+        - host: "sde-dataprovider-dtr.prod.arena2036-x.de"
           paths:
             - path: "/semantics/registry(/|$)(.*)"
               pathType: "Prefix"
         tls:
         - secretName: "dataprovider-dtr.tx.test-tls"
           hosts:
-            - "sde-dataprovider-dtr.staging.arena2036-x.de"
-      host: sde-dataprovider-dtr.staging.arena2036-x.de
+            - "sde-dataprovider-dtr.prod.arena2036-x.de"
+      host: sde-dataprovider-dtr.prod.arena2036-x.de
 
   simple-data-backend:
     nameOverride: dataprovider-submodelserver
@@ -1434,14 +1434,14 @@ tx-data-provider:
         # nginx.ingress.kubernetes.io/proxy-body-size: 50m
         cert-manager.io/cluster-issuer: letsencrypt-prod
       hosts:
-      - host: "sde-dataprovider-submodelserver.staging.arena2036-x.de"
+      - host: "sde-dataprovider-submodelserver.prod.arena2036-x.de"
         paths:
           - path: "/"
             pathType: "Prefix"
       tls:
         - secretName: "submodelserver.tx.test-tls"
           hosts:
-            - "sde-dataprovider-submodelserver.staging.arena2036-x.de"
+            - "sde-dataprovider-submodelserver.prod.arena2036-x.de"
     resources:
       limits:
         cpu: 500m
