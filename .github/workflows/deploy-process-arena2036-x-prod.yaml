@@ -174,6 +174,11 @@ jobs:
           # fi
 
           # Deploy using Helm for testing
-            helm dependency update ./charts/umbrella
-            helm upgrade --install federated ./charts/umbrella --namespace release25-09 --create-namespace --values charts/umbrella/values-prod.yaml
+            helm dependency update ./dataspace-connector-bundle
+            helm dependency update ./digital-twin-bundle
+            helm dependency update ./identity-and-trust-bundle
+            helm dependency update ./simple-data-backend
+            helm dependency update ./tx-data-provider
+            helm dependency update ./umbrella
+            helm upgrade --install federated ./charts/umbrella --namespace release25-09 --create-namespace --values charts/umbrella/values-prod.yaml --wait --timeout 10m
 
