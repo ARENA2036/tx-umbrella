@@ -24,10 +24,10 @@
 name: Continuous Deployment Arena-X (prod)
 
 on:
-  # push:
-  #   branches: [ feature/deploy-process-arena2036-x ]
-  # pull_request:
-  #   branches: [ feature/deploy-process-arena2036-x ]
+  push:
+    branches: [ feature/deploy-process-arena2036-x ]
+  pull_request:
+    branches: [ feature/deploy-process-arena2036-x ]
 
   workflow_dispatch:
     inputs:
@@ -47,9 +47,9 @@ on:
         required: false
         type: choice
         options:
-          - install
+          # - install
           - upgrade
-          - uninstall
+          # - uninstall
       helm_values_file:
         description: 'Comma-separated list of Helm values files (relative paths)'
         default: 'charts/umbrella/values-prod.yaml'
@@ -57,7 +57,7 @@ on:
         type: string
       namespace:
         description: 'Namespace to deploy the release'
-        default: 'umbrella'
+        default: 'release25-09'
         required: false
         type: string
       rollback_on_failure:
@@ -89,12 +89,30 @@ jobs:
           sudo mv vault /usr/local/bin/
           vault --version
 
+      #### Prod env. configuration
+      # - name: Fetch kubeconfig from Vault
+      #   run: |
+      #     mkdir -p $HOME/.kube
+      #     export VAULT_ADDR="${{ secrets.VAULT_ADDR_PROD }}"
+      #     export VAULT_TOKEN="${{ secrets.VAULT_TOKEN_PROD }}"
+      #     CLUSTER_PATH="prod/infra/cluster-prod"
+      #     # Fetch kubeconfig
+      #     vault kv get -field=config $CLUSTER_PATH > $HOME/.kube/config
+      #     chmod 600 $HOME/.kube/config
+
+      #     # Extract current context
+      #     CONTEXT=$(yq e '.current-context' $HOME/.kube/config)
+      #     echo "Using context: $CONTEXT"
+
+      #     # Test cluster connection
+      #     kubectl --context=$CONTEXT cluster-info
+
       - name: Fetch kubeconfig from Vault
         run: |
           mkdir -p $HOME/.kube
-          export VAULT_ADDR="${{ secrets.VAULT_ADDR_PROD }}"
-          export VAULT_TOKEN="${{ secrets.VAULT_TOKEN_PROD }}"
-          CLUSTER_PATH="prod/infra/cluster-prod"
+          export VAULT_ADDR="${{ secrets.VAULT_ADDR_STAGING }}"
+          export VAULT_TOKEN="${{ secrets.VAULT_TOKEN_STAGING }}"
+          CLUSTER_PATH="staging/infra/cluster-prod"
           # Fetch kubeconfig
           vault kv get -field=config $CLUSTER_PATH > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
