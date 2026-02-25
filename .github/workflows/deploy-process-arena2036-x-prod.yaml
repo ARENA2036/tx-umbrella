@@ -180,5 +180,4 @@ jobs:
             helm dependency update ./charts/simple-data-backend
             helm dependency update ./charts/tx-data-provider
             helm dependency update ./charts/umbrella
-            helm upgrade --install federated ./charts/umbrella --namespace release25-09 --create-namespace --values charts/umbrella/values-prod.yaml --wait --timeout 10m
-
+            helm upgrade --install federated ./charts/umbrella --namespace release25-09 --create-namespace --values charts/umbrella/values-prod.yaml --debug
