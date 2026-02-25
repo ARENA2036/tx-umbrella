@@ -1,0 +1,156 @@
+# #############################################################################
+# Copyright (c) 2023,2024 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License, Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0.
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+# #############################################################################
+
+# ######################################################
+# Automatic Deployment Process for Arena2036-X - prod
+# ######################################################
+---
+name: Continuous Deployment Arena-X (prod)
+
+on:
+  # push:
+  #   branches: [ feature/deploy-process-arena2036-x ]
+  # pull_request:
+  #   branches: [ feature/deploy-process-arena2036-x ]
+
+  workflow_dispatch:
+    inputs:
+      cluster_context:
+        description: "Environment (prod)"
+        default: 'prod'
+        required: false
+        type: string
+      deployment_name:
+        description: 'Helm release name e.g, federated'
+        default: 'federated'
+        required: false
+        type: string
+      deployment_type:
+        description: "Deployment action e.g, (install release, upgrade release, uninstall release)"
+        default: 'upgrade'
+        required: false
+        type: choice
+        options:
+          - install
+          - upgrade
+          - uninstall
+      helm_values_file:
+        description: 'Comma-separated list of Helm values files (relative paths)'
+        default: 'charts/umbrella/values-prod.yaml'
+        required: false
+        type: string
+      namespace:
+        description: 'Namespace to deploy the release'
+        default: 'umbrella'
+        required: false
+        type: string
+      rollback_on_failure:
+        description: "Rollback release if deployment fails"
+        required: false
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install kubectl
+        run: |
+          echo "Installing kubectl..."
+          curl -LO -s "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+          kubectl version --client
+
+      - name: Install Vault CLI
+        run: |
+          curl -sSL https://releases.hashicorp.com/vault/1.21.2/vault_1.21.2_linux_amd64.zip -o vault.zip
+          unzip vault.zip
+          chmod +x vault
+          sudo mv vault /usr/local/bin/
+          vault --version
+
+      - name: Fetch kubeconfig from Vault
+        run: |
+          mkdir -p $HOME/.kube
+          export VAULT_ADDR="${{ secrets.VAULT_ADDR_PROD }}"
+          export VAULT_TOKEN="${{ secrets.VAULT_TOKEN_PROD }}"
+          CLUSTER_PATH="prod/infra/cluster-prod"
+          # Fetch kubeconfig
+          vault kv get -field=config $CLUSTER_PATH > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+          # Extract current context
+          CONTEXT=$(yq e '.current-context' $HOME/.kube/config)
+          echo "Using context: $CONTEXT"
+
+          # Test cluster connection
+          kubectl --context=$CONTEXT cluster-info
+
+      - name: Install Helm
+        uses: azure/setup-helm@b7246b12e77f7134dc2d460a3d5bad15bbe29390 # v4.1.0
+        with:
+          version: v3.12.1
+    
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Deploy Release
+        run: |
+          NAMESPACE="${{ github.event.inputs.namespace }}"
+          RELEASE_NAME="${{ github.event.inputs.deployment_name }}"
+          VALUE_FILES="${{ github.event.inputs.helm_values_file }}"
+          TYPE="${{ github.event.inputs.deployment_type }}"
+          ROLLBACK="${{ github.event.inputs.rollback_on_failure }}"
+
+          # Build Helm values arguments
+          HELM_VALUES_ARGS=""
+          IFS=',' read -ra FILE_ARRAY <<< "$VALUE_FILES"
+          for f in "${FILE_ARRAY[@]}"; do
+            HELM_VALUES_ARGS="$HELM_VALUES_ARGS --values $f"
+          done
+
+          # Rollback/atomic option
+          if [ "$ROLLBACK" = "true" ]; then
+            EXTRA_ARGS="--atomic"
+          else
+            EXTRA_ARGS=""
+          fi
+
+          # Deploy using Helm
+          if [ "${{ github.event.inputs.deployment_type }}" = "install" ]; then
+            helm dependency update ./helm
+            helm install "$RELEASE_NAME" ./helm --namespace "$NAMESPACE" --create-namespace $HELM_VALUES_ARGS $EXTRA_ARGS
+
+          elif [ "${{ github.event.inputs.deployment_type }}" = "upgrade" ]; then
+            helm dependency update ./helm
+            helm upgrade --install "$RELEASE_NAME" ./helm --namespace "$NAMESPACE" --create-namespace $HELM_VALUES_ARGS $EXTRA_ARGS
+
+          elif [ "${{ github.event.inputs.deployment_type }}" = "uninstall" ]; then
+            helm uninstall "$RELEASE_NAME" --namespace "$NAMESPACE"
+
+          else
+            echo "Unknown deployment_type: ${{ github.event.inputs.deployment_type }}"
+            exit 1
+          fi
