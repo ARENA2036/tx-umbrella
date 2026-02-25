@@ -178,8 +178,8 @@ jobs:
 
           # Deploy using Helm for testing
           if [ "$TYPE" = "upgrade" ]; then
-            helm dependency update ./helm
-            helm upgrade --install "$RELEASE_NAME" ./helm --namespace "$NAMESPACE" --create-namespace $HELM_VALUES_ARGS $EXTRA_ARGS
+            helm dependency update ./charts/umbrella
+            helm upgrade --install "$RELEASE_NAME" ./charts/umbrella --namespace "$NAMESPACE" --create-namespace $HELM_VALUES_ARGS $EXTRA_ARGS
 
           else
             echo "Unknown deployment_type: ${{ github.event.inputs.deployment_type }}"
