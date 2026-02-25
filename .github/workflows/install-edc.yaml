@@ -96,8 +96,12 @@ jobs:
       - name: Setup Cluster Context
         run: |
           mkdir -p $HOME/.kube
-          echo "${{ steps.import-secrets.outputs.KUBECONFIG }}" > $HOME/.kube/config"
+          # echo "${{ steps.import-secrets.outputs.KUBECONFIG }}"
+          # echo "${{ steps.import-secrets.outputs.KUBECONFIG }}" > $HOME/.kube/config
+          echo "${{ secrets.CONFIG }}" > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
+          ls -l
+          cat $HOME/.kube/config
           CONTEXT=$(yq e '.current-context' $HOME/.kube/config)
           
           # Test connection
