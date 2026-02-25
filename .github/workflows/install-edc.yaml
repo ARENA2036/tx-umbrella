@@ -75,7 +75,7 @@ jobs:
           url: ${{ secrets.VAULT_ADDR_STAGING }}
           token: ${{ secrets.VAULT_TOKEN_STAG }}
           secrets: |
-            /v1/staging/data/infra/cluster-staging config | KUBECONFIG ;
+            staging/data/data/cluster config | KUBECONFIG ;
 
       - name: Install kubectl
         run: |
