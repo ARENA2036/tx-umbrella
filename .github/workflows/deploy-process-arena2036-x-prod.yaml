@@ -181,4 +181,4 @@ jobs:
             chmod +x ./helm-dependencies.bash
             ./helm-dependencies.bash
             echo "Running deployment script..."
-            helm upgrade --install federated ./charts/umbrella --namespace release25-09 --create-namespace --values charts/umbrella/values-prod.yaml --debug
+            helm upgrade --install federated ../charts/umbrella --namespace release25-09 --create-namespace --values ../charts/umbrella/values-prod.yaml --debug
