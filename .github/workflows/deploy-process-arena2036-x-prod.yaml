@@ -175,6 +175,9 @@ jobs:
           # fi
 
           # Deploy using Helm for testing
+            pwd
+            ls -la
+            
             chmod +x ./helm-dependencies.bash
             ./helm-dependencies.bash
             echo "Running deployment script..."
