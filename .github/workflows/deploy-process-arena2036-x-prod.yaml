@@ -175,10 +175,16 @@ jobs:
           # fi
 
           # Deploy using Helm for testing
+            echo "Current directory:"
             pwd
             ls -la
             
             chmod +x ./helm-dependencies.bash
             ./helm-dependencies.bash
+
+            echo "Building umbrella dependencies..."
+            helm dependency build ../charts/umbrella
+            echo "Dependencies successfully built!"
+                      
             echo "Running deployment script..."
             helm upgrade --install federated ../charts/umbrella --namespace release25-09 --create-namespace --values ../charts/umbrella/values-prod.yaml --debug
