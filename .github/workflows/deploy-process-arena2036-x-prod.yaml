@@ -24,10 +24,10 @@
 name: Continuous Deployment Arena-X (prod)
 
 on:
-  push:
-    branches: [ feature/deploy-process-arena2036-x ]
-  pull_request:
-    branches: [ feature/deploy-process-arena2036-x ]
+  # push:
+  #   branches: [ feature/deploy-process-arena2036-x ]
+  # pull_request:
+  #   branches: [ feature/deploy-process-arena2036-x ]
 
   workflow_dispatch:
     inputs:
@@ -47,9 +47,9 @@ on:
         required: false
         type: choice
         options:
-          # - install
+          - install
           - upgrade
-          # - uninstall
+          - uninstall
       helm_values_file:
         description: 'Comma-separated list of Helm values files (relative paths)'
         default: 'charts/umbrella/values-prod.yaml'
@@ -89,30 +89,12 @@ jobs:
           sudo mv vault /usr/local/bin/
           vault --version
 
-      #### Prod env. configuration
-      # - name: Fetch kubeconfig from Vault
-      #   run: |
-      #     mkdir -p $HOME/.kube
-      #     export VAULT_ADDR="${{ secrets.VAULT_ADDR_PROD }}"
-      #     export VAULT_TOKEN="${{ secrets.VAULT_TOKEN_PROD }}"
-      #     CLUSTER_PATH="prod/infra/cluster-prod"
-      #     # Fetch kubeconfig
-      #     vault kv get -field=config $CLUSTER_PATH > $HOME/.kube/config
-      #     chmod 600 $HOME/.kube/config
-
-      #     # Extract current context
-      #     CONTEXT=$(yq e '.current-context' $HOME/.kube/config)
-      #     echo "Using context: $CONTEXT"
-
-      #     # Test cluster connection
-      #     kubectl --context=$CONTEXT cluster-info
-
-      - name: Fetch kubeconfig from Vault
+      - name: Fetch kubeconfig from Vault and connect to cluster
         run: |
           mkdir -p $HOME/.kube
-          export VAULT_ADDR="${{ secrets.VAULT_ADDR_STAGING }}"
-          export VAULT_TOKEN="${{ secrets.VAULT_TOKEN_STAGING }}"
-          CLUSTER_PATH="staging/infra/cluster-prod"
+          export VAULT_ADDR="${{ secrets.VAULT_ADDR_PROD }}"
+          export VAULT_TOKEN="${{ secrets.VAULT_TOKEN_PROD }}"
+          CLUSTER_PATH="prod/infra/cluster-prod"
           # Fetch kubeconfig
           vault kv get -field=config $CLUSTER_PATH > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
@@ -157,34 +139,25 @@ jobs:
             EXTRA_ARGS=""
           fi
 
-          # # Deploy using Helm
-          # if [ "${{ github.event.inputs.deployment_type }}" = "install" ]; then
-          # helm dependency update ./charts/umbrella
-          #   helm install "$RELEASE_NAME" ./helm --namespace "$NAMESPACE" --create-namespace $HELM_VALUES_ARGS $EXTRA_ARGS
-
-          # elif [ "${{ github.event.inputs.deployment_type }}" = "upgrade" ]; then
-          # helm dependency update ./charts/umbrella
-          #   helm upgrade --install "$RELEASE_NAME" ./helm --namespace "$NAMESPACE" --create-namespace $HELM_VALUES_ARGS $EXTRA_ARGS
-
-          # elif [ "${{ github.event.inputs.deployment_type }}" = "uninstall" ]; then
-          #   helm uninstall "$RELEASE_NAME" --namespace "$NAMESPACE"
-
-          # else
-          #   echo "Unknown deployment_type: ${{ github.event.inputs.deployment_type }}"
-          #   exit 1
-          # fi
-
-          # Deploy using Helm for testing
-            echo "Current directory:"
-            pwd
-            ls -la
-            
+          # Run Helm dependencies script
             chmod +x ./helm-dependencies.bash
             ./helm-dependencies.bash
-
+            echo "Running deployment script..."
+            
             echo "Building umbrella dependencies..."
             helm dependency build ../charts/umbrella
             echo "Dependencies successfully built!"
-                      
-            echo "Running deployment script..."
-            helm upgrade --install federated ../charts/umbrella --namespace release25-09 --create-namespace --values ../charts/umbrella/values-prod.yaml --debug
+
+          if [ "${{ github.event.inputs.deployment_type }}" = "install" ]; then
+            helm install "$RELEASE_NAME" ../charts/umbrella --namespace "$NAMESPACE" --create-namespace $HELM_VALUES_ARGS $EXTRA_ARGS
+
+          elif [ "${{ github.event.inputs.deployment_type }}" = "upgrade" ]; then
+            helm upgrade --install "$RELEASE_NAME" ../charts/umbrella --namespace "$NAMESPACE" --create-namespace $HELM_VALUES_ARGS $EXTRA_ARGS
+
+          elif [ "${{ github.event.inputs.deployment_type }}" = "uninstall" ]; then
+            helm uninstall "$RELEASE_NAME" --namespace "$NAMESPACE"
+
+          else
+            echo "Unknown deployment_type: ${{ github.event.inputs.deployment_type }}"
+            exit 1
+          fi
