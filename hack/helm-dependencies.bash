@@ -62,7 +62,7 @@ else
   fi
 fi
 
-CHARTS_DIR="../charts"
+CHARTS_DIR="./charts"
 TX_DATA_PROVIDER_DIR="$CHARTS_DIR/tx-data-provider"
 UMBRELLA_DIR="$CHARTS_DIR/umbrella"
 
