@@ -66,8 +66,8 @@ on:
         required: false
         type: choice
         options:
-          - 'true'
           - 'false'
+          - 'true'
 
 jobs:
   deploy:
@@ -118,7 +118,7 @@ jobs:
           fetch-depth: 0
 
       - name: Deploy Release
-        working-directory: hack/
+        working-directory: .
         run: |
           NAMESPACE="${{ github.event.inputs.namespace }}"
           RELEASE_NAME="${{ github.event.inputs.deployment_name }}"
@@ -141,22 +141,22 @@ jobs:
           fi
 
           # Run Helm dependencies script
-            chmod +x ./helm-dependencies.bash
-            ./helm-dependencies.bash
+            chmod +x hack/helm-dependencies.bash
+            ./hack/helm-dependencies.bash
             echo "Running deployment script..."
             
             echo "Building umbrella dependencies..."
-            helm dependency build ../charts/umbrella
+            helm dependency build charts/umbrella --debug
             echo "Dependencies successfully built!"
 
           if [ "${{ github.event.inputs.deployment_type }}" = "install" ]; then
-            helm install "$RELEASE_NAME" ../charts/umbrella --namespace "$NAMESPACE" --create-namespace $HELM_VALUES_ARGS $EXTRA_ARGS
+            helm install "$RELEASE_NAME" charts/umbrella --namespace "$NAMESPACE" --create-namespace $HELM_VALUES_ARGS $EXTRA_ARGS --debug
 
           elif [ "${{ github.event.inputs.deployment_type }}" = "upgrade" ]; then
-            helm upgrade --install "$RELEASE_NAME" ../charts/umbrella --namespace "$NAMESPACE" --create-namespace $HELM_VALUES_ARGS $EXTRA_ARGS
+            helm upgrade --install "$RELEASE_NAME" charts/umbrella --namespace "$NAMESPACE" --create-namespace $HELM_VALUES_ARGS $EXTRA_ARGS --debug
 
           elif [ "${{ github.event.inputs.deployment_type }}" = "uninstall" ]; then
-            helm uninstall "$RELEASE_NAME" --namespace "$NAMESPACE"
+            helm uninstall "$RELEASE_NAME" --namespace "$NAMESPACE" --debug
 
           else
             echo "Unknown deployment_type: ${{ github.event.inputs.deployment_type }}"

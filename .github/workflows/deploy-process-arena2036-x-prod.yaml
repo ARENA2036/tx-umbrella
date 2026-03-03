@@ -67,7 +67,7 @@ on:
         type: choice
         options:
           - 'false'
-          - 'rrue'
+          - 'true'
 
 jobs:
   deploy:
