@@ -90,22 +90,40 @@ jobs:
           sudo mv vault /usr/local/bin/
           vault --version
 
+      # - name: Fetch kubeconfig from Vault and connect to cluster
+      #   run: |
+      #     mkdir -p $HOME/.kube
+      #     export VAULT_ADDR="${{ secrets.VAULT_ADDR_PROD }}"
+      #     export VAULT_TOKEN="${{ secrets.VAULT_TOKEN_PROD }}"
+      #     CLUSTER_PATH="prod/infra/cluster-prod"
+      #     # Fetch kubeconfig
+      #     vault kv get -field=config $CLUSTER_PATH > $HOME/.kube/config
+      #     chmod 600 $HOME/.kube/config
+
+      #     # Extract current context
+      #     CONTEXT=$(yq e '.current-context' $HOME/.kube/config)
+      #     echo "Using context: $CONTEXT"
+
+      #     # Test cluster connection
+      #     kubectl --context=$CONTEXT cluster-info
+
       - name: Fetch kubeconfig from Vault and connect to cluster
         run: |
+          set -e
           mkdir -p $HOME/.kube
           export VAULT_ADDR="${{ secrets.VAULT_ADDR_PROD }}"
           export VAULT_TOKEN="${{ secrets.VAULT_TOKEN_PROD }}"
-          CLUSTER_PATH="prod/infra/cluster-prod"
-          # Fetch kubeconfig
-          vault kv get -field=config $CLUSTER_PATH > $HOME/.kube/config
+          echo "Checking Vault connection..."
+          vault status
+          echo "Fetching kubeconfig..."
+          vault kv get -mount=prod -field=config infra/cluster-prod > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
-
-          # Extract current context
+          echo "First lines of kubeconfig:"
+          head -n 5 $HOME/.kube/config
+          
           CONTEXT=$(yq e '.current-context' $HOME/.kube/config)
           echo "Using context: $CONTEXT"
-
-          # Test cluster connection
-          kubectl --context=$CONTEXT cluster-info
+          kubectl --context="$CONTEXT" cluster-info
 
       - name: Install Helm
         uses: azure/setup-helm@b7246b12e77f7134dc2d460a3d5bad15bbe29390 # v4.1.0
