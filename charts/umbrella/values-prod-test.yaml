@@ -725,8 +725,8 @@ sharedidp:
         sslRequired: "none"
         centralidp: "https://centralidp-test.prod.arena2036-x.de"
         initialUser:
-          username: "cx-operator@tx.test"
-          password: "tractusx-umbr3lla!"
+          username: "cx-operator@arena2036.de"
+          password: "tractusx-umbr3llaA!"
         mailing:
           host: ""
           port: ""
