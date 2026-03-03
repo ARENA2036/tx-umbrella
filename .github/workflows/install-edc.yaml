@@ -23,8 +23,9 @@ name: Install EDC (Install or Upgrade)
 on:
   push:
     branches:
-      - feat/install-edc-script
       - develop
+      - main
+
   # pull_request:
   #   paths:
   #     - 'charts/**'
@@ -57,7 +58,7 @@ on:
         - uninstall
       helm_values_file:
         description: 'the relative path to the helm values.yaml'
-        default: 'values-edc-staging.yaml'
+        default: 'values-edcs-staging.yaml'
         required: false
         type: string
       namespace:
@@ -75,7 +76,7 @@ jobs:
         uses: hashicorp/vault-action@v2
         with:
           url: ${{ secrets.VAULT_ADDR_STAGING }}
-          token: ${{ secrets.VAULT_TOKEN_STAG }}
+          token: ${{ secrets.VAULT_TOKEN_STAGING }}
           secrets: |
             staging/data/data/cluster config | KUBECONFIG ;
 
