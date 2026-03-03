@@ -153,7 +153,7 @@ jobs:
             helm install "$RELEASE_NAME" charts/umbrella --namespace "$NAMESPACE" --create-namespace $HELM_VALUES_ARGS $EXTRA_ARGS --debug
 
           elif [ "${{ github.event.inputs.deployment_type }}" = "upgrade" ]; then
-            helm upgrade --install "$RELEASE_NAME" charts/umbrella --namespace "$NAMESPACE" --create-namespace $HELM_VALUES_ARGS $EXTRA_ARGS --debug
+            helm upgrade --install "$RELEASE_NAME" charts/umbrella --namespace "$NAMESPACE" --create-namespace $HELM_VALUES_ARGS --debug
 
           elif [ "${{ github.event.inputs.deployment_type }}" = "uninstall" ]; then
             helm uninstall "$RELEASE_NAME" --namespace "$NAMESPACE" --debug
