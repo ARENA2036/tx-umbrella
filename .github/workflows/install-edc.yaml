@@ -1,5 +1,6 @@
 # #############################################################################
 # Copyright (c) 2023,2024 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 ARENA2036 e.V.
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -22,7 +23,8 @@ name: Install EDC (Install or Upgrade)
 on:
   push:
     branches:
-      - main
+      - feat/install-edc-script
+      - develop
   # pull_request:
   #   paths:
   #     - 'charts/**'
@@ -96,16 +98,15 @@ jobs:
       - name: Setup Cluster Context
         run: |
           mkdir -p $HOME/.kube
-          # echo "${{ steps.import-secrets.outputs.KUBECONFIG }}"
-          # echo "${{ steps.import-secrets.outputs.KUBECONFIG }}" > $HOME/.kube/config
-          echo "${{ secrets.CONFIG }}" > $HOME/.kube/config
-          chmod 600 $HOME/.kube/config
-          ls -l
-          cat $HOME/.kube/config
-          CONTEXT=$(yq e '.current-context' $HOME/.kube/config)
-          
-          # Test connection
-          kubectl --context=$CONTEXT cluster-info
+          CONFIG_PATH="$HOME/.kube/config"
+          cat <<EOF > $CONFIG_PATH
+          ${{ steps.import-secrets.outputs.KUBECONFIG }}
+          EOF
+          chmod 600 $CONFIG_PATH
+          export KUBECONFIG="$CONFIG_PATH"
+          echo "KUBECONFIG=$CONFIG_PATH" >> $GITHUB_ENV
+          kubectl --context=${{ github.event.inputs.cluster_context }} cluster-info
+ 
 
       - name: Set up Helm
         uses: azure/setup-helm@b7246b12e77f7134dc2d460a3d5bad15bbe29390 # v4.1.0
@@ -121,14 +122,12 @@ jobs:
         working-directory: hack/
         run: |
           chmod +x ./install-edc.sh
-          chmod +x ./helm-dependencies.bash
-          ./helm-dependencies.bash
           echo "Running deployment script..."
           if [ "${{ github.event.inputs.release_type }}" = "uninstall" ]; then
             helm uninstall ${{ github.event.inputs.release_name }} --namespace ${{ github.event.inputs.namespace }}
-          elif [[ "${{ github.event.inputs.release_type }}" = "install" ] || [ "${{ github.event.inputs.release_type }}" = "upgrade" ]]; then
+          elif [ "${{ github.event.inputs.release_type }}" = "install" ] || [ "${{ github.event.inputs.release_type }}" = "upgrade" ]; then
             ./install-edc.sh ${{ github.event.inputs.cluster_context }} ${{ github.event.inputs.release_name }} ${{ github.event.inputs.release_type }} ${{ github.event.inputs.helm_values_file }} ${{ github.event.inputs.namespace }}
           else
-            echo "Invalid release_type
+            echo "Invalid release_type"
             exit 1
           fi
