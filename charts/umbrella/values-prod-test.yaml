@@ -1622,7 +1622,7 @@ identity-and-trust-bundle:
     wallet:
       replicaCount: 1
       host: ssi-dim-wallet-stub-test.prod.arena2036-x.de
-      nameSpace: "release25-09"
+      nameSpace: "cd-test"
       appName: "ssi-dim-wallet-stub"
       configName: "ssi-dim-wallet-config"
       serviceName: "ssi-dim-wallet-service"
