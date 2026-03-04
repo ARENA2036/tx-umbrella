@@ -116,6 +116,16 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+     
+      - name: Ensure namespace exists
+        run: |
+          NAMESPACE="${{ github.event.inputs.namespace }}"
+          if ! kubectl get namespace "$NAMESPACE" >/dev/null 2>&1; then
+            echo "Namespace $NAMESPACE does not exist. Creating..."
+            kubectl create namespace "$NAMESPACE"
+          else
+            echo "Namespace $NAMESPACE already exists."
+          fi
 
       - name: Deploy Release
         working-directory: .
