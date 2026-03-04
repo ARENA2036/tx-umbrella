@@ -151,15 +151,7 @@ jobs:
 
           if [ "$TYPE" = "install" ]; then
             helm install "$RELEASE_NAME" charts/umbrella --namespace "$NAMESPACE" --create-namespace $HELM_VALUES_ARGS $EXTRA_ARGS --debug
-          
-            if [ "$TYPE" = "install" ]; then
-                    helm install "$RELEASE_NAME" charts/umbrella \
-                      --namespace "$NAMESPACE" \
-                      --create-namespace \
-                      $HELM_VALUES_ARGS \
-                      $EXTRA_ARGS \
-                      --debug
-
+    
           elif [ "$TYPE" = "upgrade" ]; then
             helm upgrade --install "$RELEASE_NAME" charts/umbrella --namespace "$NAMESPACE" --create-namespace $HELM_VALUES_ARGS $EXTRA_ARGS --debug
 
