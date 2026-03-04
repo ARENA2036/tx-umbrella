@@ -116,16 +116,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-     
-      - name: Ensure namespace exists
-        run: |
-          NAMESPACE="${{ github.event.inputs.namespace }}"
-          if ! kubectl get namespace "$NAMESPACE" >/dev/null 2>&1; then
-            echo "Namespace $NAMESPACE does not exist. Creating..."
-            kubectl create namespace "$NAMESPACE"
-          else
-            echo "Namespace $NAMESPACE already exists."
-          fi
 
       - name: Deploy Release
         working-directory: .
@@ -148,49 +138,6 @@ jobs:
             EXTRA_ARGS="--atomic"
           else
             EXTRA_ARGS=""
-          fi
-
-          # Patch existing secrets (install / upgrade only)
-          if [[ "$TYPE" == "install" || "$TYPE" == "upgrade" ]]; then
-            echo "Patching existing SMTP secrets..."
-
-            # Ensure secrets exist (fail if missing)
-            kubectl get secret "$RELEASE_NAME"-sharedidp-cx-operator-realm-seeding -n "$NAMESPACE" >/dev/null
-            kubectl get secret portal-backend-mailing -n "$NAMESPACE" >/dev/null
-
-            # Encode GitHub secrets
-            SMTP_PASSWORD_B64=$(echo -n "${{ secrets.ARENA_SMTP_PASSWORD }}" | base64 -w 0)
-            SMTP_PORT_B64=$(echo -n "${{ secrets.ARENA_SMTP_PORT }}" | base64 -w 0)
-            SMTP_SERVER_B64=$(echo -n "${{ secrets.ARENA_SMTP_SERVER }}" | base64 -w 0)
-            SMTP_USERNAME_B64=$(echo -n "${{ secrets.ARENA_SMTP_USERNAME }}" | base64 -w 0)
-
-            # Patch federated sharedidp secret
-            kubectl patch secret "$RELEASE_NAME"-sharedidp-cx-operator-realm-seeding \
-              -n "$NAMESPACE" \
-              --type='merge' \
-              -p "{
-                \"data\": {
-                  \"mailing-password\": \"$SMTP_PASSWORD_B64\",
-                  \"mailing-port\": \"$SMTP_PORT_B64\",
-                  \"mailing-host\": \"$SMTP_SERVER_B64\",
-                  \"mailing-from\": \"$SMTP_USERNAME_B64\",
-                  \"mailing-reply-to\": \"$SMTP_USERNAME_B64\",
-                  \"mailing-username\": \"$SMTP_USERNAME_B64\"
-                }
-              }"
-
-            # Patch portal backend secret
-            kubectl patch secret portal-backend-mailing \
-              -n "$NAMESPACE" \
-              --type='merge' \
-              -p "{
-                \"data\": {
-                  \"password\": \"$SMTP_PASSWORD_B64\",
-                  \"provisioning-sharedrealm-password\": \"$SMTP_PASSWORD_B64\"
-                }
-              }"
-
-            echo "Secrets patched successfully."
           fi
 
           # Run Helm dependencies script
@@ -224,10 +171,45 @@ jobs:
             exit 1
           fi
 
-          # Restart deployment to apply secret changes
+          # Only run post-deployment scripts if install/upgrade
           if [[ "$TYPE" == "install" || "$TYPE" == "upgrade" ]]; then
+            echo "Release deployed successfully. Running post-deployment scripts..."
+
+            # Encode GitHub secrets
+            SMTP_PASSWORD_B64=$(echo -n "${{ secrets.ARENA_SMTP_PASSWORD }}" | base64 -w 0)
+            SMTP_PORT_B64=$(echo -n "${{ secrets.ARENA_SMTP_PORT }}" | base64 -w 0)
+            SMTP_SERVER_B64=$(echo -n "${{ secrets.ARENA_SMTP_SERVER }}" | base64 -w 0)
+            SMTP_USERNAME_B64=$(echo -n "${{ secrets.ARENA_SMTP_USERNAME }}" | base64 -w 0)
+
+            # Patch federated sharedidp secret if exists
+            kubectl get secret "$RELEASE_NAME"-sharedidp-cx-operator-realm-seeding -n "$NAMESPACE" >/dev/null 2>&1 \
+              && kubectl patch secret "$RELEASE_NAME"-sharedidp-cx-operator-realm-seeding -n "$NAMESPACE" \
+                  --type=merge -p "{
+                    \"data\": {
+                      \"mailing-password\": \"$SMTP_PASSWORD_B64\",
+                      \"mailing-port\": \"$SMTP_PORT_B64\",
+                      \"mailing-host\": \"$SMTP_SERVER_B64\",
+                      \"mailing-from\": \"$SMTP_USERNAME_B64\",
+                      \"mailing-reply-to\": \"$SMTP_USERNAME_B64\",
+                      \"mailing-username\": \"$SMTP_USERNAME_B64\"
+                    }
+                  }" \
+              || echo "Secret $RELEASE_NAME-sharedidp-cx-operator-realm-seeding not found, skipping patch"
+
+            # Patch portal-backend-mailing secret if exists
+            kubectl get secret portal-backend-mailing -n "$NAMESPACE" >/dev/null 2>&1 \
+              && kubectl patch secret portal-backend-mailing -n "$NAMESPACE" \
+                  --type=merge -p "{
+                    \"data\": {
+                      \"password\": \"$SMTP_PASSWORD_B64\",
+                      \"provisioning-sharedrealm-password\": \"$SMTP_PASSWORD_B64\"
+                    }
+                  }" \
+              || echo "Secret portal-backend-mailing not found, skipping patch"
+
+            # Restart deployment to apply secret changes
             echo "Restarting deployment to apply updated secrets..."
             kubectl rollout restart deployment "$RELEASE_NAME" -n "$NAMESPACE" || true
-          fi
 
-          echo "Deployment completed successfully."
+            echo Post-deployment scripts completed successfully."
+          fi
