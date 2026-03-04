@@ -181,35 +181,41 @@ jobs:
             SMTP_SERVER_B64=$(echo -n "${{ secrets.ARENA_SMTP_SERVER }}" | base64 -w 0)
             SMTP_USERNAME_B64=$(echo -n "${{ secrets.ARENA_SMTP_USERNAME }}" | base64 -w 0)
 
-            # Patch federated sharedidp secret if exists
-            kubectl get secret "$RELEASE_NAME"-sharedidp-cx-operator-realm-seeding -n "$NAMESPACE" >/dev/null 2>&1 \
-              && kubectl patch secret "$RELEASE_NAME"-sharedidp-cx-operator-realm-seeding -n "$NAMESPACE" \
-                  --type=merge -p "{
-                    \"data\": {
-                      \"mailing-password\": \"$SMTP_PASSWORD_B64\",
-                      \"mailing-port\": \"$SMTP_PORT_B64\",
-                      \"mailing-host\": \"$SMTP_SERVER_B64\",
-                      \"mailing-from\": \"$SMTP_USERNAME_B64\",
-                      \"mailing-reply-to\": \"$SMTP_USERNAME_B64\",
-                      \"mailing-username\": \"$SMTP_USERNAME_B64\"
-                    }
-                  }" \
-              || echo "Secret $RELEASE_NAME-sharedidp-cx-operator-realm-seeding not found, skipping patch"
+          # Patch federated sharedidp secret if exists
+          kubectl get secret "$RELEASE_NAME"-sharedidp-cx-operator-realm-seeding -n "$NAMESPACE" >/dev/null 2>&1 \
+            && kubectl patch secret "$RELEASE_NAME"-sharedidp-cx-operator-realm-seeding -n "$NAMESPACE" \
+                --type=merge -p "$(cat <<EOF
+          {
+            "data": {
+              "mailing-password": "$SMTP_PASSWORD_B64",
+              "mailing-port": "$SMTP_PORT_B64",
+              "mailing-host": "$SMTP_SERVER_B64",
+              "mailing-from": "$SMTP_USERNAME_B64",
+              "mailing-reply-to": "$SMTP_USERNAME_B64",
+              "mailing-username": "$SMTP_USERNAME_B64"
+            }
+          }
+          EOF
+          )" \
+            || echo "Secret $RELEASE_NAME-sharedidp-cx-operator-realm-seeding not found, skipping patch"
 
-            # Patch portal-backend-mailing secret if exists
-            kubectl get secret portal-backend-mailing -n "$NAMESPACE" >/dev/null 2>&1 \
-              && kubectl patch secret portal-backend-mailing -n "$NAMESPACE" \
-                  --type=merge -p "{
-                    \"data\": {
-                      \"password\": \"$SMTP_PASSWORD_B64\",
-                      \"provisioning-sharedrealm-password\": \"$SMTP_PASSWORD_B64\"
-                    }
-                  }" \
-              || echo "Secret portal-backend-mailing not found, skipping patch"
+          # Patch portal-backend-mailing secret if exists
+          kubectl get secret portal-backend-mailing -n "$NAMESPACE" >/dev/null 2>&1 \
+            && kubectl patch secret portal-backend-mailing -n "$NAMESPACE" \
+                --type=merge -p "$(cat <<EOF
+          {
+            "data": {
+              "password": "$SMTP_PASSWORD_B64",
+              "provisioning-sharedrealm-password": "$SMTP_PASSWORD_B64"
+            }
+          }
+          EOF
+          )" \
+            || echo "Secret portal-backend-mailing not found, skipping patch"
 
-            # Restart deployment to apply secret changes
-            echo "Restarting deployment to apply updated secrets..."
-            kubectl rollout restart deployment "$RELEASE_NAME" -n "$NAMESPACE" || true
+          # Restart deployment to apply secret changes
+          echo "Restarting deployment to apply updated secrets..."
+          kubectl rollout restart deployment "$RELEASE_NAME" -n "$NAMESPACE" || true
 
-            echo Post-deployment scripts completed successfully."
+          echo Post-deployment scripts completed successfully."
           fi
