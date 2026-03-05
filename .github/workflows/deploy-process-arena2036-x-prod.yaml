@@ -26,9 +26,9 @@ name: Continuous Deployment Arena-X (prod)
 
 on:
   # push:
-  #   branches: [ feature/deploy-process-arena2036-x ]
+  #   branches: [ main ]
   # pull_request:
-  #   branches: [ feature/deploy-process-arena2036-x ]
+  #   branches: [ main ]
 
   workflow_dispatch:
     inputs:

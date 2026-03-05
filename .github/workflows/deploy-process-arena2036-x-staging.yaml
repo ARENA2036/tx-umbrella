@@ -26,9 +26,9 @@ name: Continuous Deployment Arena-X (Staging)
 
 on:
   # push:
-  #   branches: [ feature/deploy-process-arena2036-x ]
+  #   branches: [ develop ]
   # pull_request:
-  #   branches: [ feature/deploy-process-arena2036-x ]
+  #   branches: [ develop ]
 
   workflow_dispatch:
     inputs:
