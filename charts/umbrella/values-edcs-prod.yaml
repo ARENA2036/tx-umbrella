@@ -1,5 +1,6 @@
 # #############################################################################
 # Copyright (c) 2023,2024 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 ARENA2036 e.V.
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -40,35 +41,35 @@ portal:
     primary:
       persistence:
         enabled: true
-  portalAddress: "https://portal.staging.arena2036-x.de"
-  portalBackendAddress: "https://portal-backend.staging.arena2036-x.de"
+  portalAddress: "https://portal.prod.arena2036-x.de"
+  portalBackendAddress: "https://portal-backend.prod.arena2036-x.de"
   centralidp:
-    address: "https://centralidp.staging.arena2036-x.de"
-  sharedidpAddress: "https://sharedidp.staging.arena2036-x.de"
-  semanticsAddress: "https://semantics.staging.arena2036-x.de"
+    address: "https://centralidp.prod.arena2036-x.de"
+  sharedidpAddress: "https://sharedidp.prod.arena2036-x.de"
+  semanticsAddress: "https://semantics.prod.arena2036-x.de"
   bpdm:
-    poolAddress: "https://business-partners.staging.arena2036-x.de"
+    poolAddress: "https://business-partners.prod.arena2036-x.de"
     poolApiPath: "/pool/v6"
-    portalGateAddress: "https://business-partners.staging.arena2036-x.de"
+    portalGateAddress: "https://business-partners.prod.arena2036-x.de"
     portalGateApiPath: "/gate/v6"
-  custodianAddress: "https://ssi-dim-wallet-stub.staging.arena2036-x.de"
+  custodianAddress: "https://ssi-dim-wallet-stub.prod.arena2036-x.de"
   dimWrapper:
-    baseAddress: "https://ssi-dim-wallet-stub.staging.arena2036-x.de"
+    baseAddress: "https://ssi-dim-wallet-stub.prod.arena2036-x.de"
     apiPath: "/api/dim"
-    tokenAddress: "https://ssi-dim-wallet-stub.staging.arena2036-x.de/oauth/token"
-  decentralIdentityManagementAuthAddress: "https://ssi-dim-wallet-stub.staging.arena2036-x.de/api/sts"
-  sdfactoryAddress: "https://sdfactory.staging.arena2036-x.de"
+    tokenAddress: "https://ssi-dim-wallet-stub.prod.arena2036-x.de/oauth/token"
+  decentralIdentityManagementAuthAddress: "https://ssi-dim-wallet-stub.prod.arena2036-x.de/api/sts"
+  sdfactoryAddress: "https://sdfactory.prod.arena2036-x.de"
   # -- no configuration for clearinghouse because it's an external component
   clearinghouse:
     default:
-      baseAddress: "https://validation.staging.arena2036-x.de"
+      baseAddress: "https://validation.prod.arena2036-x.de"
       # -- clientId and clientSecret aren't in the centralidp Keycloak
       clientId: "clearinghouse-client-id-default"
       clientSecret: ""
-      tokenAddress: "https://someiam.staging.arena2036-x.de/realms/example/protocol/openid-connect/token"
+      tokenAddress: "https://someiam.prod.arena2036-x.de/realms/example/protocol/openid-connect/token"
       # -- if set to true the self description document creation will be skipped for company registrations as well as connector registrations
       clearinghouseConnectDisabled: true
-  issuerComponentAddress: "https://ssi-credential-issuer.staging.arena2036-x.de"
+  issuerComponentAddress: "https://ssi-credential-issuer.prod.arena2036-x.de"
   frontend:
     portal:
       image:
@@ -107,15 +108,15 @@ portal:
         nginx.ingress.kubernetes.io/rewrite-target: "/$1"
         nginx.ingress.kubernetes.io/use-regex: "true"
         nginx.ingress.kubernetes.io/enable-cors: "true"
-        nginx.ingress.kubernetes.io/cors-allow-origin: "https://*.staging.arena2036-x.de"
+        nginx.ingress.kubernetes.io/cors-allow-origin: "https://*.prod.arena2036-x.de"
       tls:
         # -- Provide tls secret.
-        - secretName: "portal.staging-tls"
+        - secretName: "portal.prod-tls"
           # -- Provide host for tls secret.
           hosts:
-            - "portal.staging.arena2036-x.de"
+            - "portal.prod.arena2036-x.de"
       hosts:
-        - host: "portal.staging.arena2036-x.de"
+        - host: "portal.prod.arena2036-x.de"
           paths:
             - path: "/(.*)"
               pathType: "ImplementationSpecific"
@@ -161,7 +162,7 @@ portal:
         encryptionConfigs:
           index0:
             encryptionKey: "deb8261ec7b89c344f1c5ef5a11606e305f14e0d231b1357d90ad0180c5081d3"
-      issuerdid: "did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003CRHK"
+      issuerdid: "did:web:ssi-dim-wallet-stub.prod.arena2036-x.de:BPNL00000003CRHK"
       swaggerEnabled: true
     appmarketplace:
       logging:
@@ -209,7 +210,7 @@ portal:
         clientSecret: "changeme"
         grantType: "client_credentials"
         scope: "openid"
-        baseAddress: "https://ssi-dim-wallet-stub.staging.arena2036-x.de"
+        baseAddress: "https://ssi-dim-wallet-stub.prod.arena2036-x.de"
         universalResolverAddress: "https://dev.uniresolver.io/"
         encryptionConfigs:
           index0:
@@ -262,82 +263,82 @@ portal:
               # BPN is retrieved from participant id of the dataconsumerOne
               dataconsumerOne:
                 name: "BPN_OEM_C"
-                connectorUrl: "https://dataconsumer-1-controlplane.staging.arena2036-x.de/api/v1/dsp"
+                connectorUrl: "https://dataconsumer-1-controlplane.prod.arena2036-x.de/api/v1/dsp"
                 connectorName: "BPN OEM C Connector"
               # BPN is retrieved from participant id of the tx-data-provider
               tx-data-provider:
                 name: "BPN_OEM_A"
-                connectorUrl: "https://dataprovider-controlplane.staging.arena2036-x.de/api/v1/dsp"
+                connectorUrl: "https://dataprovider-controlplane.prod.arena2036-x.de/api/v1/dsp"
                 connectorName: "BPN OEM A Connector"
               # BPN is retrieved from participant id of the dataconsumerTwo
               dataconsumerTwo:
                 name: "BPN_OEM_B"
-                connectorUrl: "https://dataconsumer-2-controlplane.staging.arena2036-x.de/api/v1/dsp"
+                connectorUrl: "https://dataconsumer-2-controlplane.prod.arena2036-x.de/api/v1/dsp"
                 connectorName: "BPN OEM B Connector"
               company4:
                 name: "BPN_IRS_TEST"
                 bpn: "BPNL00000003AWSS"
-                connectorUrl: "https://company4-controlplane.staging.arena2036-x.de/api/v1/dsp"
+                connectorUrl: "https://company4-controlplane.prod.arena2036-x.de/api/v1/dsp"
                 connectorName: "BPN IRS TEST Connector"
               company5:
                 name: "BPN_N_TIER_A"
                 bpn: "BPNL00000003B0Q0"
-                connectorUrl: "https://company5-controlplane.staging.arena2036-x.de/api/v1/dsp"
+                connectorUrl: "https://company5-controlplane.prod.arena2036-x.de/api/v1/dsp"
                 connectorName: "BPN N TIER A Connector"
               company6:
                 name: "BPN_TRACEX_A_SITE_A"
                 bpn: "BPNS0000000008ZZ"
-                connectorUrl: "https://company6-controlplane.staging.arena2036-x.de/api/v1/dsp"
+                connectorUrl: "https://company6-controlplane.prod.arena2036-x.de/api/v1/dsp"
                 connectorName: "BPN TRACEX A SITE A Connector"
               company7:
                 name: "BPN_TRACEX_B"
                 bpn: "BPNL00000003CNKC"
-                connectorUrl: "https://company7-controlplane.staging.arena2036-x.de/api/v1/dsp"
+                connectorUrl: "https://company7-controlplane.prod.arena2036-x.de/api/v1/dsp"
                 connectorName: "BPN TRACEX B Connector"
               company8:
                 name: "BPN_DISMANTLER"
                 bpn: "BPNL00000003B6LU"
-                connectorUrl: "https://company8-controlplane.staging.arena2036-x.de/api/v1/dsp"
+                connectorUrl: "https://company8-controlplane.prod.arena2036-x.de/api/v1/dsp"
                 connectorName: "BPN DISMANTLER Connector"
               company9:
                 name: "BPN_TRACEX_A"
                 bpn: "BPNL00000003CML1"
-                connectorUrl: "https://company9-controlplane.staging.arena2036-x.de/api/v1/dsp"
+                connectorUrl: "https://company9-controlplane.prod.arena2036-x.de/api/v1/dsp"
                 connectorName: "BPN TRACEX A Connector"
               company10:
                 name: "BPN_TRACEX_B_SITE_A"
                 bpn: "BPNS00000008BDFH"
-                connectorUrl: "https://company10-controlplane.staging.arena2036-x.de/api/v1/dsp"
+                connectorUrl: "https://company10-controlplane.prod.arena2036-x.de/api/v1/dsp"
                 connectorName: "BPN TRACEX B SITE A Connector"
               company11:
                 name: "BPN_TIER_A"
                 bpn: "BPNL00000003B2OM"
-                connectorUrl: "https://company11-controlplane.staging.arena2036-x.de/api/v1/dsp"
+                connectorUrl: "https://company11-controlplane.prod.arena2036-x.de/api/v1/dsp"
                 connectorName: "BPN TIER A Connector"
               company12:
                 name: "BPN_TIER_C"
                 bpn: "BPNL00000003CSGV"
-                connectorUrl: "https://company12-controlplane.staging.arena2036-x.de/api/v1/dsp"
+                connectorUrl: "https://company12-controlplane.prod.arena2036-x.de/api/v1/dsp"
                 connectorName: "BPN TIER C Connector"
               company13:
                 name: "BPN_TIER_B"
                 bpn: "BPNL00000003B5MJ"
-                connectorUrl: "https://company13-controlplane.staging.arena2036-x.de/api/v1/dsp"
+                connectorUrl: "https://company13-controlplane.prod.arena2036-x.de/api/v1/dsp"
                 connectorName: "BPN TIER B Connector"
               company14:
                 name: "BPN_SUB_TIER_B"
                 bpn: "BPNL00000003AXS3"
-                connectorUrl: "https://company14-controlplane.staging.arena2036-x.de/api/v1/dsp"
+                connectorUrl: "https://company14-controlplane.prod.arena2036-x.de/api/v1/dsp"
                 connectorName: "BPN SUB TIER B Connector"
               company15:
                 name: "BPN_SUB_TIER_A"
                 bpn: "BPNL00000003B3NX"
-                connectorUrl: "https://company15-controlplane.staging.arena2036-x.de/api/v1/dsp"
+                connectorUrl: "https://company15-controlplane.prod.arena2036-x.de/api/v1/dsp"
                 connectorName: "BPN SUB TIER A Connector"
               company16:
                 name: "BPN_SUB_TIER_C"
                 bpn: "BPNL00000000BJTL"
-                connectorUrl: "https://company16-controlplane.staging.arena2036-x.de/api/v1/dsp"
+                connectorUrl: "https://company16-controlplane.prod.arena2036-x.de/api/v1/dsp"
                 connectorName: "BPN SUB TIER C Connector"
       logging:
         default: "Debug"
@@ -364,15 +365,15 @@ portal:
         nginx.ingress.kubernetes.io/use-regex: "true"
         nginx.ingress.kubernetes.io/enable-cors: "true"
         nginx.ingress.kubernetes.io/proxy-body-size: "8m"
-        nginx.ingress.kubernetes.io/cors-allow-origin: "http://localhost:3000, https://*.staging.arena2036-x.de"
+        nginx.ingress.kubernetes.io/cors-allow-origin: "http://localhost:3000, https://*.prod.arena2036-x.de"
       tls:
         # -- Provide tls secret.
-        - secretName: "portal-backend.staging-tls"
+        - secretName: "portal-backend.prod-tls"
           # -- Provide host for tls secret.
           hosts:
-            - "portal-backend.staging.arena2036-x.de"
+            - "portal-backend.prod.arena2036-x.de"
       hosts:
-        - host: "portal-backend.staging.arena2036-x.de"
+        - host: "portal-backend.prod.arena2036-x.de"
           paths:
             - path: "/api/registration"
               pathType: "Prefix"
@@ -446,12 +447,12 @@ centralidp:
     ingress:
       enabled: true
       ingressClassName: "nginx"
-      hostname: "centralidp.staging.arena2036-x.de"
+      hostname: "centralidp.prod.arena2036-x.de"
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-prod
         nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
         nginx.ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, OPTIONS"
-        nginx.ingress.kubernetes.io/cors-allow-origin: "https://centralidp.staging.arena2036-x.de"
+        nginx.ingress.kubernetes.io/cors-allow-origin: "https://centralidp.prod.arena2036-x.de"
         nginx.ingress.kubernetes.io/enable-cors: "true"
         nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
         nginx.ingress.kubernetes.io/proxy-buffering: "on"
@@ -500,26 +501,26 @@ centralidp:
     clients:
       registration:
         redirects:
-          - https://portal.staging.arena2036-x.de/*
+          - https://portal.prod.arena2036-x.de/*
       portal:
-        rootUrl: https://portal.staging.arena2036-x.de/home
+        rootUrl: https://portal.prod.arena2036-x.de/home
         redirects:
-          - https://portal.staging.arena2036-x.de/*
+          - https://portal.prod.arena2036-x.de/*
       semantics:
         redirects:
-          - https://portal.staging.arena2036-x.de/*
+          - https://portal.prod.arena2036-x.de/*
       miw:
         clientSecret: "changeme"
         redirects:
-          - https://managed-identity-wallets.staging.arena2036-x.de/*
+          - https://managed-identity-wallets.prod.arena2036-x.de/*
       bpdm:
         clientSecret: "changeme"
         redirects:
-          - https://partners-pool.staging.arena2036-x.de/*
+          - https://partners-pool.prod.arena2036-x.de/*
       bpdmGate:
         clientSecret: "changeme"
         redirects:
-          - https://partners-gate.staging.arena2036-x.de/*
+          - https://partners-gate.prod.arena2036-x.de/*
       bpdmOrchestrator:
         clientSecret: "changeme"
     serviceAccounts:
@@ -563,7 +564,7 @@ centralidp:
         - clientId: "sa-cl25-cx-3"
           clientSecret: "changeme"
     bpn: "BPNL00000003CRHK"
-    sharedidp: "https://sharedidp.staging.arena2036-x.de"
+    sharedidp: "https://sharedidp.prod.arena2036-x.de"
     # -- test service accounts for EDC - MIW which are obsolete since R24.05;
     # uncomment once EDC uses SSI DIM Wallet Stub and the helm chart testing has been updated;
     # currently the post-install testdata-upload-job fails if not available
@@ -670,12 +671,12 @@ sharedidp:
     ingress:
       enabled: true
       ingressClassName: "nginx"
-      hostname: "sharedidp.staging.arena2036-x.de"
+      hostname: "sharedidp.prod.arena2036-x.de"
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-prod
         nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
         nginx.ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, OPTIONS"
-        nginx.ingress.kubernetes.io/cors-allow-origin: "https://sharedidp.staging.arena2036-x.de"
+        nginx.ingress.kubernetes.io/cors-allow-origin: "https://sharedidp.prod.arena2036-x.de"
         nginx.ingress.kubernetes.io/enable-cors: "true"
         nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
         nginx.ingress.kubernetes.io/proxy-buffering: "on"
@@ -723,15 +724,16 @@ sharedidp:
     realms:
       cxOperator:
         sslRequired: "none"
-        centralidp: "https://centralidp.staging.arena2036-x.de"
+        centralidp: "https://centralidp.prod.arena2036-x.de"
         initialUser:
-          username: "cx-operator@tx.test"
-          password: "tractusx-umbr3lla!"
+          username: "cx-operator@arena2036.de"
+          password: "tractusx-umbr3llaA!"
         mailing:
           host: ""
           port: ""
           username: ""
           password: ""
+          
           from: ""
           replyTo: ""
       master:
@@ -745,7 +747,7 @@ bpndiscovery:
   enabled: false
   enablePostgres: true
   bpndiscovery:
-    host: semantics.staging.arena2036-x.de
+    host: semantics.prod.arena2036-x.de
     ingress:
       enabled: true
       tls: true
@@ -760,7 +762,7 @@ bpndiscovery:
         nginx.ingress.kubernetes.io/x-forwarded-prefix: "/bpndiscovery"
     authentication: true
     idp:
-      issuerUri: "https://centralidp.staging.arena2036-x.de/auth/realms/CX-Central"
+      issuerUri: "https://centralidp.prod.arena2036-x.de/auth/realms/CX-Central"
       publicClientId: "Cl22-CX-BPND"
     bpndiscoveryEndpoint:
       allowedTypes: oen,wmi,passtype,manufacturerPartId
@@ -769,14 +771,14 @@ bpndiscovery:
       documentation: /bpndiscovery/swagger-ui/index.html
       timeToLive: "31536000"
     discoveryfinderClient:
-      baseUrl: "semantics.staging.arena2036-x.de/discoveryfinder"
+      baseUrl: "semantics.prod.arena2036-x.de/discoveryfinder"
       registration:
         clientId: sa-cl21-01
         clientSecret: "changeme"
         authorizationGrantType: client_credentials
       schedulerCronFrequency: "0 0 */1 * * *"
       provider:
-        tokenUri: "https://centralidp.staging.arena2036-x.de/auth/realms/CX-Central/protocol/openid-connect/token"
+        tokenUri: "https://centralidp.prod.arena2036-x.de/auth/realms/CX-Central/protocol/openid-connect/token"
     livenessProbe:
       initialDelaySeconds: 200
     readinessProbe:
@@ -804,16 +806,16 @@ discoveryfinder:
       initialDelaySeconds: 200
     readinessProbe:
       initialDelaySeconds: 200
-    host: semantics.staging.arena2036-x.de
+    host: semantics.prod.arena2036-x.de
     properties:
       discoveryfinder:
         initialEndpoints:
           - type: bpn
-            endpointAddress: https://portal-backend.staging.arena2036-x.de/api/administration/Connectors/discovery
+            endpointAddress: https://portal-backend.prod.arena2036-x.de/api/administration/Connectors/discovery
             description: Service to discover connector endpoints based on bpns
-            documentation: https://portal-backend.staging.arena2036-x.de/api/administration/swagger/index.html
+            documentation: https://portal-backend.prod.arena2036-x.de/api/administration/swagger/index.html
     idp:
-      issuerUri: "https://centralidp.staging.arena2036-x.de/auth/realms/CX-Central"
+      issuerUri: "https://centralidp.prod.arena2036-x.de/auth/realms/CX-Central"
       publicClientId: "Cl21-CX-DF"
     dataSource:
       url: "jdbc:postgresql://{{ .Release.Name }}-discoveryfinder-postgresql:5432/discoveryfinder"
@@ -849,7 +851,7 @@ selfdescription:
   sdfactory:
     secret:
       # -- JWK Set URI
-      jwkSetUri: "https://centralidp.staging.arena2036-x.de/auth/realms/CX-Central/protocol/openid-connect/certs"
+      jwkSetUri: "https://centralidp.prod.arena2036-x.de/auth/realms/CX-Central/protocol/openid-connect/certs"
       # -- Details for Clearing House URI
       clearingHouseUri: ""
       # -- Details for Clearing House URL
@@ -865,14 +867,14 @@ selfdescription:
   ingress:
     enabled: true
     hosts:
-      - host: "sdfactory.staging.arena2036-x.de"
+      - host: "sdfactory.prod.arena2036-x.de"
         paths:
           - path: "/"
             pathType: "Prefix"
     tls:
-      - tlsName: sdfactory.staging.arena2036-x.de-tls
+      - tlsName: sdfactory.prod.arena2036-x.de-tls
         hosts:
-          - sdfactory.staging.arena2036-x.de
+          - sdfactory.prod.arena2036-x.de
         className: "nginx"
         annotations:
           cert-manager.io/cluster-issuer: letsencrypt-prod
@@ -880,9 +882,9 @@ selfdescription:
 ssi-credential-issuer:
   enabled: false
   replicaCount: 1
-  portalBackendAddress: "https://portal-backend.staging.arena2036-x.de"
-  walletAddress: "https://ssi-dim-wallet-stub.staging.arena2036-x.de"
-  walletTokenAddress: "https://ssi-dim-wallet-stub.staging.arena2036-x.de/oauth/token"
+  portalBackendAddress: "https://portal-backend.prod.arena2036-x.de"
+  walletAddress: "https://ssi-dim-wallet-stub.prod.arena2036-x.de"
+  walletTokenAddress: "https://ssi-dim-wallet-stub.prod.arena2036-x.de/oauth/token"
   service:
     swaggerEnabled: true
     logging:
@@ -895,9 +897,9 @@ ssi-credential-issuer:
       # -- Client-secret for portal client-id. Secret-key 'portal-client-secret'.
       clientSecret: "changeme"
     credential:
-      issuerDid: "did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003CRHK"
+      issuerDid: "did:web:ssi-dim-wallet-stub.prod.arena2036-x.de:BPNL00000003CRHK"
       issuerBpn: "BPNL00000003CRHK"
-      statusListUrl: "https://ssi-dim-wallet-stub.staging.arena2036-x.de/status-list/BPNL00000003CRHK/8a6c7486-1e1f-4555-bdd2-1a178182651e"
+      statusListUrl: "https://ssi-dim-wallet-stub.prod.arena2036-x.de/status-list/BPNL00000003CRHK/8a6c7486-1e1f-4555-bdd2-1a178182651e"
       encryptionConfigIndex: 0
       encryptionConfigs:
         index0:
@@ -943,7 +945,7 @@ ssi-credential-issuer:
       password: "dbpasswordissuer"
   centralidp:
     # -- Provide centralidp base address (CX IAM), without trailing '/auth'.
-    address: "https://centralidp.staging.arena2036-x.de"
+    address: "https://centralidp.prod.arena2036-x.de"
     jwtBearerOptions:
       requireHttpsMetadata: "false"
   ingress:
@@ -954,14 +956,14 @@ ssi-credential-issuer:
       nginx.ingress.kubernetes.io/use-regex: "true"
       nginx.ingress.kubernetes.io/enable-cors: "true"
       nginx.ingress.kubernetes.io/proxy-body-size: "8m"
-      nginx.ingress.kubernetes.io/cors-allow-origin: "https://*.staging.arena2036-x.de"
+      nginx.ingress.kubernetes.io/cors-allow-origin: "https://*.prod.arena2036-x.de"
     # -- Ingress TLS configuration
     tls:
-      - secretName: "ssi-credential-issuer.staging-tls"
+      - secretName: "ssi-credential-issuer.prod-tls"
         hosts:
-          - "ssi-credential-issuer.staging.arena2036-x.de"
+          - "ssi-credential-issuer.prod.arena2036-x.de"
     hosts:
-      - host: "ssi-credential-issuer.staging.arena2036-x.de"
+      - host: "ssi-credential-issuer.prod.arena2036-x.de"
         paths:
           - path: "/"
             pathType: "Prefix"
@@ -1007,12 +1009,12 @@ bpdm:
         nginx.ingress.kubernetes.io/use-regex: "true"
         nginx.ingress.kubernetes.io/x-forwarded-prefix: "/gate"
       tls:
-        - secretName: "partners-gate.staging-tls"
+        - secretName: "partners-gate.prod-tls"
           hosts:
-            - "business-partners.staging.arena2036-x.de"
+            - "business-partners.prod.arena2036-x.de"
       # The Portal expects its Gate on that specific url path so we provide it here through ingress
       hosts:
-        - host: "business-partners.staging.arena2036-x.de"
+        - host: "business-partners.prod.arena2036-x.de"
           paths:
             - path: "/gate(/|$)(.*)"
               pathType: "ImplementationSpecific"
@@ -1028,7 +1030,7 @@ bpdm:
           owner-bpn-l:
         security:
           # App's API is authenticated over Central-IDP
-          auth-server-url: "https://centralidp.staging.arena2036-x.de/auth"
+          auth-server-url: "https://centralidp.prod.arena2036-x.de/auth"
           realm: "CX-Central"
           # Is Central-IDPs name for the Gate client
           # The Gate will use that name to check for existing client permissions here
@@ -1039,11 +1041,11 @@ bpdm:
         # We will reuse the general BPDM admin technical user to establish connection between the services
         client:
           pool:
-            base-url: https://business-partners.staging.arena2036-x.de/pool
+            base-url: https://business-partners.prod.arena2036-x.de/pool
             registration:
               client-id: "sa-cl7-cx-1"
           orchestrator:
-            base-url: https://business-partners.staging.arena2036-x.de/orchestrator
+            base-url: https://business-partners.prod.arena2036-x.de/orchestrator
             registration:
               client-id: "sa-cl25-cx-3"
     applicationSecrets:
@@ -1074,14 +1076,14 @@ bpdm:
         nginx.ingress.kubernetes.io/use-regex: "true"
         nginx.ingress.kubernetes.io/x-forwarded-prefix: "/pool"
       hosts:
-        - host: "partners-pool.staging.arena2036-x.de"
+        - host: "partners-pool.prod.arena2036-x.de"
           paths:
             - path: "/pool(/|$)(.*)"
               pathType: "ImplementationSpecific"
       tls:
-        - secretName: "partners-pool.staging-tls"
+        - secretName: "partners-pool.prod-tls"
           hosts:
-            - "partners-pool.staging.arena2036-x.de"
+            - "partners-pool.prod.arena2036-x.de"
     applicationConfig:
       server:
         # App should take the x-forward-header-prefix into account for Swagger-UI and redirects to work correctly
@@ -1091,7 +1093,7 @@ bpdm:
           host: *bpdmPostgresName
         security:
           # App's API is authenticated over Central-IDP
-          auth-server-url: "https://centralidp.staging.arena2036-x.de/auth"
+          auth-server-url: "https://centralidp.prod.arena2036-x.de/auth"
           realm: "CX-Central"
           # Is Central-IDPs name for the Pool client
           # The Pool will use that name to check for existing client permissions here
@@ -1102,7 +1104,7 @@ bpdm:
         # We will reuse the general BPDM admin technical user to establish connection between the services
         client:
           orchestrator:
-            base-url: https://business-partners.staging.arena2036-x.de/orchestrator
+            base-url: https://business-partners.prod.arena2036-x.de/orchestrator
             registration:
               client-id: "sa-cl25-cx-2"
     applicationSecrets:
@@ -1126,14 +1128,14 @@ bpdm:
         nginx.ingress.kubernetes.io/use-regex: "true"
         nginx.ingress.kubernetes.io/x-forwarded-prefix: "/orchestrator"
       hosts:
-        - host: "partners-orchestrator.staging.arena2036-x.de"
+        - host: "partners-orchestrator.prod.arena2036-x.de"
           paths:
             - path: "/orchestrator(/|$)(.*)"
               pathType: "ImplementationSpecific"
       tls:
-        - secretName: "partners-orchestrator.staging-tls"
+        - secretName: "partners-orchestrator.prod-tls"
           hosts:
-            - "partners-orchestrator.staging.arena2036-x.de"
+            - "partners-orchestrator.prod.arena2036-x.de"
     postgres:
       enabled: false
       fullnameOverride: bpdm-postgres
@@ -1145,7 +1147,7 @@ bpdm:
         datasource:
           host: *bpdmPostgresName
         security:
-          auth-server-url: "https://centralidp.staging.arena2036-x.de/auth"
+          auth-server-url: "https://centralidp.prod.arena2036-x.de/auth"
           realm: "CX-Central"
           client-id: "Cl25-CX-BPDM-Orchestrator"
     applicationSecrets:
@@ -1163,9 +1165,9 @@ bpdm:
         # We reuse the general BPDM admin technical user to establish connection between the services
         client:
           orchestrator:
-            base-url: https://business-partners.staging.arena2036-x.de/orchestrator
+            base-url: https://business-partners.prod.arena2036-x.de/orchestrator
             provider:
-              issuer-uri: "https://centralidp.staging.arena2036-x.de/auth/realms/CX-Central"
+              issuer-uri: "https://centralidp.prod.arena2036-x.de/auth/realms/CX-Central"
             registration:
               client-id: "sa-cl25-cx-1"
     applicationSecrets:
@@ -1187,30 +1189,30 @@ dataconsumerOne:
       participant:
         id: BPNL00000003AZQP
       iatp:
-        id: did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003AZQP
+        id: did:web:ssi-dim-wallet-stub.prod.arena2036-x.de:BPNL00000003AZQP
         trustedIssuers:
-          - did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003CRHK
+          - did:web:ssi-dim-wallet-stub.prod.arena2036-x.de:BPNL00000003CRHK
         sts:
           dim:
-            url: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api/sts
+            url: https://ssi-dim-wallet-stub.prod.arena2036-x.de/api/sts
           oauth:
-            token_url: https://ssi-dim-wallet-stub.staging.arena2036-x.de/oauth/token
+            token_url: https://ssi-dim-wallet-stub.prod.arena2036-x.de/oauth/token
             client:
               id: BPNL00000003AZQP
               secret_alias: edc-wallet-secret
       controlplane:
         env:
-          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api
+          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.prod.arena2036-x.de/api
           EDC_IAM_DID_WEB_USE_HTTPS: false
         bdrs:
           server:
-            url: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api/v1/directory
+            url: https://ssi-dim-wallet-stub.prod.arena2036-x.de/api/v1/directory
         endpoints:
           management:
             authKey: TEST1
         ingresses:
           - enabled: true
-            hostname: "dataconsumer-controlplane.staging.arena2036-x.de"
+            hostname: "dataconsumer-controlplane.prod.arena2036-x.de"
             endpoints:
               - default
               - protocol
@@ -1222,11 +1224,11 @@ dataconsumerOne:
               enabled: true
       dataplane:
         env:
-          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api
+          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.prod.arena2036-x.de/api
           EDC_IAM_DID_WEB_USE_HTTPS: false
         ingresses:
           - enabled: true
-            hostname: "dataconsumer-dataplane.staging.arena2036-x.de"
+            hostname: "dataconsumer-dataplane.prod.arena2036-x.de"
             endpoints:
               - default
               - public
@@ -1282,30 +1284,30 @@ tx-data-provider:
       participant:
         id: BPNL00000003AYRE
       iatp:
-        id: did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003AYRE
+        id: did:web:ssi-dim-wallet-stub.prod.arena2036-x.de:BPNL00000003AYRE
         trustedIssuers:
-          - did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003CRHK
+          - did:web:ssi-dim-wallet-stub.prod.arena2036-x.de:BPNL00000003CRHK
         sts:
           dim:
-            url: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api/sts
+            url: https://ssi-dim-wallet-stub.prod.arena2036-x.de/api/sts
           oauth:
-            token_url: https://ssi-dim-wallet-stub.staging.arena2036-x.de/oauth/token
+            token_url: https://ssi-dim-wallet-stub.prod.arena2036-x.de/oauth/token
             client:
               id: BPNL00000003AYRE
               secret_alias: edc-wallet-secret
       controlplane:
         env:
-          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api
+          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.prod.arena2036-x.de/api
           EDC_IAM_DID_WEB_USE_HTTPS: false
         bdrs:
           server:
-            url: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api/v1/directory
+            url: https://ssi-dim-wallet-stub.prod.arena2036-x.de/api/v1/directory
         endpoints:
           management:
             authKey: TEST2
         ingresses:
           - enabled: true
-            hostname: "dataprovider-edc-controlplane.staging.arena2036-x.de"
+            hostname: "dataprovider-edc-controlplane.prod.arena2036-x.de"
             endpoints:
               - default
               - protocol
@@ -1317,11 +1319,11 @@ tx-data-provider:
               enabled: true
       dataplane:
         env:
-          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api
+          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.prod.arena2036-x.de/api
           EDC_IAM_DID_WEB_USE_HTTPS: false
         ingresses:
           - enabled: true
-            hostname: "dataprovider-edc-dataplane.staging.arena2036-x.de"
+            hostname: "dataprovider-edc-dataplane.prod.arena2036-x.de"
             endpoints:
               - default
               - public
@@ -1366,14 +1368,14 @@ tx-data-provider:
         annotations:
           cert-manager.io/cluster-issuer: letsencrypt-prod
         hosts:
-          - host: "submodelserver.staging.arena2036-x.de"
+          - host: "submodelserver.prod.arena2036-x.de"
             paths:
               - path: "/"
                 pathType: "Prefix"
         tls:
-          - secretName: "submodelserver.staging-tls"
+          - secretName: "submodelserver.prod-tls"
             hosts:
-              - "submodelserver.staging.arena2036-x.de"
+              - "submodelserver.prod.arena2036-x.de"
             
 
   digital-twin-bundle:
@@ -1382,7 +1384,7 @@ tx-data-provider:
       nameOverride: dtr
       registry:
         authentication: false
-        host: dtr.staging.arena2036-x.de
+        host: dtr.prod.arena2036-x.de
         dataSource:
           url: "jdbc:postgresql://digital-twin-db:5432/dtr"
         ingress:
@@ -1396,7 +1398,7 @@ tx-data-provider:
             nginx.ingress.kubernetes.io/x-forwarded-prefix: /semantics/registry
             cert-manager.io/cluster-issuer: letsencrypt-prod
           hosts:
-          - host: "dtr.staging.arena2036-x.de"
+          - host: "dtr.prod.arena2036-x.de"
             paths:
               - path: "/semantics/registry(/|$)(.*)"
                 pathType: "Prefix"
@@ -1415,14 +1417,14 @@ semantic-hub:
           enabled: true
   hub:
     authentication: true
-    idpIssuerUri: "https://centralidp.staging.arena2036-x.de/auth/realms/CX-Central"
+    idpIssuerUri: "https://centralidp.prod.arena2036-x.de/auth/realms/CX-Central"
     idpClientId: Cl3-CX-Semantic
     embeddedTripleStore: true
     livenessProbe:
       initialDelaySeconds: 200
     readinessProbe:
       initialDelaySeconds: 200
-    host: semantics.staging.arena2036-x.de
+    host: semantics.prod.arena2036-x.de
     ingress:
       enabled: true
       tls: true
@@ -1454,30 +1456,30 @@ dataconsumerTwo:
       participant:
         id: BPNL00000003AVTH
       iatp:
-        id: did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003AVTH
+        id: did:web:ssi-dim-wallet-stub.prod.arena2036-x.de:BPNL00000003AVTH
         trustedIssuers:
-          - did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003CRHK
+          - did:web:ssi-dim-wallet-stub.prod.arena2036-x.de:BPNL00000003CRHK
         sts:
           dim:
-            url: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api/sts
+            url: https://ssi-dim-wallet-stub.prod.arena2036-x.de/api/sts
           oauth:
-            token_url: https://ssi-dim-wallet-stub.staging.arena2036-x.de/oauth/token
+            token_url: https://ssi-dim-wallet-stub.prod.arena2036-x.de/oauth/token
             client:
               id: BPNL00000003AVTH
               secret_alias: edc-wallet-secret
       controlplane:
         env:
-          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api
+          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.prod.arena2036-x.de/api
           EDC_IAM_DID_WEB_USE_HTTPS: false
         bdrs:
           server:
-            url: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api/v1/directory
+            url: https://ssi-dim-wallet-stub.prod.arena2036-x.de/api/v1/directory
         endpoints:
           management:
             authKey: TEST3
         ingresses:
           - enabled: true
-            hostname: "dataconsumer-2-controlplane.staging.arena2036-x.de"
+            hostname: "dataconsumer-2-controlplane.prod.arena2036-x.de"
             endpoints:
               - default
               - protocol
@@ -1489,11 +1491,11 @@ dataconsumerTwo:
               enabled: true
       dataplane:
         env:
-          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api
+          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.prod.arena2036-x.de/api
           EDC_IAM_DID_WEB_USE_HTTPS: false
         ingresses:
           - enabled: true
-            hostname: "dataconsumer-2-dataplane.staging.arena2036-x.de"
+            hostname: "dataconsumer-2-dataplane.prod.arena2036-x.de"
             endpoints:
               - default
               - public
@@ -1546,7 +1548,7 @@ pgadmin4:
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt-prod
     hosts:
-      - host: pgadmin4.staging.arena2036-x.de
+      - host: pgadmin4.prod.arena2036-x.de
         paths:
           - path: /
             pathType: Prefix
@@ -1560,43 +1562,43 @@ bdrs-server-memory:
     enabled: true
     bpnList:
       - bpn: "BPNL00000003CRHK"
-        did: "did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003CRHK"
+        did: "did:web:ssi-dim-wallet-stub.prod.arena2036-x.de:BPNL00000003CRHK"
       - bpn: "BPNL00000003B3NX"
-        did: "did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003B3NX"
+        did: "did:web:ssi-dim-wallet-stub.prod.arena2036-x.de:BPNL00000003B3NX"
       - bpn: "BPNL00000003CSGV"
-        did: "did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003CSGV"
+        did: "did:web:ssi-dim-wallet-stub.prod.arena2036-x.de:BPNL00000003CSGV"
       - bpn: "BPNL00000003B6LU"
-        did: "did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003B6LU"
+        did: "did:web:ssi-dim-wallet-stub.prod.arena2036-x.de:BPNL00000003B6LU"
       - bpn: "BPNL00000003AXS3"
-        did: "did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003AXS3"
+        did: "did:web:ssi-dim-wallet-stub.prod.arena2036-x.de:BPNL00000003AXS3"
       - bpn: "BPNL00000003AZQP"
-        did: "did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003AZQP"
+        did: "did:web:ssi-dim-wallet-stub.prod.arena2036-x.de:BPNL00000003AZQP"
       - bpn: "BPNL00000003AWSS"
-        did: "did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003AWSS"
+        did: "did:web:ssi-dim-wallet-stub.prod.arena2036-x.de:BPNL00000003AWSS"
       - bpn: "BPNL00000003AYRE"
-        did: "did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003AYRE"
+        did: "did:web:ssi-dim-wallet-stub.prod.arena2036-x.de:BPNL00000003AYRE"
       - bpn: "BPNL00000003AVTH"
-        did: "did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003AVTH"
+        did: "did:web:ssi-dim-wallet-stub.prod.arena2036-x.de:BPNL00000003AVTH"
       - bpn: "BPNL00000000BJTL"
-        did: "did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000000BJTL"
+        did: "did:web:ssi-dim-wallet-stub.prod.arena2036-x.de:BPNL00000000BJTL"
       - bpn: "BPNL00000003CML1"
-        did: "did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003CML1"
+        did: "did:web:ssi-dim-wallet-stub.prod.arena2036-x.de:BPNL00000003CML1"
       - bpn: "BPNL00000003B2OM"
-        did: "did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003B2OM"
+        did: "did:web:ssi-dim-wallet-stub.prod.arena2036-x.de:BPNL00000003B2OM"
       - bpn: "BPNL00000003B0Q0"
-        did: "did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003B0Q0"
+        did: "did:web:ssi-dim-wallet-stub.prod.arena2036-x.de:BPNL00000003B0Q0"
       - bpn: "BPNL00000003B5MJ"
-        did: "did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003B5MJ"
+        did: "did:web:ssi-dim-wallet-stub.prod.arena2036-x.de:BPNL00000003B5MJ"
       - bpn: "BPNS0000000008ZZ"
-        did: "did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNS0000000008ZZ"
+        did: "did:web:ssi-dim-wallet-stub.prod.arena2036-x.de:BPNS0000000008ZZ"
       - bpn: "BPNL00000003CNKC"
-        did: "did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003CNKC"
+        did: "did:web:ssi-dim-wallet-stub.prod.arena2036-x.de:BPNL00000003CNKC"
       - bpn: "BPNS00000008BDFH"
-        did: "did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNS00000008BDFH"
+        did: "did:web:ssi-dim-wallet-stub.prod.arena2036-x.de:BPNS00000008BDFH"
 
   server:
     trustedIssuers:
-      - did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003CRHK
+      - did:web:ssi-dim-wallet-stub.prod.arena2036-x.de:BPNL00000003CRHK
     env:
       EDC_IAM_DID_WEB_USE_HTTPS: false
     endpoints:
@@ -1604,7 +1606,7 @@ bdrs-server-memory:
         authKey: TEST
     ingresses:
       - enabled: true
-        hostname: bdrs-server.staging.arena2036-x.de
+        hostname: bdrs-server.prod.arena2036-x.de
         endpoints:
           - directory
           - management
@@ -1619,7 +1621,7 @@ identity-and-trust-bundle:
   ssi-dim-wallet-stub:
     wallet:
       replicaCount: 1
-      host: ssi-dim-wallet-stub.staging.arena2036-x.de
+      host: ssi-dim-wallet-stub.prod.arena2036-x.de
       nameSpace: "release25-09"
       appName: "ssi-dim-wallet-stub"
       configName: "ssi-dim-wallet-config"
@@ -1632,7 +1634,7 @@ identity-and-trust-bundle:
         enabled: true
         tls:
           enabled: true
-          name: "ssi-wallet.staging-tls"
+          name: "ssi-wallet.prod-tls"
         urlPrefix: /
         className: nginx
         annotations:
@@ -1645,18 +1647,18 @@ identity-and-trust-bundle:
       logLevel: "debug"
       environment: "default"
       baseWalletBpn: "BPNL00000003CRHK"
-      didHost: "ssi-dim-wallet-stub.staging.arena2036-x.de"
-      stubUrl: "https://ssi-dim-wallet-stub.staging.arena2036-x.de"
+      didHost: "ssi-dim-wallet-stub.prod.arena2036-x.de"
+      stubUrl: "https://ssi-dim-wallet-stub.prod.arena2036-x.de"
       statusListVcId: "8a6c7486-1e1f-4555-bdd2-1a178182651e"
       tokenExpiryTime: "5"
       portal:
         waitTime: "60"
-        host: "https://portal-backend.staging.arena2036-x.de"
+        host: "https://portal-backend.prod.arena2036-x.de"
         clientId: "sa-cl2-05"
         clientSecret: "changeme"
       keycloak:
         realm: "CX-Central"
-        authServerUrl: "https://centralidp.staging.arena2036-x.de/auth"
+        authServerUrl: "https://centralidp.prod.arena2036-x.de/auth"
       postgresql:
         username: "postgres"
         password: "postgrespassword"
@@ -1690,7 +1692,7 @@ identity-and-trust-bundle:
 smtp4dev:
   enabled: false
   ingress:
-    url: smtp.staging.arena2036-x.de
+    url: smtp.prod.arena2036-x.de
   ports:
     smtp: 25
     http: 80

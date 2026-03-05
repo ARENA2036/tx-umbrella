@@ -68,6 +68,15 @@ echo ""
 #helm repo add tractusx-dev https://eclipse-tractusx.github.io/charts/dev
 #echo ""
 
+echo "Updating dataspace-connector-bundle"
+helm dependency update ../dataspace-connector-bundle
+echo ""
+echo "Updating../data-persistence-layer-bundle"
+helm dependency update ../data-persistence-layer-bundle
+echo ""
+echo "Updating digital-twin-bundle"
+helm dependency update ../digital-twin-bundle
+echo ""
 helm dependency update ../tx-data-provider
 helm dependency update
 echo "Now installing customised configuration stored in $HELM_VALUES_FILE ..."
