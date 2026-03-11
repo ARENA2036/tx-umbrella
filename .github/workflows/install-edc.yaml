@@ -73,9 +73,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Import Secrets from staging Vault
+        id: import-staging-secrets
         # retrieve values from vault for staging
         if: ${{ github.event.inputs.cluster_context  == 'staging' }}
-        id: import-secrets
         uses: hashicorp/vault-action@v2
         with:
           url: ${{ secrets.VAULT_ADDR_STAGING }}
@@ -84,9 +84,9 @@ jobs:
             staging/data/data/cluster config | KUBECONFIG ;
 
       - name: Import Secrets from prod Vault
+        id: import-prod-secrets
         # retrieve values from vault for prod
         if: ${{ github.event.inputs.cluster_context == 'prod' }}
-        id: import-secrets
         uses: hashicorp/vault-action@v2
         with:
           url: ${{ secrets.VAULT_ADDR_PROD }}
@@ -114,9 +114,20 @@ jobs:
         run: |
           mkdir -p $HOME/.kube
           CONFIG_PATH="$HOME/.kube/config"
-          cat <<EOF > $CONFIG_PATH
-          ${{ steps.import-secrets.outputs.KUBECONFIG }}
-          EOF
+          if [[ "${{ github.event.inputs.cluster_context }}" == "staging" ]]; then  
+            echo "Setting context for staging..."  
+            cat <<EOF > $CONFIG_PATH
+            ${{ steps.import-staging-secrets.outputs.KUBECONFIG }}
+            EOF
+          elif [[ "${{ github.event.inputs.cluster_context }}" == "prod" ]]; then
+            echo "Setting context for production..."  
+            cat <<EOF > $CONFIG_PATH
+            ${{ steps.import-prod-secrets.outputs.KUBECONFIG }}
+            EOF
+          else
+            echo "Not a valid environment"
+            exit 1
+          fi
           chmod 600 $CONFIG_PATH
           export KUBECONFIG="$CONFIG_PATH"
           echo "KUBECONFIG=$CONFIG_PATH" >> $GITHUB_ENV
