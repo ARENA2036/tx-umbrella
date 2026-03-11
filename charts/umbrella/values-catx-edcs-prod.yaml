@@ -1298,6 +1298,7 @@ dataconsumerOne:
           enabled: true
           tls:
             enabled: true
+            secretName: catx-a-registry-certificate-secret
           className: "nginx"
           annotations:
             nginx.ingress.kubernetes.io/rewrite-target: "/$2"
@@ -1436,6 +1437,7 @@ tx-data-provider:
           enabled: true
           tls:
             enabled: true
+            secretName: catx-b-registry-certificate-secret
           className: "nginx"
           annotations:
             nginx.ingress.kubernetes.io/rewrite-target: "/$2"
