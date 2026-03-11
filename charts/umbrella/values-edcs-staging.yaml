@@ -1395,7 +1395,7 @@ tx-data-provider:
             nginx.ingress.kubernetes.io/rewrite-target: /$2
             nginx.ingress.kubernetes.io/x-forwarded-prefix: /semantics/registry
             cert-manager.io/cluster-issuer: letsencrypt-prod
-          hosts:
+          rules:
           - host: "dtr.staging.arena2036-x.de"
             paths:
               - path: "/semantics/registry(/|$)(.*)"
