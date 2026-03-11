@@ -23,6 +23,7 @@ name: Install EDC (Install or Upgrade)
 on:
   push:
     branches:
+      - feat/install-edc-script
       - develop
       - main
 
@@ -73,12 +74,22 @@ jobs:
     steps:
       - name: Import Secrets from Vault
         id: import-secrets
+        # retrieve values from vault based on selected environment: staging or prod
+        if: ${{ github.event.inputs.cluster_context }} == 'staging'
         uses: hashicorp/vault-action@v2
         with:
           url: ${{ secrets.VAULT_ADDR_STAGING }}
           token: ${{ secrets.VAULT_TOKEN_STAGING }}
           secrets: |
             staging/data/data/cluster config | KUBECONFIG ;
+        # check for the prod envrionment
+        if: ${{ github.event.inputs.cluster_context }} == 'prod'
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ secrets.VAULT_ADDR_PROD }}
+          token: ${{ secrets.VAULT_TOKEN_PROD }}
+          secrets: |
+            prod/data/data/cluster config | KUBECONFIG ;
 
       - name: Install kubectl
         run: |
