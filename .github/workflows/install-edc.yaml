@@ -117,13 +117,13 @@ jobs:
           if [[ "${{ github.event.inputs.cluster_context }}" == "staging" ]]; then  
             echo "Setting context for staging..."  
             cat <<EOF > $CONFIG_PATH
-            ${{ steps.import-staging-secrets.outputs.KUBECONFIG }}
-            EOF
+          ${{ steps.import-staging-secrets.outputs.KUBECONFIG }}
+          EOF
           elif [[ "${{ github.event.inputs.cluster_context }}" == "prod" ]]; then
             echo "Setting context for production..."  
             cat <<EOF > $CONFIG_PATH
-            ${{ steps.import-prod-secrets.outputs.KUBECONFIG }}
-            EOF
+          ${{ steps.import-prod-secrets.outputs.KUBECONFIG }}
+          EOF
           else
             echo "Not a valid environment"
             exit 1
