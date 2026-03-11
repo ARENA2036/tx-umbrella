@@ -1180,12 +1180,12 @@ bpdm:
 dataconsumerOne:
   enabled: true
   seedTestdata: false
-  nameOverride: catx-a-edc
+  nameOverride: edc-a
   secrets:
     edc-wallet-secret: changeme
   dataspace-connector-bundle:
     tractusx-connector:
-      nameOverride: catx-a-edc
+      nameOverride: edc-a
       participant:
         id: BPNLA360000CATXA
       iatp:
@@ -1272,15 +1272,15 @@ tx-data-provider:
   seedTestdata: true
   backendUrl: http://{{ .Release.Name }}-submodelserver:8080
   registryUrl: http://{{ .Release.Name }}-dtr:8080/api/v3
-  controlplanePublicUrl: http://{{ .Release.Name }}-catx-b-edc-controlplane:8084
-  controlplaneManagementUrl: http://{{ .Release.Name }}-catx-b-edc-controlplane:8081
-  dataplaneUrl: http://{{ .Release.Name }}-catx-b-edc-dataplane:8081
-  nameOverride: catx-b-edc
+  controlplanePublicUrl: http://{{ .Release.Name }}-edc-b-controlplane:8084
+  controlplaneManagementUrl: http://{{ .Release.Name }}-edc-b-controlplane:8081
+  dataplaneUrl: http://{{ .Release.Name }}-edc-b-dataplane:8081
+  nameOverride: edc-b
   secrets:
     edc-wallet-secret: changeme
   dataspace-connector-bundle:
     tractusx-connector:
-      nameOverride: catx-b-edc
+      nameOverride: edc-b
       participant:
         id: BPNLA360000CATXB
       iatp:
@@ -1338,44 +1338,44 @@ tx-data-provider:
           verifier:
             publickey_alias: tokenSignerPublicKey
       postgresql:
-        jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-catx-b-edc-db:5432/edc"
+        jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-edc-b-db:5432/edc"
         auth:
           user: "dbusertxdataprovider"
           password: "dbpasswordtxdataprovider"
           postgresPassword: "dbpasswordtxdataprovider"
       vault:
         hashicorp:
-          url: http://{{ .Release.Name }}-catx-b-vault:8200
+          url: http://{{ .Release.Name }}-b-vault:8200
 
     postgresql:
-      nameOverride: catx-b-edc-db
+      nameOverride: edc-b-db
       auth:
         user: "dbusertxdataprovider"
         password: "dbpasswordtxdataprovider"
         postgresPassword: "dbpasswordtxdataprovider"
 
     vault:
-      nameOverride: catx-b-vault
+      nameOverride: b-vault
       enabled: true
 
   data-persistence-layer-bundle:
     enabled: true
     simple-data-backend:
-      nameOverride: catx-submodelserver
+      nameOverride: submodelserver
       ingress:
         enabled: true
         className: "nginx"
         annotations:
           cert-manager.io/cluster-issuer: letsencrypt-prod
         hosts:
-          - host: "catx-submodelserver.prod.arena2036-x.de"
+          - host: "submodelserver.prod.arena2036-x.de"
             paths:
               - path: "/"
                 pathType: "Prefix"
         tls:
           - secretName: "submodelserver.prod-tls"
             hosts:
-              - "catx-submodelserver.prod.arena2036-x.de"
+              - "submodelserver.prod.arena2036-x.de"
             
 
   digital-twin-bundle:
@@ -1384,9 +1384,9 @@ tx-data-provider:
       nameOverride: dtr
       registry:
         authentication: false
-        host: catx-dtr.prod.arena2036-x.de
+        host: dtr.prod.arena2036-x.de
         dataSource:
-          url: "jdbc:postgresql://catx-digital-twin-db:5432/dtr"
+          url: "jdbc:postgresql://b-digital-twin-db:5432/dtr"
         ingress:
           enabled: true
           tls:
@@ -1398,13 +1398,13 @@ tx-data-provider:
             nginx.ingress.kubernetes.io/x-forwarded-prefix: /semantics/registry
             cert-manager.io/cluster-issuer: letsencrypt-prod
           hosts:
-          - host: "catx-dtr.prod.arena2036-x.de"
+          - host: "dtr.prod.arena2036-x.de"
             paths:
               - path: "/semantics/registry(/|$)(.*)"
                 pathType: "Prefix"
 
     postgresql:
-      fullnameOverride: "catx-digital-twin-db"
+      fullnameOverride: "b-digital-twin-db"
 
 semantic-hub:
   enabled: false
