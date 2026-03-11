@@ -72,24 +72,27 @@ jobs:
   install-edc:
     runs-on: ubuntu-latest
     steps:
-      - name: Import Secrets from Vault
+      - name: Import Secrets from staging Vault
         id: import-secrets
-        # retrieve values from vault based on selected environment: staging or prod
-        if: ${{ github.event.inputs.cluster_context }} == 'staging'
+        # retrieve values from vault for staging
+        if: ${{ github.event.inputs.cluster_context  == 'staging' }}
         uses: hashicorp/vault-action@v2
         with:
           url: ${{ secrets.VAULT_ADDR_STAGING }}
           token: ${{ secrets.VAULT_TOKEN_STAGING }}
           secrets: |
             staging/data/data/cluster config | KUBECONFIG ;
-        # check for the prod envrionment
-        if: ${{ github.event.inputs.cluster_context }} == 'prod'
+
+      - name: Import Secrets from prod Vault
+        id: import-secrets
+        # retrieve values from vault for prod
+        if: ${{ github.event.inputs.cluster_context == 'prod' }}
         uses: hashicorp/vault-action@v2
         with:
           url: ${{ secrets.VAULT_ADDR_PROD }}
           token: ${{ secrets.VAULT_TOKEN_PROD }}
           secrets: |
-            prod/data/data/cluster config | KUBECONFIG ;
+            staging/data/data/cluster-prod config | KUBECONFIG ;
 
       - name: Install kubectl
         run: |
