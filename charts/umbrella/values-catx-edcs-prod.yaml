@@ -1179,7 +1179,12 @@ bpdm:
 
 dataconsumerOne:
   enabled: true
-  seedTestdata: false
+  seedTestdata: true
+  backendUrl: http://{{ .Release.Name }}-a-submodelserver:8080
+  registryUrl: http://{{ .Release.Name }}-a-dtr:8080/api/v3
+  controlplanePublicUrl: http://{{ .Release.Name }}-a-controlplane:8084
+  controlplaneManagementUrl: http://{{ .Release.Name }}-a-controlplane:8081
+  dataplaneUrl: http://{{ .Release.Name }}-a-dataplane:8081
   nameOverride: edc-a
   secrets:
     edc-wallet-secret: changeme
@@ -1243,38 +1248,78 @@ dataconsumerOne:
           verifier:
             publickey_alias: tokenSignerPublicKey
       postgresql:
-        jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-catx-a-edc-db:5432/edc"
+        jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-edc-a-db:5432/edc"
         auth:
           password: "dbpassworddataconsumerone"
           postgresPassword: "dbpassworddataconsumerone"
       vault:
         hashicorp:
-          url: http://{{ .Release.Name }}-edc-catx-a-vault:8200
+          url: http://{{ .Release.Name }}-a-vault:8200
 
     postgresql:
-      nameOverride: catx-a-edc-db
+      nameOverride: edc-a-db
       auth:
         password: "dbpassworddataconsumerone"
         postgresPassword: "dbpassworddataconsumerone"
 
     vault:
-      nameOverride: edc-catx-a-vault
+      nameOverride: a-vault
       enabled: true
 
   data-persistence-layer-bundle:
-    enabled: false
+    enabled: true
+    simple-data-backend:
+      nameOverride: catx-a-submodelserver
+      ingress:
+        enabled: true
+        className: "nginx"
+        annotations:
+          cert-manager.io/cluster-issuer: letsencrypt-prod
+        hosts:
+          - host: "catx-a-submodelserver.prod.arena2036-x.de"
+            paths:
+              - path: "/"
+                pathType: "Prefix"
+        tls:
+          - secretName: "catx-a-submodelserver.prod-tls"
+            hosts:
+              - "catx-a-submodelserver.prod.arena2036-x.de"
 
   digital-twin-bundle:
-    enabled: false
+    enabled: true
+    digital-twin-registry:
+      nameOverride: catx-a-dtr
+      registry:
+        authentication: false
+        host: catx-a-dtr.prod.arena2036-x.de
+        dataSource:
+          url: "jdbc:postgresql://catx-a-digital-twin-db:5432/dtr"
+        ingress:
+          enabled: true
+          tls:
+            enabled: true
+          className: "nginx"
+          annotations:
+            nginx.ingress.kubernetes.io/rewrite-target: "/$2"
+            nginx.ingress.kubernetes.io/use-regex: "true"
+            cert-manager.io/cluster-issuer: letsencrypt-prod
+          rules:
+            - host: catx-a-dtr.prod.arena2036-x.de
+              http:
+                paths:
+                  - path: "/semantics/registry(/|$)(.*)"
+                    pathType: ImplementationSpecific
+    postgresql:
+      fullnameOverride: "catx-a-digital-twin-db"
 
 tx-data-provider:
   enabled: true
   seedTestdata: true
-  backendUrl: http://{{ .Release.Name }}-submodelserver:8080
-  registryUrl: http://{{ .Release.Name }}-dtr:8080/api/v3
-  controlplanePublicUrl: http://{{ .Release.Name }}-edc-b-controlplane:8084
-  controlplaneManagementUrl: http://{{ .Release.Name }}-edc-b-controlplane:8081
-  dataplaneUrl: http://{{ .Release.Name }}-edc-b-dataplane:8081
+  backendUrl: http://{{ .Release.Name }}-b-submodelserver:8080
+  registryUrl: http://{{ .Release.Name }}-b-dtr:8080/api/v3
+  controlplanePublicUrl: http://{{ .Release.Name }}-b-controlplane:8084
+  controlplaneManagementUrl: http://{{ .Release.Name }}-b-controlplane:8081
+  dataplaneUrl: http://{{ .Release.Name }}-b-dataplane:8081
   nameOverride: edc-b
   secrets:
     edc-wallet-secret: changeme
@@ -1361,32 +1406,32 @@ tx-data-provider:
   data-persistence-layer-bundle:
     enabled: true
     simple-data-backend:
-      nameOverride: submodelserver
+      nameOverride: catx-b-submodelserver
       ingress:
         enabled: true
         className: "nginx"
         annotations:
           cert-manager.io/cluster-issuer: letsencrypt-prod
         hosts:
-          - host: "submodelserver.prod.arena2036-x.de"
+          - host: "catx-b-submodelserver.prod.arena2036-x.de"
             paths:
               - path: "/"
                 pathType: "Prefix"
         tls:
-          - secretName: "submodelserver.prod-tls"
+          - secretName: "catx-b-submodelserver.prod-tls"
             hosts:
-              - "submodelserver.prod.arena2036-x.de"
+              - "catx-b-submodelserver.prod.arena2036-x.de"
             
 
   digital-twin-bundle:
     enabled: true
     digital-twin-registry:
-      nameOverride: dtr
+      nameOverride: catx-b-dtr
       registry:
         authentication: false
-        host: dtr.prod.arena2036-x.de
+        host: catx-b-dtr.prod.arena2036-x.de
         dataSource:
-          url: "jdbc:postgresql://b-digital-twin-db:5432/dtr"
+          url: "jdbc:postgresql://catx-b-digital-twin-db:5432/dtr"
         ingress:
           enabled: true
           tls:
@@ -1397,13 +1442,13 @@ tx-data-provider:
             nginx.ingress.kubernetes.io/use-regex: "true"
             cert-manager.io/cluster-issuer: letsencrypt-prod
           rules:
-            - host: dtr.prod.arena2036-x.de
+            - host: catx-b-dtr.prod.arena2036-x.de
               http:
                 paths:
                   - path: "/semantics/registry(/|$)(.*)"
                     pathType: ImplementationSpecific
     postgresql:
-      fullnameOverride: "b-digital-twin-db"
+      fullnameOverride: "catx-b-digital-twin-db"
 
 semantic-hub:
   enabled: false
