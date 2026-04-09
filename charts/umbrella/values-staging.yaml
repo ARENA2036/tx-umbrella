@@ -74,7 +74,7 @@ portal:
     portal:
       image:
         name: "harbor-hub-shared.arena.3ascloud.de/arena2036/portal-frontend"
-        portaltag: "latest"
+        portaltag: "11032026-latest"
         pullPolicy: "Always"
         pullSecrets:
           - name: harbor-creds
@@ -430,7 +430,7 @@ centralidp:
         mountPath: /opt/bitnami/keycloak/themes/catenax-central
     initContainers:
       - name: import
-        image: harbor-hub-shared.arena.3ascloud.de/arena2036/portal-iam:latest-v2
+        image: harbor-hub-shared.arena.3ascloud.de/arena2036/portal-iam:11032026-latest
         imagePullPolicy: Always
         command:
           - sh
@@ -650,7 +650,7 @@ sharedidp:
         mountPath: /opt/bitnami/keycloak/themes/catenax-shared-portal
     initContainers:
       - name: import
-        image: harbor-hub-shared.arena.3ascloud.de/arena2036/portal-iam:latest-v2
+        image: harbor-hub-shared.arena.3ascloud.de/arena2036/portal-iam:11032026-latest
         imagePullPolicy: Always
         command:
           - sh
@@ -1177,7 +1177,7 @@ bpdm:
               client-secret: "changeme"
 
 dataconsumerOne:
-  enabled: true
+  enabled: false
   seedTestdata: false
   nameOverride: dataconsumer-1
   secrets:
@@ -1267,7 +1267,7 @@ dataconsumerOne:
     enabled: false
 
 tx-data-provider:
-  enabled: true
+  enabled: false
   seedTestdata: true
   backendUrl: http://{{ .Release.Name }}-dataprovider-submodelserver:8080
   registryUrl: http://{{ .Release.Name }}-dataprovider-dtr:8080/api/v3
@@ -1628,7 +1628,7 @@ identity-and-trust-bundle:
       secretName: "ssi-dim-wallet-secret"
       ingressName: "ssi-dim-wallet-ingress"
       seeding:
-        bpnList: "BPNL00000003AZQP,BPNL00000003AYRE"
+        bpnList: "BPNL00000003AZQP,BPNL00000003AYRE,BPNLA360000CATXA,BPNS00000008BDFH,BPNL0000000TIERB,BPNLA360000BOSCH,BPNL00000000RUHL,BPNLA3600000TSYS,BPNL00000003CNKC,BPNLA360000CATXB,BPNLA360000SPIEG,BPNL00000003B6LU,BPNLA3600000INNO,BPNS0000000008ZZ,BPNL00000003CSGV,BPNL00000003B0Q0,BPNL00000000DC40,BPNL00000003AWSS,BPNLA36000000ISW,BPNL00000000BJTL,BPNL00000003AVTH,BPNL00000003B2OM,BPNL0000000TIERX,BPNLA36000MSGGRP,BPNL00000003B3NX,BPNL00000003AXS3,BPNL00000003B5MJ,BPNL0000000TIERC"
       ingress:
         enabled: true
         tls:
