@@ -72,7 +72,7 @@ portal:
   frontend:
     portal:
       image:
-        name: "harbor-hub-shared.arena.3ascloud.de/arena2036/portal-frontend"
+        name: "harbor-hub-shared.arena.3ascloud.de/redrives/portal-frontend"
         portaltag: "latest"
         pullPolicy: "Always"
         pullSecrets:
@@ -87,8 +87,8 @@ portal:
         memory: 125M
     assets:
       image:
-        name: "harbor-hub-shared.arena.3ascloud.de/arena2036/portal-assets"
-        assetstag: "latest"
+        name: "harbor-hub-shared.arena.3ascloud.de/redrives/portal-assets"
+        assetstag: "17022026"
         pullPolicy: "Always"
         pullSecrets:
           - name: harbor-creds
@@ -429,7 +429,7 @@ centralidp:
         mountPath: /opt/bitnami/keycloak/themes/catenax-central
     initContainers:
       - name: import
-        image: harbor-hub-shared.arena.3ascloud.de/arena2036/portal-iam:latest-v2
+        image: harbor-hub-shared.arena.3ascloud.de/redrives/portal-iam:17022026
         imagePullPolicy: Always
         command:
           - sh
@@ -649,7 +649,7 @@ sharedidp:
         mountPath: /opt/bitnami/keycloak/themes/catenax-shared-portal
     initContainers:
       - name: import
-        image: harbor-hub-shared.arena.3ascloud.de/arena2036/portal-iam:latest-v2
+        image: harbor-hub-shared.arena.3ascloud.de/redrives/portal-iam:17022026
         imagePullPolicy: Always
         command:
           - sh
