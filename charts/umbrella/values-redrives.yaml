@@ -1550,6 +1550,10 @@ pgadmin4:
         paths:
           - path: /
             pathType: Prefix
+    tls:
+      - secretName: "pgadmin4.redrives-tls"
+        hosts:
+          - "pgadmin4.redrives.arena2036-x.de"
 
 bdrs-server-memory:
   nameOverride: bdrs-server
