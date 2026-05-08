@@ -1,5 +1,5 @@
 ###############################################################
-# Copyright (c) 2026 ARENA20366 e.V.
+# Copyright (c) 2026 ARENA2036 e.V.
 # Copyright (c) 2023 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
@@ -77,18 +77,4 @@ spec:
             - name: sql
               configMap:
                 name: onboarding-process-worker-configmap
-              # command:
-              #   - /bin/sh
-              #   - -c
-              #   - |
-              #     echo "Running onboarding status check..."
-
-              #     psql <<EOF
-              #     SELECT id, status, created_at
-              #     FROM onboarding_process
-              #     WHERE status NOT IN ('COMPLETED', 'FAILED')
-              #     ORDER BY created_at ASC;
-              #     EOF
-
-              #     echo "Done."
 {{ end }}
