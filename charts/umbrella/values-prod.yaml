@@ -1,6 +1,6 @@
 # #############################################################################
-# Copyright (c) 2023,2024 Contributors to the Eclipse Foundation
 # Copyright (c) 2026 ARENA2036 e.V.
+# Copyright (c) 2023,2024 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -33,7 +33,10 @@ portal:
     ## UNTIL HERE
     nameOverride: "portal-backend-postgresql"
     architecture: standalone
+    dbName: postgres
+    dbPort: 5432
     auth:
+      dbUser: postgres
       password: "dbpasswordportal"
       portalPassword: "dbpasswordportal"
       replicationPassword: "dbpasswordportal"
@@ -247,11 +250,11 @@ portal:
             encryptionKey:
               "d2e27d71b018cb36029184852f1baa3e26891be94718f77de4c7cc6c882fe317"
     mailing:
-      host: ""
-      port: ""
-      user: ""
-      senderEmail: ""
-      password: ""
+      host: "SMTP_HOST_PLACEHOLDER"
+      port: "SMTP_PORT_PLACEHOLDER"
+      user: "SMTP_USER_PLACEHOLDER"
+      senderEmail: "SMTP_USER_PLACEHOLDER"
+      password: "SMTP_PASSWORD_PLACEHOLDER"
     portalmigrations:
       seeding:
         seedTestData:
@@ -345,12 +348,12 @@ portal:
     provisioning:
       sharedRealm:
         smtpServer:
-          host: ""
-          port: ""
-          user: ""
-          password: ""
-          from: ""
-          replyTo: ""
+          host: "SMTP_HOST_PLACEHOLDER"
+          port: "SMTP_PORT_PLACEHOLDER"
+          user: "SMTP_USER_PLACEHOLDER"
+          password: "SMTP_PASSWORD_PLACEHOLDER"
+          from: "SMTP_USER_PLACEHOLDER"
+          replyTo: "SMTP_USER_PLACEHOLDER"
     # -- docs: http://portal-backend.tx.test/api/administration/swagger/index.html
     # http://portal-backend.tx.test/api/registration/swagger/index.html
     # http://portal-backend.tx.test/api/apps/swagger/index.html
@@ -729,12 +732,12 @@ sharedidp:
           username: "cx-operator@arena2036.de"
           password: "tractusx-umbr3llaA!"
         mailing:
-          host: ""
-          port: ""
-          username: ""
-          password: ""
-          from: ""
-          replyTo: ""
+          host: "SMTP_HOST_PLACEHOLDER"
+          port: "SMTP_PORT_PLACEHOLDER"
+          username: "SMTP_USER_PLACEHOLDER"
+          password: "SMTP_PASSWORD_PLACEHOLDER"
+          from: "SMTP_USER_PLACEHOLDER"
+          replyTo: "SMTP_USER_PLACEHOLDER"
       master:
         serviceAccounts:
           provisioning:
