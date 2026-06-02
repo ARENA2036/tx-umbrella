@@ -81,7 +81,7 @@ jobs:
           url: ${{ secrets.VAULT_ADDR_STAGING }}
           token: ${{ secrets.VAULT_TOKEN_STAGING }}
           secrets: |
-            staging/data/data/cluster config | KUBECONFIG ;
+            staging/data/infra/cluster-staging config | KUBECONFIG ;
 
       - name: Import Secrets from prod Vault
         id: import-prod-secrets
