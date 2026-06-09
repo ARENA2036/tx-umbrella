@@ -99,26 +99,29 @@ jobs:
         run: |
           mkdir -p "$HOME/.kube"
 
-          if [[ "$TARGET_CONTEXT" == "staging" ]]; then
+          if [[ "$TARGET_CONTEXT" == "prod" ]]; then
+            export VAULT_ADDR="${{ secrets.VAULT_ADDR_PROD }}"
+            export VAULT_TOKEN="${{ secrets.VAULT_TOKEN_PROD }}"
+            CLUSTER_PATH="staging/infra/cluster-prod"
+          elif [[ "$TARGET_CONTEXT" == "staging" ]]; then
             export VAULT_ADDR="${{ secrets.VAULT_ADDR_STAGING }}"
             export VAULT_TOKEN="${{ secrets.VAULT_TOKEN_STAGING }}"
             CLUSTER_PATH="staging/infra/cluster-staging"
           else
-            export VAULT_ADDR="${{ secrets.VAULT_ADDR_PROD }}"
-            export VAULT_TOKEN="${{ secrets.VAULT_TOKEN_PROD }}"
-            CLUSTER_PATH="staging/infra/cluster-prod"
+            echo "Invalid TARGET_CONTEXT: $TARGET_CONTEXT"
+            exit 1
           fi
 
           echo "Fetching kubeconfig from Vault path: $CLUSTER_PATH"
-
           vault kv get -field=config "$CLUSTER_PATH" > "$HOME/.kube/config"
           chmod 600 "$HOME/.kube/config"
 
           echo "KUBECONFIG=$HOME/.kube/config" >> "$GITHUB_ENV"
           export KUBECONFIG="$HOME/.kube/config"
 
-          kubectl config get-contexts
-          kubectl config use-context "$TARGET_CONTEXT" || true
+          CONTEXT=$(kubectl config current-context)
+          echo "Using kube context from config: $CONTEXT"
+
           kubectl cluster-info
 
       - name: Run Database Backup Script
