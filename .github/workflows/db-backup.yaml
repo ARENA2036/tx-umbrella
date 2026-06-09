@@ -43,7 +43,7 @@ on:
       release_name:
         description: "Enter release name e.g, fed-services"
         required: true
-        default: "fed-services"
+        default: "federated"
 
   # schedule:
   #   - cron: '0 20 * * 5' # Runs every Friday at 8 PM UTC
@@ -56,7 +56,7 @@ jobs:
     env:
       TARGET_CONTEXT: ${{ github.event.inputs.cluster_context || 'prod' }}
       NAMESPACE: ${{ github.event.inputs.namespace || 'release25-09' }}
-      RELEASE_NAME: ${{ github.event.inputs.release_name || 'fed-services' }}
+      RELEASE_NAME: ${{ github.event.inputs.release_name || 'federated' }}
 
       SHAREDIDP_DB_PASSWORD: ${{ secrets.SHAREDIDP_DB_PASSWORD }}
       POSTGRESQL_DB: ${{ secrets.POSTGRESQL_DB }}
@@ -79,52 +79,46 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Import staging kubeconfig
-      - name: Import Secrets from staging Vault
-        id: import-staging-secrets
-        if: ${{ env.TARGET_CONTEXT == 'staging' }}
-        uses: hashicorp/vault-action@v2
-        with:
-          url: ${{ secrets.VAULT_ADDR_STAGING }}
-          token: ${{ secrets.VAULT_TOKEN_STAGING }}
-          secrets: |
-            staging/infra/cluster-staging config | KUBECONFIG ;
-
-      ## Import prod kubeconfig
-      - name: Import Secrets from prod Vault
-        id: import-prod-secrets
-        if: ${{ env.TARGET_CONTEXT == 'prod' }}
-        uses: hashicorp/vault-action@v2
-        with:
-          url: ${{ secrets.VAULT_ADDR_PROD }}
-          token: ${{ secrets.VAULT_TOKEN_PROD }}
-          secrets: |
-            staging/infra/cluster-prod config | KUBECONFIG ;
-
       - name: Install kubectl
         run: |
+          echo "Installing kubectl..."
           curl -LO -s "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
           chmod +x kubectl
           sudo mv kubectl /usr/local/bin/
           kubectl version --client
 
-      - name: Setup Cluster Context
+      - name: Install Vault CLI
+        run: |
+          curl -sSL https://releases.hashicorp.com/vault/1.21.2/vault_1.21.2_linux_amd64.zip -o vault.zip
+          unzip vault.zip
+          chmod +x vault
+          sudo mv vault /usr/local/bin/
+          vault --version
+
+      - name: Fetch kubeconfig from Vault and connect to cluster
         run: |
           mkdir -p "$HOME/.kube"
-          CONFIG_PATH="$HOME/.kube/config"
 
           if [[ "$TARGET_CONTEXT" == "staging" ]]; then
-            echo "Setting staging kubeconfig..."
-            echo '${{ steps.import-staging-secrets.outputs.KUBECONFIG }}' > "$CONFIG_PATH"
+            export VAULT_ADDR="${{ secrets.VAULT_ADDR_STAGING }}"
+            export VAULT_TOKEN="${{ secrets.VAULT_TOKEN_STAGING }}"
+            CLUSTER_PATH="staging/infra/cluster-staging"
           else
-            echo "Setting prod kubeconfig..."
-            echo '${{ steps.import-prod-secrets.outputs.KUBECONFIG }}' > "$CONFIG_PATH"
+            export VAULT_ADDR="${{ secrets.VAULT_ADDR_PROD }}"
+            export VAULT_TOKEN="${{ secrets.VAULT_TOKEN_PROD }}"
+            CLUSTER_PATH="staging/infra/cluster-prod"
           fi
 
-          chmod 600 "$CONFIG_PATH"
-          echo "KUBECONFIG=$CONFIG_PATH" >> "$GITHUB_ENV"
+          echo "Fetching kubeconfig from Vault path: $CLUSTER_PATH"
+
+          vault kv get -field=config "$CLUSTER_PATH" > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+
+          echo "KUBECONFIG=$HOME/.kube/config" >> "$GITHUB_ENV"
+          export KUBECONFIG="$HOME/.kube/config"
 
           kubectl config get-contexts
+          kubectl config use-context "$TARGET_CONTEXT" || true
           kubectl cluster-info
 
       - name: Run Database Backup Script
