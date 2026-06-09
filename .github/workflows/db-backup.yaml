@@ -74,7 +74,7 @@ jobs:
       WALLET_DB_PASSWORD: postgrespassword
       DATAPROVIDER_DB_PASSWORD: dbpasswordtxdataprovider
       DATAPROVIDER_DTR_DB_PASSWORD: password
-      
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -88,7 +88,7 @@ jobs:
           url: ${{ secrets.VAULT_ADDR_STAGING }}
           token: ${{ secrets.VAULT_TOKEN_STAGING }}
           secrets: |
-           staging/infra/cluster-staging config | KUBECONFIG ;
+            staging/infra/cluster-staging config | KUBECONFIG ;
 
       ## Import prod kubeconfig
       - name: Import Secrets from prod Vault
