@@ -71,10 +71,10 @@ jobs:
       # DATAPROVIDER_DB_PASSWORD: ${{ secrets.DATAPROVIDER_DB_PASSWORD }}
       # DATAPROVIDER_DTR_DB_PASSWORD: ${{ secrets.DATAPROVIDER_DTR_DB_PASSWORD }}
 
-      WALLET_DB_PASSWORD: wallet-postgres-0:postgres:postgrespassword:postgres
-      DATAPROVIDER_DB_PASSWORD: ${RELEASE_NAME}-dataprovider-0:user:dbpasswordtxdataprovider:edc
-      DATAPROVIDER_DTR_DB_PASSWORD: dataprovider-digital-twin-db-0:user:password:dtr
-
+      WALLET_DB_PASSWORD: postgrespassword
+      DATAPROVIDER_DB_PASSWORD: dbpasswordtxdataprovider
+      DATAPROVIDER_DTR_DB_PASSWORD: password
+      
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -88,7 +88,7 @@ jobs:
           url: ${{ secrets.VAULT_ADDR_STAGING }}
           token: ${{ secrets.VAULT_TOKEN_STAGING }}
           secrets: |
-            staging/data/infra/cluster-staging config | KUBECONFIG ;
+           staging/infra/cluster-staging config | KUBECONFIG ;
 
       ## Import prod kubeconfig
       - name: Import Secrets from prod Vault
@@ -99,7 +99,7 @@ jobs:
           url: ${{ secrets.VAULT_ADDR_PROD }}
           token: ${{ secrets.VAULT_TOKEN_PROD }}
           secrets: |
-            staging/data/data/cluster-prod config | KUBECONFIG ;
+            staging/infra/cluster-prod config | KUBECONFIG ;
 
       - name: Install kubectl
         run: |
