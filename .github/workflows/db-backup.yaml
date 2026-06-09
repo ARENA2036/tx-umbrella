@@ -20,41 +20,33 @@
 name: Database Backup - PostgresSQL
 
 on:
-  # push:
-  #   branches:
-  #     - backup-db
+  push:
+    branches:
+      - DT-55-automated-database-backup
 
   workflow_dispatch:
-      inputs:
-        cluster_context:
-          description: "Select the AKS environment"
-          default: "arena2036-x-fed-services"
-          required: true
-          type: choice
-          options:
-            - demo-cluster
-            - arena2036-x-edc-cluster
-            - arena2036-x-fed-services
-        resource_group:
-          description: "Select Azure resource group"
-          default: "arena2036-x-federated-services"
-          required: true
-          type: choice
-          options:
-            - demo
-            - arena2036-x-edc
-            - arena2036-x-federated-services
-        namespace:
-          description: "Kubernetes namespace to back up e.g, release24-12"
-          required: true
-          default: "release24-12"
-        release_name:
-          description: "Enter release name e.g, fed-services"
-          required: true
-          default: "fed-services"
+    inputs:
+      cluster_context:
+        description: "Select environment"
+        required: true
+        default: "prod"
+        type: choice
+        options:
+          - prod
+          - staging
 
-  schedule:
-    - cron: '0 20 * * 5' # Runs every Friday at 8 PM UTC
+      namespace:
+        description: "Kubernetes namespace to back up e.g, release25-09"
+        required: true
+        default: "release25-09"
+
+      release_name:
+        description: "Enter release name e.g, fed-services"
+        required: true
+        default: "fed-services"
+
+  # schedule:
+  #   - cron: '0 20 * * 5' # Runs every Friday at 8 PM UTC
 
 jobs:
   db-backup:
@@ -62,16 +54,9 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      # TARGET_CONTEXT: ${{ github.event.inputs.cluster_context || 'arena2036-x-fed-services' }}
-      # RESOURCE_GROUP: ${{ github.event.inputs.resource_group || 'arena2036-x-federated-services' }}
-      # NAMESPACE: ${{ github.event.inputs.namespace || 'release24-12' }}
-      # RELEASE_NAME: ${{ github.event.inputs.release_name || 'fed-services' }}
-      TARGET_CONTEXT: ${{ github.event.inputs.cluster_context && github.event.inputs.cluster_context || 'arena2036-x-fed-services' }}
-      RESOURCE_GROUP: ${{ github.event.inputs.resource_group && github.event.inputs.resource_group || 'arena2036-x-federated-services' }}
-      NAMESPACE: ${{ github.event.inputs.namespace && github.event.inputs.namespace || 'release24-12' }}
-      RELEASE_NAME: ${{ github.event.inputs.release_name && github.event.inputs.release_name || 'fed-services' }}
-      AZURE_ACCOUNT: "arena2036"
-      AZURE_CONTAINER: "database-backup"
+      TARGET_CONTEXT: ${{ github.event.inputs.cluster_context || 'prod' }}
+      NAMESPACE: ${{ github.event.inputs.namespace || 'release25-09' }}
+      RELEASE_NAME: ${{ github.event.inputs.release_name || 'fed-services' }}
 
       SHAREDIDP_DB_PASSWORD: ${{ secrets.SHAREDIDP_DB_PASSWORD }}
       POSTGRESQL_DB: ${{ secrets.POSTGRESQL_DB }}
@@ -81,50 +66,90 @@ jobs:
       DATACONSUMER_DB_PASSWORD: ${{ secrets.DATACONSUMER_DB_PASSWORD }}
       CENTRALIDP_DB_PASSWORD: ${{ secrets.CENTRALIDP_DB_PASSWORD }}
       BPNDISCOVERY_DB_PASSWORD: ${{ secrets.BPNDISCOVERY_DB_PASSWORD }}
-      
+
+      # WALLET_DB_PASSWORD: ${{ secrets.WALLET_DB_PASSWORD }}
+      # DATAPROVIDER_DB_PASSWORD: ${{ secrets.DATAPROVIDER_DB_PASSWORD }}
+      # DATAPROVIDER_DTR_DB_PASSWORD: ${{ secrets.DATAPROVIDER_DTR_DB_PASSWORD }}
+
+      WALLET_DB_PASSWORD: wallet-postgres-0:postgres:postgrespassword:postgres
+      DATAPROVIDER_DB_PASSWORD: ${RELEASE_NAME}-dataprovider-0:user:dbpasswordtxdataprovider:edc
+      DATAPROVIDER_DTR_DB_PASSWORD: dataprovider-digital-twin-db-0:user:password:dtr
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Show Workflow Inputs
-        run: |
-          echo "Cluster context: ${{ github.event.inputs.cluster_context }}"
-          echo "Resource group: ${{ github.event.inputs.resource_group }}"
-          echo "Namespace:      ${{ github.event.inputs.namespace }}"
-          echo "Release name: ${{ github.event.inputs.release_name }}"
-
-      - name: Log in to Azure
-        uses: azure/login@v1
+      # Import staging kubeconfig
+      - name: Import Secrets from staging Vault
+        id: import-staging-secrets
+        if: ${{ env.TARGET_CONTEXT == 'staging' }}
+        uses: hashicorp/vault-action@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          url: ${{ secrets.VAULT_ADDR_STAGING }}
+          token: ${{ secrets.VAULT_TOKEN_STAGING }}
+          secrets: |
+            staging/data/infra/cluster-staging config | KUBECONFIG ;
 
-      - name: Connect to AKS Cluster
+      ## Import prod kubeconfig
+      - name: Import Secrets from prod Vault
+        id: import-prod-secrets
+        if: ${{ env.TARGET_CONTEXT == 'prod' }}
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ secrets.VAULT_ADDR_PROD }}
+          token: ${{ secrets.VAULT_TOKEN_PROD }}
+          secrets: |
+            staging/data/data/cluster-prod config | KUBECONFIG ;
+
+      - name: Install kubectl
         run: |
-          az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          az aks get-credentials \
-            --resource-group "$RESOURCE_GROUP" \
-            --name "$TARGET_CONTEXT" \
-            --overwrite-existing
-          kubectl config use-context "$TARGET_CONTEXT"
-          kubectl config current-context
+          curl -LO -s "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+          kubectl version --client
+
+      - name: Setup Cluster Context
+        run: |
+          mkdir -p "$HOME/.kube"
+          CONFIG_PATH="$HOME/.kube/config"
+
+          if [[ "$TARGET_CONTEXT" == "staging" ]]; then
+            echo "Setting staging kubeconfig..."
+            echo '${{ steps.import-staging-secrets.outputs.KUBECONFIG }}' > "$CONFIG_PATH"
+          else
+            echo "Setting prod kubeconfig..."
+            echo '${{ steps.import-prod-secrets.outputs.KUBECONFIG }}' > "$CONFIG_PATH"
+          fi
+
+          chmod 600 "$CONFIG_PATH"
+          echo "KUBECONFIG=$CONFIG_PATH" >> "$GITHUB_ENV"
+
+          kubectl config get-contexts
+          kubectl cluster-info
 
       - name: Run Database Backup Script
         run: |
           chmod +x ./hack/db-backup.sh
           ./hack/db-backup.sh
 
-      - name: Upload Backup Logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: db-backup-logs
-          path: ./logs/**/*.log
-          retention-days: 7
+      - name: Compress backups and logs
+        if: success()
+        run: |
+          TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)
+          tar -czf db-backup-$TARGET_CONTEXT-$TIMESTAMP.tar.gz ./backup ./logs
 
-      - name: Upload Backup Files
+      - name: Upload Backup Artifact
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: db-backup-files
-          path: ./backup/**/*.sql
-          retention-days: 7
+          name: db-backup-${{ env.TARGET_CONTEXT }}
+          path: db-backup-*.tar.gz
+          retention-days: 30
+
+      - name: Upload Logs Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-logs-${{ env.TARGET_CONTEXT }}
+          path: ./logs/**/*.log
+          retention-days: 30

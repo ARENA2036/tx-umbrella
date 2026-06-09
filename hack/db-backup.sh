@@ -4,8 +4,7 @@ set -euo pipefail
 
 # =========================================================
 #  Database Backup Script
-#  - Backs up PostgreSQL databases running in AKS
-#  - Uploads backups to Azure Blob Storage
+#  - Backs up PostgreSQL databases running in Kubernetes
 #  - Generates detailed logs
 #  - Creates unique timestamped folders per run
 # =========================================================
@@ -16,16 +15,13 @@ set -euo pipefail
 # TARGET_CONTEXT     = Kubernetes context name
 # NAMESPACE          = Kubernetes namespace
 # RELEASE_NAME       = Kubernetes release name
-# AZURE_ACCOUNT      = Azure storage account name
-# AZURE_CONTAINER    = Azure blob container name
 
 # --- Print starting info ---
 echo "----------------------------------------"
 echo "Starting database backup at $(date)"
 echo "Cluster context: $TARGET_CONTEXT"
 echo "Namespace:       $NAMESPACE"
-echo "Azure Account:   $AZURE_ACCOUNT"
-echo "Azure Container: $AZURE_CONTAINER"
+echo "Release:   $RELEASE_NAME"
 echo "----------------------------------------"
 
 # --- Switch to the correct cluster context ---
@@ -40,10 +36,9 @@ TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)
 BACKUP_DIR="./backup/backup_$TIMESTAMP"
 LOG_DIR="./logs/backup_$TIMESTAMP"
 
-mkdir -p "$BACKUP_DIR" "$LOG_DIR"
-
 # --- Initialize log file ---
 LOG_FILE="$LOG_DIR/backup.log"
+mkdir -p "$BACKUP_DIR" "$LOG_DIR"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 echo "Backup folder: $BACKUP_DIR"
@@ -60,6 +55,10 @@ DBS=(
   "dataconsumer-1-db:${RELEASE_NAME}-dataconsumer-1-db-0:testuser:${DATACONSUMER_DB_PASSWORD}:edc"
   "centralidp-postgresql:${RELEASE_NAME}-centralidp-postgresql-0:kccentral:${CENTRALIDP_DB_PASSWORD}:iamcentralidp"
   "bpndiscovery-postgresql:${RELEASE_NAME}-bpndiscovery-postgresql-0:default-user:${BPNDISCOVERY_DB_PASSWORD}:bpndiscovery"
+  "wallet-postgres:wallet-postgres-0:postgres:postgrespassword:postgres"
+  "dataprovider-db:${RELEASE_NAME}-dataprovider-0:user:dbpasswordtxdataprovider:edc"
+  "dataprovider-digital-twin-db:dataprovider-digital-twin-db-0:user:password:dtr"
+
 )
 
 # --- Step 1: Take backups ---
@@ -95,32 +94,12 @@ for FILE in "$BACKUP_DIR"/*.sql; do
 done
 echo "----------------------------------------"
 
-# --- Step 3: Upload to Azure Blob ---
-echo "Step 3: Uploading backups to Azure Blob Storage..."
-for FILE in "$BACKUP_DIR"/*.sql; do
-  if [[ -f "$FILE" && -s "$FILE" ]]; then
-    echo "Uploading $(basename "$FILE") ..."
-    az storage blob upload \
-      --account-name "$AZURE_ACCOUNT" \
-      --container-name "$AZURE_CONTAINER" \
-      --file "$FILE" \
-      --name "$(basename "$FILE")" \
-      --overwrite true \
-      --only-show-errors
-  else
-    echo "Skipping empty or missing file: $FILE"
-  fi
-done
-echo "----------------------------------------"
+# --- Step 3: Upload to SharePoint ---
 
 # --- Step 4: Verify Azure upload ---
-echo "Uploaded files in Azure Blob Storage:"
-az storage blob list \
-  --account-name "$AZURE_ACCOUNT" \
-  --container-name "$AZURE_CONTAINER" \
-  --output table
-echo "----------------------------------------"
+
 
 # --- Finish ---
 echo "Backup completed successfully at $(date)"
-echo "Logs saved to: $LOG_FILE"
+echo "Backups stored in: $BACKUP_DIR"
+echo "Logs saved to:     $LOG_FILE"
