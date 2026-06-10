@@ -55,9 +55,9 @@ DBS=(
   "dataconsumer-1-db:${RELEASE_NAME}-dataconsumer-1-db-0:user:${DATACONSUMER_DB_PASSWORD}:edc"
   "centralidp-postgresql:${RELEASE_NAME}-centralidp-postgresql-0:kccentral:${CENTRALIDP_DB_PASSWORD}:iamcentralidp"
   "bpndiscovery-postgresql:${RELEASE_NAME}-bpndiscovery-postgresql-0:default-user:${BPNDISCOVERY_DB_PASSWORD}:bpndiscovery"
-  "wallet-postgres:wallet-postgres-0:postgres:postgrespassword:postgres"
-  "dataprovider-db:${RELEASE_NAME}-dataprovider-db-0:user:dbpasswordtxdataprovider:edc"
-  "dataprovider-digital-twin-db:dataprovider-digital-twin-db-0:user:password:dtr"
+  "wallet-postgres:wallet-postgres-0:postgres:${WALLET_DB_PASSWORD}:postgres"
+  "dataprovider-db:${RELEASE_NAME}-dataprovider-db-0:user:${DATAPROVIDER_DB_PASSWORD}:edc"
+  "dataprovider-digital-twin-db:dataprovider-digital-twin-db-0:user:${DATAPROVIDER_DTR_DB_PASSWORD}:dtr"
 
 )
 
