@@ -59,7 +59,6 @@ jobs:
       RELEASE_NAME: ${{ github.event.inputs.release_name || 'federated' }}
 
       SHAREDIDP_DB_PASSWORD: ${{ secrets.SHAREDIDP_DB_PASSWORD }}
-      POSTGRESQL_DB: ${{ secrets.POSTGRESQL_DB }}
       PORTAL_DB_PASSWORD: ${{ secrets.PORTAL_DB_PASSWORD }}
       ISSUER_DB_PASSWORD: ${{ secrets.ISSUER_DB_PASSWORD }}
       DISCOVERYFINDER_DB_PASSWORD: ${{ secrets.DISCOVERYFINDER_DB_PASSWORD }}
@@ -134,6 +133,23 @@ jobs:
         run: |
           TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)
           tar -czf db-backup-$TARGET_CONTEXT-$TIMESTAMP.tar.gz ./backup ./logs
+    
+      - name: Upload Backup to SharePoint
+        if: success()
+        run: |
+          FILE=$(ls db-backup-*.tar.gz | head -n 1)
+
+          TARGET_URL="${SHAREPOINT_UPLOAD_URL_DB_BACKUP}/${SHAREPOINT_FOLDER_NAME_DB_BACKUP}/$(basename "$FILE")"
+
+          echo "Uploading $FILE to SharePoint..."
+          echo "Target folder: ${SHAREPOINT_FOLDER_NAME_DB_BACKUP}"
+
+          curl --fail \
+            -u "${SHAREPOINT_USERNAME_DB_BACKUP}:${SHAREPOINT_PASSWORD_DB_BACKUP}" \
+            -T "$FILE" \
+            "$TARGET_URL"
+
+          echo "SharePoint upload completed."
 
       - name: Upload Backup Artifact
         if: success()
@@ -141,12 +157,4 @@ jobs:
         with:
           name: db-backup-${{ env.TARGET_CONTEXT }}
           path: db-backup-*.tar.gz
-          retention-days: 30
-
-      - name: Upload Logs Artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: db-backup-logs-${{ env.TARGET_CONTEXT }}
-          path: ./logs/**/*.log
           retention-days: 30

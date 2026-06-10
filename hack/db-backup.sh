@@ -48,15 +48,15 @@ echo "----------------------------------------"
 # --- Databases to back up ---
 DBS=(
   "sharedidp-postgresql:${RELEASE_NAME}-sharedidp-postgresql-0:kcshared:${SHAREDIDP_DB_PASSWORD}:iamsharedidp"
-  "postgresql:${RELEASE_NAME}-postgresql-0:issuer:${POSTGRESQL_DB}:issuer"
+  # "postgresql:${RELEASE_NAME}-postgresql-0:issuer:${POSTGRESQL_DB}:issuer"
   "portal-backend:${RELEASE_NAME}-portal-backend-postgresql-0:postgres:${PORTAL_DB_PASSWORD}:postgres"
   "issuer-postgresql:${RELEASE_NAME}-issuer-postgresql-0:issuer:${ISSUER_DB_PASSWORD}:issuer"
   "discoveryfinder:${RELEASE_NAME}-discoveryfinder-postgresql-0:catenax:${DISCOVERYFINDER_DB_PASSWORD}:discoveryfinder"
-  "dataconsumer-1-db:${RELEASE_NAME}-dataconsumer-1-db-0:testuser:${DATACONSUMER_DB_PASSWORD}:edc"
+  "dataconsumer-1-db:${RELEASE_NAME}-dataconsumer-1-db-0:user:${DATACONSUMER_DB_PASSWORD}:edc"
   "centralidp-postgresql:${RELEASE_NAME}-centralidp-postgresql-0:kccentral:${CENTRALIDP_DB_PASSWORD}:iamcentralidp"
   "bpndiscovery-postgresql:${RELEASE_NAME}-bpndiscovery-postgresql-0:default-user:${BPNDISCOVERY_DB_PASSWORD}:bpndiscovery"
   "wallet-postgres:wallet-postgres-0:postgres:postgrespassword:postgres"
-  "dataprovider-db:${RELEASE_NAME}-dataprovider-0:user:dbpasswordtxdataprovider:edc"
+  "dataprovider-db:${RELEASE_NAME}-dataprovider-db-0:user:dbpasswordtxdataprovider:edc"
   "dataprovider-digital-twin-db:dataprovider-digital-twin-db-0:user:password:dtr"
 
 )
