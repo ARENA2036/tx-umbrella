@@ -22,7 +22,7 @@ name: Database Backup - PostgresSQL
 on:
   push:
     branches:
-      - DT-55-automated-database-backup
+      - DT-544-automated-database-backup
 
   workflow_dispatch:
     inputs:
@@ -138,9 +138,18 @@ jobs:
         run: |
           TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)
           tar -czf db-backup-$TARGET_CONTEXT-$TIMESTAMP.tar.gz ./backup ./logs
-    
+
+      - name: Upload Backup Artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ env.TARGET_CONTEXT }}
+          path: db-backup-*.tar.gz
+          retention-days: 30
+
       - name: Upload Backup to SharePoint
         if: success()
+        continue-on-error: true
         run: |
           FILE=$(ls db-backup-*.tar.gz | head -n 1)
 
@@ -155,11 +164,3 @@ jobs:
             "$TARGET_URL"
 
           echo "SharePoint upload completed."
-
-      - name: Upload Backup Artifact
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: db-backup-${{ env.TARGET_CONTEXT }}
-          path: db-backup-*.tar.gz
-          retention-days: 30
