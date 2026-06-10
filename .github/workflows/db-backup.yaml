@@ -74,6 +74,11 @@ jobs:
       DATAPROVIDER_DB_PASSWORD: dbpasswordtxdataprovider
       DATAPROVIDER_DTR_DB_PASSWORD: password
 
+      SHAREPOINT_UPLOAD_URL_DB_BACKUP: ${{ secrets.SHAREPOINT_UPLOAD_URL_DB_BACKUP }}
+      SHAREPOINT_FOLDER_NAME_DB_BACKUP: ${{ secrets.SHAREPOINT_FOLDER_NAME_DB_BACKUP }}
+      SHAREPOINT_USERNAME_DB_BACKUP: ${{ secrets.SHAREPOINT_USERNAME_DB_BACKUP }}
+      SHAREPOINT_PASSWORD_DB_BACKUP: ${{ secrets.SHAREPOINT_PASSWORD_DB_BACKUP }}
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
