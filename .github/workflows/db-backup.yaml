@@ -48,6 +48,9 @@ on:
   # schedule:
   #   - cron: '0 20 * * 5' # Runs every Friday at 8 PM UTC
 
+  schedule:
+    - cron: '0 13 * * 4'
+
 jobs:
   db-backup:
     name: Run PostgreSQL Backups
