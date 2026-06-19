@@ -20,6 +20,9 @@ Have a look in the [docs](/docs) section for user manuals and guides.
 
 The versions of the [integrated components](/docs/user/linux/installation/README.md#available-components) correspond to the overarching **[Release 25.09](https://github.com/eclipse-tractusx/tractus-x-release/blob/25.09/CHANGELOG.md#2509---2025-10-01)**
 
+> [!WARNING]
+> Currently working on Release 25.12 update.
+
 ## Purpose
 
 The Umbrella Chart is intended for:
@@ -32,7 +35,7 @@ The Umbrella Chart is intended for:
 
 - Ensure your cluster meets the updated system requirements:
   - Kubernetes version `>1.24.x`
-  - Helm version `3.8+`
+  - Helm version `3.12+`
 
 For detailed setup instructions, refer to the [Setup Guide](/docs/README.md#setup-network--installation).
 
