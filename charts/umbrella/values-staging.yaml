@@ -1,5 +1,6 @@
 # #############################################################################
 # Copyright (c) 2023,2024 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 ARENA2036 e.V.
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -725,8 +726,8 @@ sharedidp:
         sslRequired: "none"
         centralidp: "https://centralidp.staging.arena2036-x.de"
         initialUser:
-          username: "cx-operator@tx.test"
-          password: "tractusx-umbr3lla!"
+          username: "cx-operator@arena2036.de"
+          password: "tractusx-umbr3llaA!"
         mailing:
           host: ""
           port: ""
@@ -1187,24 +1188,24 @@ dataconsumerOne:
       participant:
         id: BPNL00000003AZQP
       iatp:
-        id: did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000003AZQP
+        id: did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003AZQP
         trustedIssuers:
-          - did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000003CRHK
+          - did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003CRHK
         sts:
           dim:
-            url: https://ssi-dim-wallet-stub.arena2036-x.de/api/sts
+            url: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api/sts
           oauth:
-            token_url: https://ssi-dim-wallet-stub.arena2036-x.de/oauth/token
+            token_url: https://ssi-dim-wallet-stub.staging.arena2036-x.de/oauth/token
             client:
               id: BPNL00000003AZQP
               secret_alias: edc-wallet-secret
       controlplane:
         env:
-          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.arena2036-x.de/api
+          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api
           EDC_IAM_DID_WEB_USE_HTTPS: false
         bdrs:
           server:
-            url: https://ssi-dim-wallet-stub.arena2036-x.de/api/v1/directory
+            url: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api/v1/directory
         endpoints:
           management:
             authKey: TEST1
@@ -1222,7 +1223,7 @@ dataconsumerOne:
               enabled: true
       dataplane:
         env:
-          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.arena2036-x.de/api
+          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api
           EDC_IAM_DID_WEB_USE_HTTPS: false
         ingresses:
           - enabled: true
@@ -1282,24 +1283,24 @@ tx-data-provider:
       participant:
         id: BPNL00000003AYRE
       iatp:
-        id: did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000003AYRE
+        id: did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003AYRE
         trustedIssuers:
-          - did:web:ssi-dim-wallet-stub.arena2036-x.de:BPNL00000003CRHK
+          - did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003CRHK
         sts:
           dim:
-            url: https://ssi-dim-wallet-stub.arena2036-x.de/api/sts
+            url: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api/sts
           oauth:
-            token_url: https://ssi-dim-wallet-stub.arena2036-x.de/oauth/token
+            token_url: https://ssi-dim-wallet-stub.staging.arena2036-x.de/oauth/token
             client:
               id: BPNL00000003AYRE
               secret_alias: edc-wallet-secret
       controlplane:
         env:
-          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.arena2036-x.de/api
+          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api
           EDC_IAM_DID_WEB_USE_HTTPS: false
         bdrs:
           server:
-            url: https://ssi-dim-wallet-stub.arena2036-x.de/api/v1/directory
+            url: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api/v1/directory
         endpoints:
           management:
             authKey: TEST2
@@ -1317,7 +1318,7 @@ tx-data-provider:
               enabled: true
       dataplane:
         env:
-          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.arena2036-x.de/api
+          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api
           EDC_IAM_DID_WEB_USE_HTTPS: false
         ingresses:
           - enabled: true
