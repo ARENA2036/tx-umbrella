@@ -19,7 +19,7 @@
 # #############################################################################
 ---
 portal:
-  enabled: true
+  enabled: false
   replicaCount: 1
   postgresql:
     ## TEMPORALY UNTIL NEW PORTAL UPDATE
@@ -113,7 +113,6 @@ portal:
         nginx.ingress.kubernetes.io/enable-cors: "true"
         nginx.ingress.kubernetes.io/cors-allow-origin: "http://*.txcd.arena2036-x.de"
         external-dns.alpha.kubernetes.io/hostname: portal.txcd.arena2036-x.de
-        traefik.ingress.kubernetes.io/router.middlewares: "release26-03-strip-portal@kubernetescrd"
         traefik.ingress.kubernetes.io/router.entrypoints: websecure
       tls:
         # -- Provide tls secret.
@@ -124,23 +123,18 @@ portal:
       hosts:
         - host: "portal.txcd.arena2036-x.de"
           paths:
-            - path: "/"
-              pathType: "Prefix"
+            - path: "/(.*)"
+              pathType: "ImplementationSpecific"
               backend:
                 service: "portal"
                 port: 8080
-            - path: "/registration"
-              pathType: "Prefix"
+            - path: "/registration/(.*)"
+              pathType: "ImplementationSpecific"
               backend:
                 service: "registration"
                 port: 8080
-            - path: "/assets"
-              pathType: "Prefix"
-              backend:
-                service: "assets"
-                port: 8080
-            - path: "/documentation"
-              pathType: "Prefix"
+            - path: "/((assets|documentation)/.*)"
+              pathType: "ImplementationSpecific"
               backend:
                 service: "assets"
                 port: 8080
@@ -416,7 +410,7 @@ portal:
                 port: 8080
 
 centralidp:
-  enabled: true
+  enabled: false
   keycloak:
     nameOverride: "centralidp"
     replicaCount: 1
@@ -627,7 +621,7 @@ centralidp:
         pullPolicy: IfNotPresent
 
 sharedidp:
-  enabled: true
+  enabled: false
   keycloak:
     nameOverride: "sharedidp"
     auth:
@@ -740,7 +734,7 @@ sharedidp:
             clientSecret: "changeme"
 
 bpndiscovery:
-  enabled: true
+  enabled: false
   enablePostgres: true
   bpndiscovery:
     host: semantics.txcd.arena2036-x.de
@@ -752,7 +746,6 @@ bpndiscovery:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-int
         external-dns.alpha.kubernetes.io/hostname: semantics.txcd.arena2036-x.de
-        traefik.ingress.kubernetes.io/router.middlewares: "release26-03-strip-bpndiscovery@kubernetescrd"
         traefik.ingress.kubernetes.io/router.entrypoints: websecure
     authentication: true
     idp:
@@ -792,7 +785,7 @@ bpndiscovery:
       postgresPassword: "dbpasswordbpndiscovery"
 
 discoveryfinder:
-  enabled: true
+  enabled: false
   enablePostgres: true
   discoveryfinder:
     authentication: true
@@ -839,7 +832,7 @@ discoveryfinder:
       postgresPassword: "dbpassworddiscoveryfinder"
 
 selfdescription:
-  enabled: true
+  enabled: false
   sdfactory:
     secret:
       # -- JWK Set URI
@@ -874,7 +867,7 @@ selfdescription:
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
 
 ssi-credential-issuer:
-  enabled: true
+  enabled: false
   replicaCount: 1
   portalBackendAddress: "https://portal-backend.txcd.arena2036-x.de"
   walletAddress: "https://ssi-dim-wallet-stub.txcd.arena2036-x.de"
@@ -965,7 +958,7 @@ ssi-credential-issuer:
 # Set up services for a business partner pool, golden record process
 # and a gate with which the Portal and the users can share business partner data
 bpdm:
-  enabled: true
+  enabled: false
   postgres:
     # We use the default name for BPDM postgres
     fullnameOverride: &bpdmPostgresName "bpdm-postgres"
@@ -1167,7 +1160,7 @@ bpdm:
               client-secret: "changeme"
 
 dataconsumerOne:
-  enabled: false
+  enabled: true
   seedTestdata: false
   nameOverride: dataconsumer-1
   secrets:
@@ -1192,7 +1185,7 @@ dataconsumerOne:
       controlplane:
         env:
           TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.txcd.arena2036-x.de/api
-          EDC_IAM_DID_WEB_USE_HTTPS: false
+          EDC_IAM_DID_WEB_USE_HTTPS: true
         bdrs:
           server:
             url: https://ssi-dim-wallet-stub.txcd.arena2036-x.de/api/v1/directory
@@ -1216,7 +1209,7 @@ dataconsumerOne:
       dataplane:
         env:
           TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.txcd.arena2036-x.de/api
-          EDC_IAM_DID_WEB_USE_HTTPS: false
+          EDC_IAM_DID_WEB_USE_HTTPS: true
         ingresses:
           - enabled: true
             hostname: "dataconsumer-1-dataplane.txcd.arena2036-x.de"
@@ -1261,7 +1254,7 @@ dataconsumerOne:
     enabled: false
 
 tx-data-provider:
-  enabled: false
+  enabled: true
   seedTestdata: true
   backendUrl: http://{{ .Release.Name }}-dataprovider-submodelserver:8080
   registryUrl: http://{{ .Release.Name }}-dataprovider-dtr:8080/api/v3
@@ -1291,7 +1284,7 @@ tx-data-provider:
       controlplane:
         env:
           TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.txcd.arena2036-x.de/api
-          EDC_IAM_DID_WEB_USE_HTTPS: false
+          EDC_IAM_DID_WEB_USE_HTTPS: true
         bdrs:
           server:
             url: https://ssi-dim-wallet-stub.txcd.arena2036-x.de/api/v1/directory
@@ -1315,7 +1308,7 @@ tx-data-provider:
       dataplane:
         env:
           TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.txcd.arena2036-x.de/api
-          EDC_IAM_DID_WEB_USE_HTTPS: false
+          EDC_IAM_DID_WEB_USE_HTTPS: true
         ingresses:
           - enabled: true
             hostname: "dataprovider-dataplane.txcd.arena2036-x.de"
@@ -1405,7 +1398,7 @@ tx-data-provider:
       fullnameOverride: "dataprovider-digital-twin-db"
 
 semantic-hub:
-  enabled: true
+  enabled: false
   enableKeycloak: false
   keycloak:
     postgresql:
@@ -1465,7 +1458,7 @@ dataconsumerTwo:
       controlplane:
         env:
           TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.txcd.arena2036-x.de/api
-          EDC_IAM_DID_WEB_USE_HTTPS: false
+          EDC_IAM_DID_WEB_USE_HTTPS: true
         bdrs:
           server:
             url: https://ssi-dim-wallet-stub.txcd.arena2036-x.de/api/v1/directory
@@ -1489,7 +1482,7 @@ dataconsumerTwo:
       dataplane:
         env:
           TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.txcd.arena2036-x.de/api
-          EDC_IAM_DID_WEB_USE_HTTPS: false
+          EDC_IAM_DID_WEB_USE_HTTPS: true
         ingresses:
           - enabled: true
             hostname: "dataconsumer-2-dataplane.txcd.arena2036-x.de"
@@ -1535,7 +1528,7 @@ dataconsumerTwo:
       enabled: false
 
 pgadmin4:
-  enabled: true
+  enabled: false
   env:
     email: pgadmin4@txtest.org
     password: tractusxpgadmin4
@@ -1557,7 +1550,7 @@ pgadmin4:
 bdrs-server-memory:
   nameOverride: bdrs-server
   fullnameOverride: bdrs-server
-  enabled: true
+  enabled: false
   seeding:
     url: "http://bdrs-server:8081"
     enabled: true
@@ -1620,7 +1613,7 @@ bdrs-server-memory:
           enabled: true
 
 identity-and-trust-bundle:
-  enabled: true
+  enabled: false
   ssi-dim-wallet-stub:
     wallet:
       replicaCount: 1
