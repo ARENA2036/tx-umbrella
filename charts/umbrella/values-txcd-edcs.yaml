@@ -105,15 +105,14 @@ portal:
           memory: 100M
     ingress:
       enabled: true
-      className : "traefik"
+      className : "nginx"
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-int
         nginx.ingress.kubernetes.io/rewrite-target: "/$1"
         nginx.ingress.kubernetes.io/use-regex: "true"
         nginx.ingress.kubernetes.io/enable-cors: "true"
-        nginx.ingress.kubernetes.io/cors-allow-origin: "http://*.txcd.arena2036-x.de"
+        nginx.ingress.kubernetes.io/cors-allow-origin: "https://*.txcd.arena2036-x.de"
         external-dns.alpha.kubernetes.io/hostname: portal.txcd.arena2036-x.de
-        traefik.ingress.kubernetes.io/router.entrypoints: websecure
       tls:
         # -- Provide tls secret.
         - secretName: "portal.txcd-tls"
@@ -364,11 +363,14 @@ portal:
     ingress:
       enabled: true
       name: "portal-backend"
-      className : "traefik"
+      className : "nginx"
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-int
+        nginx.ingress.kubernetes.io/use-regex: "true"
+        nginx.ingress.kubernetes.io/enable-cors: "true"
+        nginx.ingress.kubernetes.io/proxy-body-size: "8m"
+        nginx.ingress.kubernetes.io/cors-allow-origin: "http://localhost:3000, https://*.txcd.arena2036-x.de"
         external-dns.alpha.kubernetes.io/hostname: portal-backend.txcd.arena2036-x.de
-        traefik.ingress.kubernetes.io/router.entrypoints: websecure
       tls:
         # -- Provide tls secret.
         - secretName: "portal-backend.txcd-tls"
@@ -449,12 +451,19 @@ centralidp:
       - name: harbor-creds        
     ingress:
       enabled: true
-      ingressClassName: "traefik"
+      ingressClassName: "nginx"
       hostname: "centralidp.txcd.arena2036-x.de"
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-int
+        nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+        nginx.ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, OPTIONS"
+        nginx.ingress.kubernetes.io/cors-allow-origin: "https://centralidp.txcd.arena2036-x.de"
+        nginx.ingress.kubernetes.io/enable-cors: "true"
+        nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+        nginx.ingress.kubernetes.io/proxy-buffering: "on"
+        nginx.ingress.kubernetes.io/proxy-buffers-number: "20"
+        nginx.ingress.kubernetes.io/use-regex: "true"
         external-dns.alpha.kubernetes.io/hostname: centralidp.txcd.arena2036-x.de
-        traefik.ingress.kubernetes.io/router.entrypoints: websecure
       tls: true
     # initContainers:
     #   - name: init-certs
@@ -667,12 +676,19 @@ sharedidp:
       - name: harbor-creds
     ingress:
       enabled: true
-      ingressClassName: "traefik"
+      ingressClassName: "nginx"
       hostname: "sharedidp.txcd.arena2036-x.de"
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-int
+        nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+        nginx.ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, OPTIONS"
+        nginx.ingress.kubernetes.io/cors-allow-origin: "https://sharedidp.txcd.arena2036-x.de"
+        nginx.ingress.kubernetes.io/enable-cors: "true"
+        nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+        nginx.ingress.kubernetes.io/proxy-buffering: "on"
+        nginx.ingress.kubernetes.io/proxy-buffers-number: "20"
+        nginx.ingress.kubernetes.io/use-regex: "true"
         external-dns.alpha.kubernetes.io/hostname: sharedidp.txcd.arena2036-x.de
-        traefik.ingress.kubernetes.io/router.entrypoints: websecure
       tls: true
     # initContainers:
     #   - name: init-certs
@@ -742,11 +758,15 @@ bpndiscovery:
       enabled: true
       tls: true
       urlPrefix: "/bpndiscovery"
-      className: "traefik"
+      className: "nginx"
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-int
+        nginx.ingress.kubernetes.io/rewrite-target: "/$2"
+        nginx.ingress.kubernetes.io/use-regex: "true"
+        nginx.ingress.kubernetes.io/enable-cors: "true"
+        nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+        nginx.ingress.kubernetes.io/x-forwarded-prefix: "/bpndiscovery"
         external-dns.alpha.kubernetes.io/hostname: semantics.txcd.arena2036-x.de
-        traefik.ingress.kubernetes.io/router.entrypoints: websecure
     authentication: true
     idp:
       issuerUri: "https://centralidp.txcd.arena2036-x.de/auth/realms/CX-Central"
@@ -811,12 +831,15 @@ discoveryfinder:
       enabled: true
       tls: true
       urlPrefix: "/discoveryfinder"
-      className: "traefik"
+      className: "nginx"
       annotations:
         cert-manager.io/cluster-issuer: "letsencrypt-int"
+        nginx.ingress.kubernetes.io/rewrite-target: "/$2"
+        nginx.ingress.kubernetes.io/use-regex: "true"
+        nginx.ingress.kubernetes.io/enable-cors: "true"
+        nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+        nginx.ingress.kubernetes.io/x-forwarded-prefix: "/discoveryfinder"
         external-dns.alpha.kubernetes.io/hostname: semantics.txcd.arena2036-x.de
-        traefik.ingress.kubernetes.io/router.middlewares: release26-03-strip-discoveryfinder@kubernetescrd
-        traefik.ingress.kubernetes.io/router.entrypoints: websecure
   postgresql:
     nameOverride: "discoveryfinder-postgresql"
     image:
@@ -860,11 +883,10 @@ selfdescription:
       - tlsName: sdfactory.txcd.arena2036-x.de-tls
         hosts:
           - sdfactory.txcd.arena2036-x.de
-        className: "traefik"
+        className: "nginx"
         annotations:
           cert-manager.io/cluster-issuer: letsencrypt-int
           external-dns.alpha.kubernetes.io/hostname: sdfactory.txcd.arena2036-x.de
-          traefik.ingress.kubernetes.io/router.entrypoints: websecure
 
 ssi-credential-issuer:
   enabled: false
@@ -937,11 +959,14 @@ ssi-credential-issuer:
       requireHttpsMetadata: "false"
   ingress:
     enabled: true
-    className: "traefik"
+    className: "nginx"
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt-int
+      nginx.ingress.kubernetes.io/use-regex: "true"
+      nginx.ingress.kubernetes.io/enable-cors: "true"
+      nginx.ingress.kubernetes.io/proxy-body-size: "8m"
+      nginx.ingress.kubernetes.io/cors-allow-origin: "https://*.txcd.arena2036-x.de"
       external-dns.alpha.kubernetes.io/hostname: ssi-credential-issuer.txcd.arena2036-x.de
-      traefik.ingress.kubernetes.io/router.entrypoints: websecure
     # -- Ingress TLS configuration
     tls:
       - secretName: "ssi-credential-issuer.txcd-tls"
@@ -990,13 +1015,14 @@ bpdm:
       enabled: true
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-int
+        nginx.ingress.kubernetes.io/rewrite-target: "/$2"
+        nginx.ingress.kubernetes.io/use-regex: "true"
+        nginx.ingress.kubernetes.io/x-forwarded-prefix: "/gate"
         external-dns.alpha.kubernetes.io/hostname: business-partners.txcd.arena2036-x.de
-        traefik.ingress.kubernetes.io/router.entrypoints: websecure
       tls:
         - secretName: "partners-gate.txcd-tls"
           hosts:
             - "business-partners.txcd.arena2036-x.de"
-      # The Portal expects its Gate on that specific url path so we provide it here through ingress
       hosts:
         - host: "business-partners.txcd.arena2036-x.de"
           paths:
@@ -1056,8 +1082,10 @@ bpdm:
       enabled: true
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-int
+        nginx.ingress.kubernetes.io/rewrite-target: "/$2"
+        nginx.ingress.kubernetes.io/use-regex: "true"
+        nginx.ingress.kubernetes.io/x-forwarded-prefix: "/pool"
         external-dns.alpha.kubernetes.io/hostname: partners-pool.txcd.arena2036-x.de
-        traefik.ingress.kubernetes.io/router.entrypoints: websecure
       hosts:
         - host: "partners-pool.txcd.arena2036-x.de"
           paths:
@@ -1107,8 +1135,10 @@ bpdm:
       enabled: true
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-int
+        nginx.ingress.kubernetes.io/rewrite-target: "/$2"
+        nginx.ingress.kubernetes.io/use-regex: "true"
+        nginx.ingress.kubernetes.io/x-forwarded-prefix: "/orchestrator"
         external-dns.alpha.kubernetes.io/hostname: partners-orchestrator.txcd.arena2036-x.de
-        traefik.ingress.kubernetes.io/router.entrypoints: websecure
       hosts:
         - host: "partners-orchestrator.txcd.arena2036-x.de"
           paths:
@@ -1199,11 +1229,10 @@ dataconsumerOne:
               - default
               - protocol
               - management
-            className: "traefik"
+            className: "nginx"
             annotations:
               cert-manager.io/cluster-issuer: letsencrypt-int
               external-dns.alpha.kubernetes.io/hostname: dataconsumer-1-controlplane.txcd.arena2036-x.de
-              traefik.ingress.kubernetes.io/router.entrypoints: websecure
             tls:
               enabled: true
       dataplane:
@@ -1216,11 +1245,10 @@ dataconsumerOne:
             endpoints:
               - default
               - public
-            className: "traefik"
+            className: "nginx"
             annotations:
               cert-manager.io/cluster-issuer: letsencrypt-int
               external-dns.alpha.kubernetes.io/hostname: dataconsumer-1-dataplane.txcd.arena2036-x.de
-              traefik.ingress.kubernetes.io/router.entrypoints: websecure
             tls:
               enabled: true
         token:
@@ -1298,11 +1326,10 @@ tx-data-provider:
               - default
               - protocol
               - management
-            className: "traefik"
+            className: "nginx"
             annotations:
               cert-manager.io/cluster-issuer: letsencrypt-int
               external-dns.alpha.kubernetes.io/hostname: dataprovider-controlplane.txcd.arena2036-x.de
-              traefik.ingress.kubernetes.io/router.entrypoints: websecure
             tls:
               enabled: true
       dataplane:
@@ -1315,11 +1342,10 @@ tx-data-provider:
             endpoints:
               - default
               - public
-            className: "traefik"
+            className: "nginx"
             annotations:
               cert-manager.io/cluster-issuer: letsencrypt-int
               external-dns.alpha.kubernetes.io/hostname: dataprovider-dataplane.txcd.arena2036-x.de
-              traefik.ingress.kubernetes.io/router.entrypoints: websecure
             tls:
               enabled: true
         token:
@@ -1354,11 +1380,10 @@ tx-data-provider:
       nameOverride: dataprovider-submodelserver
       ingress:
         enabled: true
-        className: "traefik"
+        className: "nginx"
         annotations:
           cert-manager.io/cluster-issuer: letsencrypt-int
           external-dns.alpha.kubernetes.io/hostname: dataprovider-submodelserver.txcd.arena2036-x.de
-          traefik.ingress.kubernetes.io/router.entrypoints: websecure
         hosts:
           - host: "dataprovider-submodelserver.txcd.arena2036-x.de"
             paths:
@@ -1381,18 +1406,18 @@ tx-data-provider:
           url: "jdbc:postgresql://dataprovider-digital-twin-db:5432/dtr"
         ingress:
           enabled: true
+          rules:
+            - host: dataprovider-dtr.txcd.arena2036-x.de
+              http:
+                paths:
+                  - path: "/semantics/registry(/|$)(.*)"
+                    pathType: ImplementationSpecific
           tls:
             enabled: true
-          className: "traefik"
+          className: "nginx"
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt-int
             external-dns.alpha.kubernetes.io/hostname: dataprovider-dtr.txcd.arena2036-x.de
-            traefik.ingress.kubernetes.io/router.entrypoints: websecure
-          hosts:
-          - host: "dataprovider-dtr.txcd.arena2036-x.de"
-            paths:
-              - path: "/semantics/registry(/|$)(.*)"
-                pathType: "Prefix"
 
     postgresql:
       fullnameOverride: "dataprovider-digital-twin-db"
@@ -1417,14 +1442,18 @@ semantic-hub:
       initialDelaySeconds: 200
     host: semantics.txcd.arena2036-x.de
     ingress:
-      enabled: true
+      enabled: false
       tls: true
       urlPrefix: "/hub"
-      className: "traefik"
+      className: "nginx"
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-int
+        nginx.ingress.kubernetes.io/rewrite-target: "/$2"
+        nginx.ingress.kubernetes.io/use-regex: "true"
+        nginx.ingress.kubernetes.io/enable-cors: "true"
+        nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+        nginx.ingress.kubernetes.io/x-forwarded-prefix: "/hub"
         external-dns.alpha.kubernetes.io/hostname: semantics.txcd.arena2036-x.de
-        traefik.ingress.kubernetes.io/router.entrypoints: websecure
   graphdb:
     enabled: true
     image: jena-fuseki-docker:5.0.0
@@ -1472,11 +1501,10 @@ dataconsumerTwo:
               - default
               - protocol
               - management
-            className: "traefik"
+            className: "nginx"
             annotations:
               cert-manager.io/cluster-issuer: letsencrypt-int
               external-dns.alpha.kubernetes.io/hostname: dataconsumer-2-controlplane.txcd.arena2036-x.de
-              traefik.ingress.kubernetes.io/router.entrypoints: websecure
             tls:
               enabled: true
       dataplane:
@@ -1489,11 +1517,10 @@ dataconsumerTwo:
             endpoints:
               - default
               - public
-            className: "traefik"
+            className: "nginx"
             annotations:
               cert-manager.io/cluster-issuer: letsencrypt-int
               external-dns.alpha.kubernetes.io/hostname: dataconsumer-2-dataplane.txcd.arena2036-x.de
-              traefik.ingress.kubernetes.io/router.entrypoints: websecure
             tls:
               enabled: true
         token:
@@ -1536,11 +1563,10 @@ pgadmin4:
     enabled: true
   ingress:
     enabled: true
-    ingressClassName: "traefik"
+    ingressClassName: "nginx"
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt-int
       external-dns.alpha.kubernetes.io/hostname: pgadmin4.txcd.arena2036-x.de
-      traefik.ingress.kubernetes.io/router.entrypoints: websecure
     hosts:
       - host: pgadmin4.txcd.arena2036-x.de
         paths:
@@ -1604,11 +1630,10 @@ bdrs-server-memory:
         endpoints:
           - directory
           - management
-        className: "traefik"
+        className: "nginx"
         annotations:
               cert-manager.io/cluster-issuer: letsencrypt-int
               external-dns.alpha.kubernetes.io/hostname: bdrs-server.txcd.arena2036-x.de
-              traefik.ingress.kubernetes.io/router.entrypoints: websecure
         tls:
           enabled: true
 
@@ -1632,11 +1657,10 @@ identity-and-trust-bundle:
           enabled: true
           name: "ssi-wallet.txcd-tls"
         urlPrefix: /
-        className: traefik
+        className: nginx
         annotations:
         cert-manager.io/cluster-issuer: letsencrypt-int
         external-dns.alpha.kubernetes.io/hostname: "ssi-dim-wallet-stub.txcd.arena2036-x.de"
-        traefik.ingress.kubernetes.io/router.entrypoints: websecure
       swagger:
         ui:
           status: true
