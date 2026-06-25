@@ -84,12 +84,12 @@ dependencies:
     version: 0.4.7
     repository: file://../tx-data-provider
     condition: connectorOne.enabled
-    # Connector 2
-  - name: tx-data-provider
-    alias: connectorTwo
-    version: 0.4.7
-    repository: file://../tx-data-provider
-    condition: connectorTwo.enabled
+  #   # Connector 2
+  # - name: tx-data-provider
+  #   alias: connectorTwo
+  #   version: 0.4.7
+  #   repository: file://../tx-data-provider
+  #   condition: connectorTwo.enabled
     # Connector 3
   - name: tx-data-provider
     alias: connectorThree
