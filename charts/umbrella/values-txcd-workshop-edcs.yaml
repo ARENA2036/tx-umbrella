@@ -1578,8 +1578,8 @@ connectorThree:
         postgresPassword: dbpassworddataconsumerthree
 
     vault:
-      nameOverride: edc-connector-3-vault
       enabled: true
+      nameOverride: edc-connector-3-vault
 
   data-persistence-layer-bundle:
     enabled: true
