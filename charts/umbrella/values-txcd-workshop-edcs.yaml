@@ -1266,7 +1266,6 @@ connectorOne:
         postgresPassword: dbpassworddataconsumerone
 
     vault:
-      nameOverride: edc-connector-1-vault
       enabled: true
 
   data-persistence-layer-bundle:
