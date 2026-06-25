@@ -1292,7 +1292,7 @@ connectorOne:
       fullnameOverride: "connector-1-digital-twin-db"
 
 connectorTwo:
-  enabled: true
+  enabled: false
   seedTestdata: true
   nameOverride: connector-2
   secrets:
@@ -1374,8 +1374,8 @@ connectorTwo:
         postgresPassword: "dbpassworddataconsumertwo"
 
     vault:
-      nameOverride: edc-connector-2-vault
       enabled: true
+      nameOverride: edc-connector-2-vault
 
   data-persistence-layer-bundle:
     enabled: true
@@ -1424,7 +1424,7 @@ connectorTwo:
       fullnameOverride: "connector-2-digital-twin-db"
 
 connectorThree:
-  enabled: true
+  enabled: false
   seedTestdata: true
   nameOverride: connector-3
   secrets:
@@ -1556,7 +1556,7 @@ connectorThree:
       fullnameOverride: "connector-3-digital-twin-db"
 
 connectorFour:
-  enabled: true
+  enabled: false
   seedTestdata: true
   nameOverride: connector-4
   secrets:
@@ -1865,102 +1865,6 @@ semantic-hub:
     imagePullPolicy: Never
     storageClassName: ""
     storageSize: 8Gi
-
-dataconsumerThree:
-  enabled: true
-  seedTestdata: true
-  nameOverride: dataconsumer-3
-  secrets:
-    edc-wallet-secret: changeme
-  dataspace-connector-bundle:
-    tractusx-connector:
-      nameOverride: dataconsumer-3-edc
-      participant:
-        id: BPNL00000003AWSS
-      iatp:
-        id: did:web:ssi-dim-wallet-stub.txcd.arena2036-x.de:BPNL00000003AWSS
-        trustedIssuers:
-          - did:web:ssi-dim-wallet-stub.txcd.arena2036-x.de:BPNL00000003CRHK
-        sts:
-          dim:
-            url: https://ssi-dim-wallet-stub.txcd.arena2036-x.de/api/sts
-          oauth:
-            token_url: https://ssi-dim-wallet-stub.txcd.arena2036-x.de/oauth/token
-            client:
-              id: BPNL00000003AWSS
-              secret_alias: edc-wallet-secret
-      controlplane:
-        env:
-          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.txcd.arena2036-x.de/api
-          EDC_IAM_DID_WEB_USE_HTTPS: true
-        bdrs:
-          server:
-            url: https://ssi-dim-wallet-stub.txcd.arena2036-x.de/api/v1/directory
-        endpoints:
-          management:
-            authKey: TEST4
-        ingresses:
-          - enabled: true
-            hostname: "dataconsumer-3-controlplane.txcd.arena2036-x.de"
-            endpoints:
-              - default
-              - protocol
-              - management
-            className: "traefik"
-            annotations:
-              cert-manager.io/cluster-issuer: letsencrypt-int
-              external-dns.alpha.kubernetes.io/hostname: dataconsumer-3-controlplane.txcd.arena2036-x.de
-              traefik.ingress.kubernetes.io/router.entrypoints: websecure
-            tls:
-              enabled: true
-      dataplane:
-        env:
-          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.txcd.arena2036-x.de/api
-          EDC_IAM_DID_WEB_USE_HTTPS: true
-        ingresses:
-          - enabled: true
-            hostname: "dataconsumer-3-dataplane.txcd.arena2036-x.de"
-            endpoints:
-              - default
-              - public
-            className: "traefik"
-            annotations:
-              cert-manager.io/cluster-issuer: letsencrypt-int
-              external-dns.alpha.kubernetes.io/hostname: dataconsumer-3-dataplane.txcd.arena2036-x.de
-              traefik.ingress.kubernetes.io/router.entrypoints: websecure
-            tls:
-              enabled: true
-        token:
-          signer:
-            privatekey_alias: tokenSignerPrivateKey
-          verifier:
-            publickey_alias: tokenSignerPublicKey
-      postgresql:
-        jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataconsumer-3-db:5432/edc"
-        auth:
-          password: "dbpassworddataconsumerthree"
-          postgresPassword: "dbpassworddataconsumerthree"
-      vault:
-        hashicorp:
-          url: http://{{ .Release.Name }}-edc-dataconsumer-3-vault:8200
-
-    postgresql:
-      nameOverride: dataconsumer-3-db
-      auth:
-        password: "dbpassworddataconsumerthree"
-        postgresPassword: "dbpassworddataconsumerthree"
-
-    vault:
-      nameOverride: edc-dataconsumer-3-vault
-      enabled: true
-
-  data-persistence-layer-bundle:
-    enabled: true
-
-  digital-twin-bundle:
-    enabled: true
-    digital-twin-registry:
-      nameOverride: dataconsumer-3-dtr
 
 pgadmin4:
   enabled: false
