@@ -1161,7 +1161,7 @@ bpdm:
 
 connectorOne:
   enabled: true
-  seedTestdata: false
+  seedTestdata: true
   nameOverride: connector-1
   secrets:
     edc-wallet-secret: changeme
@@ -1199,6 +1199,7 @@ connectorOne:
               - default
               - protocol
               - management
+            className: "nginx"
             annotations:
               cert-manager.io/cluster-issuer: letsencrypt-int
               external-dns.alpha.kubernetes.io/hostname: connector-1-controlplane.txcd.arena2036-x.de
@@ -1214,6 +1215,7 @@ connectorOne:
             endpoints:
               - default
               - public
+            className: "nginx"
             annotations:
               cert-manager.io/cluster-issuer: letsencrypt-int
               external-dns.alpha.kubernetes.io/hostname: connector-1-dataplane.txcd.arena2036-x.de
@@ -1249,6 +1251,7 @@ connectorOne:
       nameOverride: connector-1-submodelserver
       ingress:
         enabled: true
+        className: "nginx"
         annotations:
           cert-manager.io/cluster-issuer: letsencrypt-int
           external-dns.alpha.kubernetes.io/hostname: connector-1-submodelserver.txcd.arena2036-x.de
@@ -1275,6 +1278,7 @@ connectorOne:
           enabled: true
           tls:
             enabled: true
+          className: "nginx"
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt-int
             external-dns.alpha.kubernetes.io/hostname: connector-1-dtr.txcd.arena2036-x.de
@@ -1289,7 +1293,7 @@ connectorOne:
 
 connectorTwo:
   enabled: true
-  seedTestdata: false
+  seedTestdata: true
   nameOverride: connector-2
   secrets:
     edc-wallet-secret: changeme
@@ -1327,6 +1331,7 @@ connectorTwo:
               - default
               - protocol
               - management
+            className: "nginx"
             annotations:
               cert-manager.io/cluster-issuer: letsencrypt-int
               external-dns.alpha.kubernetes.io/hostname: connector-2-controlplane.txcd.arena2036-x.de
@@ -1342,6 +1347,7 @@ connectorTwo:
             endpoints:
               - default
               - public
+            className: "nginx"
             annotations:
               cert-manager.io/cluster-issuer: letsencrypt-int
               external-dns.alpha.kubernetes.io/hostname: connector-2-dataplane.txcd.arena2036-x.de
@@ -1377,6 +1383,7 @@ connectorTwo:
       nameOverride: connector-2-submodelserver
       ingress:
         enabled: true
+        className: "nginx"
         annotations:
           cert-manager.io/cluster-issuer: letsencrypt-int
           external-dns.alpha.kubernetes.io/hostname: connector-2-submodelserver.txcd.arena2036-x.de
@@ -1403,6 +1410,7 @@ connectorTwo:
           enabled: true
           tls:
             enabled: true
+          className: "nginx"
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt-int
             external-dns.alpha.kubernetes.io/hostname: connector-2-dtr.txcd.arena2036-x.de
@@ -1417,7 +1425,7 @@ connectorTwo:
 
 connectorThree:
   enabled: true
-  seedTestdata: false
+  seedTestdata: true
   nameOverride: connector-3
   secrets:
     edc-wallet-secret: changeme
@@ -1455,6 +1463,7 @@ connectorThree:
               - default
               - protocol
               - management
+            className: "nginx"
             annotations:
               cert-manager.io/cluster-issuer: letsencrypt-int
               external-dns.alpha.kubernetes.io/hostname: connector-3-controlplane.txcd.arena2036-x.de
@@ -1470,6 +1479,7 @@ connectorThree:
             endpoints:
               - default
               - public
+            className: "nginx"  
             annotations:
               cert-manager.io/cluster-issuer: letsencrypt-int
               external-dns.alpha.kubernetes.io/hostname: connector-3-dataplane.txcd.arena2036-x.de
@@ -1505,6 +1515,7 @@ connectorThree:
       nameOverride: connector-3-submodelserver
       ingress:
         enabled: true
+        className: "nginx"
         annotations:
           cert-manager.io/cluster-issuer: letsencrypt-int
           external-dns.alpha.kubernetes.io/hostname: connector-3-submodelserver.txcd.arena2036-x.de
@@ -1531,6 +1542,7 @@ connectorThree:
           enabled: true
           tls:
             enabled: true
+          className: "nginx"
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt-int
             external-dns.alpha.kubernetes.io/hostname: connector-3-dtr.txcd.arena2036-x.de
@@ -1545,7 +1557,7 @@ connectorThree:
 
 connectorFour:
   enabled: true
-  seedTestdata: false
+  seedTestdata: true
   nameOverride: connector-4
   secrets:
     edc-wallet-secret: changeme
@@ -1583,6 +1595,7 @@ connectorFour:
               - default
               - protocol
               - management
+            className: "nginx"
             annotations:
               cert-manager.io/cluster-issuer: letsencrypt-int
               external-dns.alpha.kubernetes.io/hostname: connector-4-controlplane.txcd.arena2036-x.de
@@ -1598,6 +1611,7 @@ connectorFour:
             endpoints:
               - default
               - public
+            className: "nginx"
             annotations:
               cert-manager.io/cluster-issuer: letsencrypt-int
               external-dns.alpha.kubernetes.io/hostname: connector-4-dataplane.txcd.arena2036-x.de
@@ -1633,6 +1647,7 @@ connectorFour:
       nameOverride: connector-4-submodelserver
       ingress:
         enabled: true
+        className: "nginx"
         annotations:
           cert-manager.io/cluster-issuer: letsencrypt-int
           external-dns.alpha.kubernetes.io/hostname: connector-4-submodelserver.txcd.arena2036-x.de
@@ -1659,6 +1674,7 @@ connectorFour:
           enabled: true
           tls:
             enabled: true
+          className: "nginx"
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt-int
             external-dns.alpha.kubernetes.io/hostname: connector-4-dtr.txcd.arena2036-x.de
@@ -1852,7 +1868,7 @@ semantic-hub:
 
 dataconsumerThree:
   enabled: true
-  seedTestdata: false
+  seedTestdata: true
   nameOverride: dataconsumer-3
   secrets:
     edc-wallet-secret: changeme
