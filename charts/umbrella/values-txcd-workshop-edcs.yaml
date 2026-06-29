@@ -1161,7 +1161,7 @@ bpdm:
 
 connectorOne:
   enabled: true
-  seedTestdata: true
+  seedTestdata: false
   nameOverride: connector-1
 
   secrets:
