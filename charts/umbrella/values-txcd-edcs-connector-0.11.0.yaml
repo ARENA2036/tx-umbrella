@@ -1191,7 +1191,7 @@ bpdm:
 
 dataconsumerOne:
   enabled: true
-  seedTestdata: true
+  seedTestdata: false
   nameOverride: dataconsumer-1-v011
   secrets:
     edc-wallet-secret: changeme
@@ -1212,7 +1212,6 @@ dataconsumerOne:
             client:
               id: BPNL00000003AZQP
               secret_alias: edc-wallet-secret
-
       controlplane:
         env:
           TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.txcd.arena2036-x.de/api
@@ -1236,7 +1235,6 @@ dataconsumerOne:
               external-dns.alpha.kubernetes.io/hostname: dataconsumer-1-v011-controlplane.txcd.arena2036-x.de
             tls:
               enabled: true
-
       dataplane:
         env:
           TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.txcd.arena2036-x.de/api
@@ -1258,13 +1256,11 @@ dataconsumerOne:
             privatekey_alias: tokenSignerPrivateKey
           verifier:
             publickey_alias: tokenSignerPublicKey
-
       postgresql:
         jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataconsumer-1-v011-db:5432/edc"
         auth:
           password: "dbpassworddataconsumerone"
           postgresPassword: "dbpassworddataconsumerone"
-
       vault:
         hashicorp:
           url: http://{{ .Release.Name }}-edc-dataconsumer-1-v011-vault:8200
@@ -1287,7 +1283,7 @@ dataconsumerOne:
 
 tx-data-provider:
   enabled: true
-  seedTestdata: true
+  seedTestdata: false
   backendUrl: http://{{ .Release.Name }}-dataprovider-v011-submodelserver:8080
   registryUrl: http://{{ .Release.Name }}-dataprovider-v011-dtr:8080/api/v3
   controlplanePublicUrl: http://{{ .Release.Name }}-dataprovider-v011-edc-controlplane:8084
@@ -1313,7 +1309,6 @@ tx-data-provider:
             client:
               id: BPNL00000003AYRE
               secret_alias: edc-wallet-secret
-
       controlplane:
         env:
           TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.txcd.arena2036-x.de/api
@@ -1337,7 +1332,6 @@ tx-data-provider:
               external-dns.alpha.kubernetes.io/hostname: dataprovider-v011-controlplane.txcd.arena2036-x.de
             tls:
               enabled: true
-
       dataplane:
         env:
           TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.txcd.arena2036-x.de/api
@@ -1359,14 +1353,12 @@ tx-data-provider:
             privatekey_alias: tokenSignerPrivateKey
           verifier:
             publickey_alias: tokenSignerPublicKey
-
       postgresql:
         jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataprovider-v011-db:5432/edc"
         auth:
           user: "dbusertxdataprovider"
           password: "dbpasswordtxdataprovider"
           postgresPassword: "dbpasswordtxdataprovider"
-
       vault:
         hashicorp:
           url: http://{{ .Release.Name }}-edc-dataprovider-v011-vault:8200
@@ -1383,7 +1375,7 @@ tx-data-provider:
       enabled: true
 
   data-persistence-layer-bundle:
-    enabled: false
+    enabled: true
     simple-data-backend:
       nameOverride: dataprovider-v011-submodelserver
       ingress:
@@ -1398,9 +1390,10 @@ tx-data-provider:
               - path: "/"
                 pathType: "Prefix"
         tls:
-          - secretName: "dataprovider-v011-submodelserver-txcd-tls"
+          - secretName: "dataprovider-v011-submodelserver.txcd-tls"
             hosts:
               - "dataprovider-v011-submodelserver.txcd.arena2036-x.de"
+            
 
   digital-twin-bundle:
     enabled: false
