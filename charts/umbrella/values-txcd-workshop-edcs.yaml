@@ -1257,7 +1257,7 @@ connectorOne:
           postgresPassword: dbpassworddataconsumerone
       vault:
         hashicorp:
-          url: "http://{{ .Release.Name }}-connector-1-vault:8200"
+          url: "http://{{ .Release.Name }}-edc-connector-1-vault:8200"
 
     postgresql:
       nameOverride: connector-1-db
@@ -1266,7 +1266,7 @@ connectorOne:
         postgresPassword: dbpassworddataconsumerone
 
     vault:
-      nameOverride: edc-connector-1-vault
+      nameOverride: connector-1-vault
       enabled: true
 
   data-persistence-layer-bundle:
@@ -1413,7 +1413,7 @@ connectorTwo:
           postgresPassword: dbpassworddataconsumertwo
       vault:
         hashicorp:
-          url: "http://{{ .Release.Name }}-connector-2-vault:8200"
+          url: "http://{{ .Release.Name }}-edc-connector-2-vault:8200"
 
     postgresql:
       nameOverride: connector-2-db
@@ -1423,7 +1423,7 @@ connectorTwo:
 
     vault:
       enabled: true
-      nameOverride: edc-connector-2-vault
+      nameOverride: connector-2-vault
 
   data-persistence-layer-bundle:
     enabled: true
@@ -1569,7 +1569,7 @@ connectorThree:
           postgresPassword: dbpassworddataconsumerthree
       vault:
         hashicorp:
-          url: "http://{{ .Release.Name }}-connector-3-vault:8200"
+          url: "http://{{ .Release.Name }}-edc-connector-3-vault:8200"
 
     postgresql:
       nameOverride: connector-3-db
@@ -1578,7 +1578,7 @@ connectorThree:
         postgresPassword: dbpassworddataconsumerthree
 
     vault:
-      nameOverride: edc-connector-3-vault
+      nameOverride: connector-3-vault
       enabled: true
 
   data-persistence-layer-bundle:
@@ -1725,7 +1725,7 @@ connectorFour:
           postgresPassword: dbpassworddataconsumerfour
       vault:
         hashicorp:
-          url: "http://{{ .Release.Name }}-connector-4-vault:8200"
+          url: "http://{{ .Release.Name }}-edc-connector-4-vault:8200"
 
     postgresql:
       nameOverride: connector-4-db
@@ -1734,7 +1734,7 @@ connectorFour:
         postgresPassword: dbpassworddataconsumerfour
 
     vault:
-      nameOverride: edc-connector-4-vault
+      nameOverride: connector-4-vault
       enabled: true
 
   data-persistence-layer-bundle:
