@@ -1266,7 +1266,7 @@ connectorOne:
         postgresPassword: dbpassworddataconsumerone
 
     vault:
-      nameOverride: connector-1-vault
+      nameOverride: edc-connector-1-vault
       enabled: true
 
   data-persistence-layer-bundle:
@@ -1423,7 +1423,7 @@ connectorTwo:
 
     vault:
       enabled: true
-      nameOverride: connector-2-vault
+      nameOverride: edc-connector-2-vault
 
   data-persistence-layer-bundle:
     enabled: true
@@ -1578,7 +1578,7 @@ connectorThree:
         postgresPassword: dbpassworddataconsumerthree
 
     vault:
-      nameOverride: connector-3-vault
+      nameOverride: edc-connector-3-vault
       enabled: true
 
   data-persistence-layer-bundle:
@@ -1734,7 +1734,7 @@ connectorFour:
         postgresPassword: dbpassworddataconsumerfour
 
     vault:
-      nameOverride: connector-4-vault
+      nameOverride: edc-connector-4-vault
       enabled: true
 
   data-persistence-layer-bundle:
