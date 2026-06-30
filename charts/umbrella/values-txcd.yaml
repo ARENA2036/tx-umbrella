@@ -51,7 +51,7 @@ portal:
   sharedidpAddress: "https://sharedidp.txcd.arena2036-x.de"
   semanticsAddress: "https://semantics.txcd.arena2036-x.de"
   bpdm:
-    poolAddress: "https://business-partners.txcd.arena2036-x.de"
+    poolAddress: "https://partners-pool.txcd.arena2036-x.de"
     poolApiPath: "/pool/v6"
     portalGateAddress: "https://business-partners.txcd.arena2036-x.de"
     portalGateApiPath: "/gate/v6"
@@ -353,7 +353,7 @@ portal:
           port: "SMTP_PORT_PLACEHOLDER"
           user: "SMTP_USER_PLACEHOLDER"
           password: "SMTP_PASSWORD_PLACEHOLDER"
-          from: "SMTP_FROM_PLACEHOLDER"
+          from: "SMTP_USER_PLACEHOLDER"
           replyTo: "SMTP_USER_PLACEHOLDER"
     # -- docs: http://portal-backend.tx.test/api/administration/swagger/index.html
     # http://portal-backend.tx.test/api/registration/swagger/index.html
@@ -740,7 +740,7 @@ sharedidp:
           port: "SMTP_PORT_PLACEHOLDER"
           username: "SMTP_USER_PLACEHOLDER"
           password: "SMTP_PASSWORD_PLACEHOLDER"
-          from: "SMTP_FROM_PLACEHOLDER"
+          from: "SMTP_USER_PLACEHOLDER"
           replyTo: "SMTP_USER_PLACEHOLDER"
       master:
         serviceAccounts:
@@ -1051,11 +1051,11 @@ bpdm:
         # We will reuse the general BPDM admin technical user to establish connection between the services
         client:
           pool:
-            base-url: https://business-partners.txcd.arena2036-x.de/pool
+            base-url: https://partners-pool.txcd.arena2036-x.de/pool
             registration:
               client-id: "sa-cl7-cx-1"
           orchestrator:
-            base-url: https://business-partners.txcd.arena2036-x.de/orchestrator
+            base-url: https://partners-orchestrator.txcd.arena2036-x.de/orchestrator
             registration:
               client-id: "sa-cl25-cx-3"
     applicationSecrets:
@@ -1115,7 +1115,7 @@ bpdm:
         # We will reuse the general BPDM admin technical user to establish connection between the services
         client:
           orchestrator:
-            base-url: https://business-partners.txcd.arena2036-x.de/orchestrator
+            base-url: https://partners-orchestrator.txcd.arena2036-x.de/orchestrator
             registration:
               client-id: "sa-cl25-cx-2"
     applicationSecrets:
@@ -1177,7 +1177,7 @@ bpdm:
         # We reuse the general BPDM admin technical user to establish connection between the services
         client:
           orchestrator:
-            base-url: https://business-partners.txcd.arena2036-x.de/orchestrator
+            base-url: https://partners-orchestrator.txcd.arena2036-x.de/orchestrator
             provider:
               issuer-uri: "https://centralidp.txcd.arena2036-x.de/auth/realms/CX-Central"
             registration:
