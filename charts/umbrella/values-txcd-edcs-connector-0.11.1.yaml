@@ -1283,7 +1283,7 @@ dataconsumerOne:
 
 tx-data-provider:
   enabled: true
-  seedTestdata: false
+  seedTestdata: true
   backendUrl: http://{{ .Release.Name }}-dataprovider-v011-submodelserver:8080
   registryUrl: http://{{ .Release.Name }}-dataprovider-v011-dtr:8080/api/v3
   controlplanePublicUrl: http://{{ .Release.Name }}-dataprovider-v011-edc-controlplane:8084
