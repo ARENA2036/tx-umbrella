@@ -78,12 +78,42 @@ dependencies:
     condition: bpdm.enabled
     repository: https://eclipse-tractusx.github.io/charts/dev
     version: 6.3.0
-    # TX Data Consumer 1
+    # Connector 1
   - name: tx-data-provider
-    alias: dataconsumerOne
+    alias: connectorOne
     version: 0.4.7
     repository: file://../tx-data-provider
-    condition: dataconsumerOne.enabled
+    condition: connectorOne.enabled
+    # Connector 2
+  - name: tx-data-provider
+    alias: connectorTwo
+    version: 0.4.7
+    repository: file://../tx-data-provider
+    condition: connectorTwo.enabled
+    # Connector 3
+  - name: tx-data-provider
+    alias: connectorThree
+    version: 0.4.7
+    repository: file://../tx-data-provider
+    condition: connectorThree.enabled
+    # Connector 4
+  - name: tx-data-provider
+    alias: connectorFour
+    version: 0.4.7
+    repository: file://../tx-data-provider
+    condition: connectorFour.enabled
+    # Connector 5
+  - name: tx-data-provider
+    alias: connectorFive
+    version: 0.4.7
+    repository: file://../tx-data-provider
+    condition: connectorFive.enabled
+    # Connector 6
+  - name: tx-data-provider
+    alias: connectorSix
+    version: 0.4.7
+    repository: file://../tx-data-provider
+    condition: connectorSix.enabled
     # TX Data Providers
   - name: tx-data-provider
     version: 0.4.7

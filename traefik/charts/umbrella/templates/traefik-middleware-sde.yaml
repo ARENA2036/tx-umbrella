@@ -1,0 +1,41 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: strip-semantics-registry
+  namespace: simple-data-exchanger
+spec:
+  replacePathRegex:
+    regex: ^/semantics/registry/?(.*)$
+    replacement: /$1
+  # stripPrefix:
+  #   prefixes:
+  #     - /semantics/registry
+    # forceSlash: false
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: cors-wildcard
+  namespace: simple-data-exchanger
+spec:
+  headers:
+    accessControlAllowHeaders:
+      - "*"
+    # accessControlAllowOriginList:
+    #   - https://portal-backend.txcd.arena2036-x.de
+    #   - https://portal.txcd.arena2036-x.de
+    accessControlAllowOriginListRegex:
+      - "^https?://[a-z0-9-]+\\.txcd\\.arena2036-x\\.de$"
+      - "^https?://[a-z0-9-]+\\.services\\.construct-x\\.net$"
+    accessControlAllowCredentials: true
+    accessControlAllowMethods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "DELETE"
+      - "OPTIONS"
+      - "PATCH"
+    # accessControlAllowHeaders:
+    #   - "Content-Type"
+    #   - "Authorization"
+    #   - "X-Requested-With"
