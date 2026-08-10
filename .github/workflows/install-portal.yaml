@@ -164,7 +164,7 @@ jobs:
       - name: Deploy Portal
         working-directory: hack/
         run: |
-          chmod +x ./install-portal.sh
+          chmod +x ./install-release.sh
           echo "Running deployment script..."
           if [ "${{ github.event.inputs.release_type }}" = "uninstall" ]; then
             helm uninstall ${{ github.event.inputs.release_name }} --namespace ${{ github.event.inputs.namespace }}
