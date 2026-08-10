@@ -60,7 +60,7 @@ on:
         - uninstall
       helm_values_file:
         description: 'the relative path to the helm values.yaml'
-        default: 'values-portal-staging.yaml'
+        default: 'values-adopter-portal-dev.yaml'
         required: false
         type: string
       namespace:
