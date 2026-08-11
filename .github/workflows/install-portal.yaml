@@ -60,7 +60,7 @@ on:
         - uninstall
       helm_values_file:
         description: 'the relative path to the helm values.yaml'
-        default: 'values-portal-staging.yaml'
+        default: 'values-adopter-portal-dev.yaml'
         required: false
         type: string
       namespace:
@@ -164,7 +164,7 @@ jobs:
       - name: Deploy Portal
         working-directory: hack/
         run: |
-          chmod +x ./install-portal.sh
+          chmod +x ./install-release.sh
           echo "Running deployment script..."
           if [ "${{ github.event.inputs.release_type }}" = "uninstall" ]; then
             helm uninstall ${{ github.event.inputs.release_name }} --namespace ${{ github.event.inputs.namespace }}
