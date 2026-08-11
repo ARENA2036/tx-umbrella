@@ -36,11 +36,12 @@ on:
   workflow_dispatch:
     inputs:
       cluster_context:
-        default: 'staging'
+        default: 'k8s-ap6-01'
         required: false
         description: "Select the environment"
         type: choice
         options:
+        - k8s-ap6-01
         - staging
         - prod
       release_name:
@@ -59,12 +60,12 @@ on:
         - uninstall
       helm_values_file:
         description: 'the relative path to the helm values.yaml'
-        default: 'values-edcs-staging.yaml'
+        default: 'values-edcs-dev-ap6.yaml'
         required: false
         type: string
       namespace:
         description: 'the namespace where the edc is to be deployed'
-        default: 'default'
+        default: 'simple-data-exchanger'
         required: false
         type: string
 
@@ -93,6 +94,17 @@ jobs:
           token: ${{ secrets.VAULT_TOKEN_PROD }}
           secrets: |
             staging/data/data/cluster-prod config | KUBECONFIG ;
+
+      - name: Import Secrets from dev Vault
+        id: import-dev-secrets
+        # retrieve values from vault for prod
+        if: ${{ github.event.inputs.cluster_context == 'k8s-ap6-01' }}
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ secrets.VAULT_ADDR_DEV }}
+          token: ${{ secrets.VAULT_TOKEN_DEV }}
+          secrets: |
+            staging/data/infra/cluster-dev config | KUBECONFIG ;
 
       - name: Install kubectl
         run: |
@@ -123,6 +135,11 @@ jobs:
             echo "Setting context for production..."  
             cat <<EOF > $CONFIG_PATH
           ${{ steps.import-prod-secrets.outputs.KUBECONFIG }}
+          EOF
+          elif [[ "${{ github.event.inputs.cluster_context }}" == "k8s-ap6-01" ]]; then
+            echo "Setting context for development..."  
+            cat <<EOF > $CONFIG_PATH
+          ${{ steps.import-dev-secrets.outputs.KUBECONFIG }}
           EOF
           else
             echo "Not a valid environment"
