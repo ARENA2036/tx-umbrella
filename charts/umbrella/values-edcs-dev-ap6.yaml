@@ -21,7 +21,7 @@ portal:
   enabled: false
   replicaCount: 1
   postgresql:
-    ## TEMPORALY UNTIL NEW PORTAL UPDATE
+    ## TEMPORARILY UNTIL NEW PORTAL UPDATE
     enabled: true
     image:
       registry: docker.io
