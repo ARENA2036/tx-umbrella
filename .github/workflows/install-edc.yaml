@@ -41,9 +41,9 @@ on:
         description: "Select the environment"
         type: choice
         options:
-        - k8s-ap6-01
-        - staging
-        - prod
+          - k8s-ap6-01
+          - staging
+          - prod
       release_name:
         description: 'helm deployment name e.g, umbrella-edc'
         default: 'umbrella-edc'
