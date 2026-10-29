@@ -67,6 +67,7 @@ CHARTS_DIR="./charts"
 TX_DATA_PROVIDER_DIR="$CHARTS_DIR/tx-data-provider"
 UMBRELLA_DIR="$CHARTS_DIR/umbrella"
 CONNECTOR_PATCH="./hack/patches/tractusx-connector-0.13.0-secret-refs.patch"
+WALLET_INGRESS_PATCH="./hack/patches/ssi-dim-wallet-stub-0.1.14-ingress-annotations.patch"
 
 # Apply the local SecretRef extension only to the pinned Connector 0.13.0 package.
 # This is intentionally version-specific: a package mismatch or changed upstream template fails closed.
@@ -104,6 +105,54 @@ patch_connector_package() {
   rm -rf "$tmp"
 }
 
+# Fix the annotation indentation defect in the pinned Wallet stub 0.1.14 chart.
+# This patch is version-specific and fails closed if upstream changes its template.
+patch_wallet_package() {
+  local package="$1" tmp chart_yaml
+  [[ -f "$package" ]] || { echo "Missing $package" >&2; exit 1; }
+  chart_yaml="$(tar xOf "$package" ssi-dim-wallet-stub/Chart.yaml 2>/dev/null)" || {
+    echo "Could not read Wallet chart metadata" >&2
+    exit 1
+  }
+  grep -q '^name: ssi-dim-wallet-stub$' <<<"$chart_yaml" || {
+    echo "Unexpected chart in Wallet package" >&2
+    exit 1
+  }
+  grep -q '^version: 0.1.14$' <<<"$chart_yaml" || {
+    echo "Wallet ingress patch requires chart 0.1.14" >&2
+    exit 1
+  }
+  tmp="$(mktemp -d "${TMPDIR:-/tmp}/wallet-014-patch.XXXXXX")"
+  if ! tar xzf "$package" -C "$tmp"; then
+    rm -rf "$tmp"
+    echo "Could not extract Wallet chart package" >&2
+    exit 1
+  fi
+  if patch -F 0 --dry-run --batch --forward -p1 -d "$tmp/ssi-dim-wallet-stub" < "$WALLET_INGRESS_PATCH" >/dev/null 2>&1; then
+    if ! patch -F 0 --batch --forward -p1 -d "$tmp/ssi-dim-wallet-stub" < "$WALLET_INGRESS_PATCH" >/dev/null; then
+      rm -rf "$tmp"
+      echo "Could not apply Wallet ingress patch" >&2
+      exit 1
+    fi
+    if ! find "$tmp/ssi-dim-wallet-stub" -exec touch -t 200001010000 {} +; then
+      rm -rf "$tmp"
+      echo "Could not normalize patched Wallet chart timestamps" >&2
+      exit 1
+    fi
+    if ! helm package "$tmp/ssi-dim-wallet-stub" -d "$(dirname "$package")" >/dev/null; then
+      rm -rf "$tmp"
+      echo "Could not package patched Wallet chart" >&2
+      exit 1
+    fi
+    echo "   applied $(basename "$WALLET_INGRESS_PATCH") to $(basename "$package")"
+  elif ! patch -F 0 --dry-run --batch --reverse -p1 -d "$tmp/ssi-dim-wallet-stub" < "$WALLET_INGRESS_PATCH" >/dev/null 2>&1; then
+    rm -rf "$tmp"
+    echo "Wallet ingress patch does not apply to $package; refusing to continue." >&2
+    exit 1
+  fi
+  rm -rf "$tmp"
+}
+
 echo "🔄 Updating Helm repositories..."
 helm repo update
 
@@ -118,6 +167,7 @@ for chartdir in "$CHARTS_DIR"/*; do
 done
 
 patch_connector_package "$CHARTS_DIR/dataspace-connector-bundle/charts/tractusx-connector-0.13.0.tgz"
+patch_wallet_package "$CHARTS_DIR/identity-and-trust-bundle/charts/ssi-dim-wallet-stub-0.1.14.tgz"
 
 # Update tx-data-provider and umbrella at the end
 echo -e "\n📦 Updating dependencies for chart: $TX_DATA_PROVIDER_DIR"
