@@ -2,6 +2,10 @@
 .idea/
 **/*.tgz
 Chart.lock
+# Keep locks for the charts directly involved in the Connector 0.13 migration.
+!charts/dataspace-connector-bundle/Chart.lock
+!charts/tx-data-provider/Chart.lock
+!charts/umbrella/Chart.lock
 *.iml
 target/
 **/values-local.yaml

@@ -59,6 +59,28 @@ class Connector013MigrationTests(unittest.TestCase):
         self.assertRegex(chart, r"(?m)^\s+version: 0\.13\.0$")
         self.assertNotRegex(chart, r"(?m)^\s+version: 0\.12\.0$")
 
+    def test_local_chart_dependency_versions_are_consistent(self) -> None:
+        provider = current_text("charts/tx-data-provider/Chart.yaml")
+        umbrella = current_text("charts/umbrella/Chart.yaml")
+        self.assertRegex(provider, r"(?m)^version: 0\.4\.3$")
+        self.assertRegex(
+            provider,
+            r"(?ms)name: dataspace-connector-bundle\n\s+repository: file://\.\./dataspace-connector-bundle\n\s+version: 1\.2\.2$",
+        )
+        self.assertRegex(umbrella, r"(?m)^version: 3\.14\.1$")
+        self.assertEqual(len(re.findall(r"(?m)^\s*- name: tx-data-provider$", umbrella)), 3)
+        self.assertEqual(len(re.findall(r"(?m)^\s+version: 0\.4\.3$", umbrella)), 3)
+
+    def test_relevant_dependency_locks_pin_published_artifacts(self) -> None:
+        connector_lock = current_text("charts/dataspace-connector-bundle/Chart.lock")
+        provider_lock = current_text("charts/tx-data-provider/Chart.lock")
+        umbrella_lock = current_text("charts/umbrella/Chart.lock")
+        self.assertRegex(connector_lock, r"(?m)^  version: 0\.13\.0$")
+        self.assertRegex(connector_lock, r"(?m)^  version: 15\.2\.1$")
+        self.assertRegex(provider_lock, r"(?m)^  version: 1\.2\.2$")
+        self.assertRegex(umbrella_lock, r"(?m)^  version: 0\.4\.3$")
+        self.assertRegex(umbrella_lock, r"(?m)^  version: 1\.25\.3$")
+
     def test_active_profiles_use_dcp_div_and_renamed_credential_service_key(self) -> None:
         active = [
             "charts/dataspace-connector-bundle/values.yaml",
@@ -105,6 +127,60 @@ class Connector013MigrationTests(unittest.TestCase):
     def test_ap6_profile_is_untouched(self) -> None:
         path = "charts/umbrella/values-edcs-dev-ap6.yaml"
         self.assertEqual(current_text(path), baseline_text(path))
+
+    def test_dtr_tls_overlay_is_unchanged_by_edc_migration(self) -> None:
+        path = "charts/umbrella/values-tls.yaml"
+        pattern = re.compile(
+            r"(?ms)^  digital-twin-bundle:\n.*?(?=^  data-persistence-layer-bundle:|\Z)"
+        )
+        before = pattern.search(baseline_text(path))
+        after = pattern.search(current_text(path))
+        self.assertIsNotNone(before)
+        self.assertIsNotNone(after)
+        self.assertEqual(before.group(0), after.group(0))
+
+    def test_connector_secretrefs_fail_closed_without_literal_fallback(self) -> None:
+        patch = current_text("hack/patches/tractusx-connector-0.13.0-secret-refs.patch")
+        added = "\n".join(
+            line[1:] for line in patch.splitlines()
+            if line.startswith("+") and not line.startswith("+++")
+        )
+        self.assertIn("fail (printf", added)
+        self.assertIn("SecretRef.name is required", added)
+        self.assertIn("SecretRef.key is required", added)
+        self.assertIn("secretKeyRef:", added)
+        self.assertNotIn("value: {{ .value", added)
+        self.assertNotIn('"value" .Values.', added)
+
+    def test_provider_vault_seed_uses_secret_refs_for_all_secret_material(self) -> None:
+        job = current_text("charts/tx-data-provider/templates/post-install-vault-setup.yaml")
+        configmap = current_text("charts/tx-data-provider/templates/vault-edc-configmap.yaml")
+        self.assertIn("$tokenSecretRef.name | required", job)
+        self.assertIn("$tokenSecretRef.key | required", job)
+        self.assertIn("$keyMaterialSecretRef.name | required", job)
+        self.assertIn("$keyMaterialSecretRef.privateKeyKey | required", job)
+        self.assertIn("$keyMaterialSecretRef.aesSecretKey | required", job)
+        self.assertIn("vaultSetup.seedPayloadSecretRefs", job)
+        self.assertIn("vaultSetup.seedPayloadSecretRefs.%s.name is required", job)
+        self.assertIn("vaultSetup.seedPayloadSecretRefs.%s.key is required", job)
+        self.assertIn("--post-file=/opt/secret-seeds/", job)
+        self.assertNotIn("$value", job)
+        self.assertNotIn("{{ $value }}", job)
+        self.assertNotIn("--post-data", job)
+        self.assertNotRegex(job, r"(?m)^\s*(?:cat|echo)\b")
+        self.assertNotIn("set -x", job)
+        self.assertIn("--post-file=/opt/secret-seeds/", job)
+        self.assertIn("readOnly: true", job)
+        self.assertIn("defaultMode: 0400", job)
+        self.assertIn("/opt/key-material/key.json", job)
+        self.assertIn("/opt/key-material/aes-secret.json", job)
+        self.assertNotIn("key.json: |-", configmap)
+        self.assertNotIn("aes-secret.json: |-", configmap)
+        self.assertNotIn("BEGIN PRIVATE KEY", configmap)
+        self.assertNotIn("$vaultToken", job)
+        self.assertIn("$vaultSetup.tokenSecretRef | default dict", job)
+        self.assertIn("$vaultSetup.keyMaterialSecretRef | default dict", job)
+        self.assertIn("$vaultSetup.seedPayloadSecretRefs | default dict", job)
 
     def test_secretref_patch_is_connector_013_only_and_least_scope(self) -> None:
         patch = current_text("hack/patches/tractusx-connector-0.13.0-secret-refs.patch")
