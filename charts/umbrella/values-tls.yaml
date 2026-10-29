@@ -450,10 +450,13 @@ tx-data-provider:
   digital-twin-bundle:
     digital-twin-registry:
       registry:
+        host: "dataprovider-dtr.tx.test"
         ingress:
           annotations:
             cert-manager.io/issuer: "umbrella-ca-issuer"
-          tls: true
+          tls:
+            enabled: true
+            secretName: "dataprovider-dtr-tls"
 
   data-persistence-layer-bundle:
     simple-data-backend:

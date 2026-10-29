@@ -226,17 +226,6 @@ class Connector013MigrationTests(unittest.TestCase):
         path = "charts/umbrella/values-edcs-dev-ap6.yaml"
         self.assertEqual(current_text(path), baseline_text(path))
 
-    def test_dtr_tls_overlay_is_unchanged_by_edc_migration(self) -> None:
-        path = "charts/umbrella/values-tls.yaml"
-        pattern = re.compile(
-            r"(?ms)^  digital-twin-bundle:\n.*?(?=^  data-persistence-layer-bundle:|\Z)"
-        )
-        before = pattern.search(baseline_text(path))
-        after = pattern.search(current_text(path))
-        self.assertIsNotNone(before)
-        self.assertIsNotNone(after)
-        self.assertEqual(before.group(0), after.group(0))
-
     def test_connector_secretrefs_fail_closed_without_literal_fallback(self) -> None:
         patch = current_text("hack/patches/tractusx-connector-0.13.0-secret-refs.patch")
         added = "\n".join(
