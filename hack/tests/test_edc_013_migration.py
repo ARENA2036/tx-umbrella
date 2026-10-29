@@ -81,6 +81,104 @@ class Connector013MigrationTests(unittest.TestCase):
         self.assertRegex(umbrella_lock, r"(?m)^  version: 0\.4\.3$")
         self.assertRegex(umbrella_lock, r"(?m)^  version: 1\.25\.3$")
 
+    def test_connector_optional_services_are_distinct_from_bundle_services(self) -> None:
+        """Disabling Connector-owned dependencies does not disable bundle services."""
+        chart = current_text("charts/dataspace-connector-bundle/Chart.yaml")
+        values = current_text("charts/dataspace-connector-bundle/values.yaml")
+        self.assertRegex(
+            chart,
+            r"(?ms)- name: tractusx-connector\n.*?condition: tractusx-connector.enabled\n\n"
+            r"\s*- name: postgresql\n\s+version: 15\.2\.1\n"
+            r"\s+repository: https://charts\.bitnami\.com/bitnami\n"
+            r"\s+condition: postgresql\.enabled",
+        )
+        self.assertRegex(
+            chart,
+            r"(?ms)- name: vault\n\s+version: 0\.27\.0\n"
+            r"\s+repository: https://helm\.releases\.hashicorp\.com\n"
+            r"\s+condition: vault\.enabled",
+        )
+        connector = re.search(
+            r"(?ms)^tractusx-connector:\n(.*?)(?=^postgresql:\n)", values
+        )
+        self.assertIsNotNone(connector)
+        self.assertRegex(connector.group(1), r"(?m)^\s+postgresql: false$")
+        self.assertRegex(connector.group(1), r"(?m)^\s+vault: false$")
+        self.assertRegex(values, r"(?ms)^postgresql:\n.*?^  enabled: true$")
+        self.assertRegex(values, r"(?ms)^vault:\n.*?^  enabled: true$")
+
+    def test_connector_013_helm_render_uses_dcp_variable_and_secret_refs(self) -> None:
+        """Exercise the pinned chart; never include its rendered output in failures."""
+        references = [
+            ("controlplane.endpoints.management.authKeySecretRef", "management-key"),
+            ("dataplane.endpoints.proxy.authKeySecretRef", "proxy-key"),
+            ("vault.hashicorp.tokenSecretRef", "vault-token"),
+            ("postgresql.auth.passwordSecretRef", "db-password"),
+        ]
+        command = [
+            "helm", "template", "be293-validation",
+            "charts/dataspace-connector-bundle", "--namespace", "be293",
+        ]
+        for path, key in references:
+            prefix = f"tractusx-connector.{path}"
+            command.extend(("--set-string", f"{prefix}.name=synthetic-edc-runtime"))
+            command.extend(("--set-string", f"{prefix}.key={key}"))
+        result = subprocess.run(
+            command, cwd=ROOT, capture_output=True, text=True, check=False
+        )
+        if result.returncode:
+            self.fail("pinned Connector 0.13 chart render failed")
+        rendered = result.stdout
+        for expected in (
+            "TX_EDC_IAM_DCP_CREDENTIALSERVICE_URL",
+            "secretKeyRef:",
+            "synthetic-edc-runtime",
+            "management-key",
+            "proxy-key",
+            "vault-token",
+            "db-password",
+        ):
+            if expected not in rendered:
+                self.fail(f"render omitted expected 0.13 mapping/reference marker: {expected}")
+        if "TX_IAM_IATP_CREDENTIALSERVICE_URL" in rendered:
+            self.fail("render contains the removed IATP credential-service variable")
+
+    def test_connector_013_helm_render_fails_closed_without_secretrefs(self) -> None:
+        result = subprocess.run(
+            [
+                "helm", "template", "be293-validation",
+                "charts/dataspace-connector-bundle", "--namespace", "be293",
+            ],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode == 0:
+            self.fail("Connector 0.13 chart rendered without required SecretRefs")
+
+    def test_federated_catalog_retention_gate_is_explicit_and_unset(self) -> None:
+        """Do not choose discard or preservation before the data owner decides."""
+        blocker_doc = current_text("docs/dev/BE-293-edc-0.13-migration-blockers.md")
+        self.assertIn("edc_federated_catalog", blocker_doc)
+        self.assertIn("tx.edc.postgresql.migration.federatedcatalog.enabled=false", blocker_doc)
+        self.assertRegex(blocker_doc, r"(?is)data owner must decide.*?(discard|retain|retention)")
+        draft_doc = current_text("docs/dev/BE-293-edc-0.13-draft-pr.md")
+        self.assertIn("is **not** a complete Tractus-X 26.09", draft_doc)
+        self.assertIn("PostgreSQL/Vault topology", draft_doc)
+        self.assertIn("Historical key material", draft_doc)
+        active = [
+            "charts/dataspace-connector-bundle/values.yaml",
+            *PROFILE_CONTEXTS,
+            "charts/values-test-data-exchange.yaml",
+        ]
+        for path in active:
+            with self.subTest(path=path):
+                self.assertNotIn(
+                    "tx.edc.postgresql.migration.federatedcatalog.enabled",
+                    current_text(path),
+                )
+
     def test_active_profiles_use_dcp_div_and_renamed_credential_service_key(self) -> None:
         active = [
             "charts/dataspace-connector-bundle/values.yaml",
