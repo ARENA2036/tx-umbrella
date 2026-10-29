@@ -78,14 +78,21 @@ names and keys in process memory. No Secret payloads were rendered or reported.
   Plane and two Data Plane Deployments; Consumer 2 is disabled by that profile.
   Portal, Central/Shared IDP, ssi-credential-issuer, BPN Discovery, DTR and
   Wallet stub are rendered. BPDM and IdentityHub are absent.
+- The prior 308-object production count is reproducible with the same ordered
+  values files and synthetic Secret references when the single CLI override
+  `dataconsumerTwo.enabled=true` is added. This adds 32 YAML documents: 31
+  distinct resource identities for Consumer 2 and one additional Pod document
+  with the same name as the existing Connector Helm test-hook Pod. The extra
+  document is a test hook, not another normal running Pod. A focused inventory
+  regression test now checks both counts.
 - Both raw renders contain repeated Pod definitions named
   controlplane-with-token-auth-test. They carry the Helm test hook annotation,
   not a normal workload hook. The chart sets before-hook-creation and
   hook-succeeded deletion policy. These are test-hook definitions, not three
   running Pods. Helm test was not run against a cluster.
-- The earlier 240-object total cannot be reproduced from a preserved exact
-  command and values set. The counts above are from the explicit stacks named
-  here and an in-memory inventory parser; they are not a live-resource diff.
+- These counts come from the explicit ordered stacks and an in-memory inventory
+  parser; they are not a live-resource diff. The 276-versus-308 difference is
+  the Consumer 2 enablement profile, not a change in the counting method.
 - Rendered charts contain cluster-scoped resources, including RBAC, CRDs and
   admission webhooks. The counts are 43 in the three-connector profile and 39
   in production. Any deployment requires a separate cluster-scope review.
