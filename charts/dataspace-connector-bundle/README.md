@@ -29,7 +29,7 @@ For more information to "Bring Your Own" configuration, see the [hausanschluss u
 | Repository | Name | Version |
 |------------|------|---------|
 | https://charts.bitnami.com/bitnami | postgresql | 15.2.1 |
-| https://eclipse-tractusx.github.io/charts/dev | tractusx-connector | 0.11.1 |
+| https://eclipse-tractusx.github.io/charts/dev | tractusx-connector | 0.13.0 |
 | https://helm.releases.hashicorp.com | vault | 0.27.0 |
 
 ## Values
@@ -38,22 +38,27 @@ For more information to "Bring Your Own" configuration, see the [hausanschluss u
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| tractusx-connector.iatp.id | string | `"did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003AZQP"` | Decentralized IDentifier (DID) of the connector |
-| tractusx-connector.iatp.trustedIssuers | list | `["did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003CRHK"]` | Configures the trusted issuers for this runtime |
-| tractusx-connector.iatp.sts.dim.url | string | `"http://ssi-dim-wallet-stub.tx.test/api/sts"` | URL where connectors can request SI tokens |
-| tractusx-connector.iatp.sts.oauth.token_url | string | `"http://ssi-dim-wallet-stub.tx.test/oauth/token"` | URL where connectors can request OAuth2 access tokens for DIM access |
-| tractusx-connector.iatp.sts.oauth.client.id | string | `"BPNL00000003AZQP"` | Client ID for requesting OAuth2 access token for DIM access |
-| tractusx-connector.iatp.sts.oauth.client.secret_alias | string | `"client-secret"` | Alias under which the client secret is stored in the vault for requesting OAuth2 access token for DIM access |
-| tractusx-connector.participant.id | string | `"BPNL00000003AZQP"` | Business Partner Number (BPN) of the connector |
-| tractusx-connector.controlplane.env | map | `{"TX_IAM_IATP_CREDENTIALSERVICE_URL":"http://ssi-dim-wallet-stub.tx.test/api"}` | Extra environment variables that will be pass onto deployment pods |
+| tractusx-connector.dcp.trustedIssuers | list | `["did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003CRHK"]` | Configures the trusted issuers for this runtime |
+| tractusx-connector.dcp.sts.div.url | string | `"http://ssi-dim-wallet-stub.tx.test/api/sts"` | URL where connectors can request SI tokens |
+| tractusx-connector.dcp.sts.oauth.token_url | string | `"http://ssi-dim-wallet-stub.tx.test/oauth/token"` | URL where connectors can request OAuth2 access tokens for DIV access |
+| tractusx-connector.dcp.sts.oauth.client.id | string | `"BPNL00000003AZQP"` | Client ID for requesting OAuth2 access token for DIV access |
+| tractusx-connector.dcp.sts.oauth.client.secret_alias | string | `"client-secret"` | Alias under which the client secret is stored in the vault for requesting OAuth2 access token for DIV access |
+| tractusx-connector.participant.id | string | `"did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003AZQP"` | Connector DID used as the participant identifier |
+| tractusx-connector.participant.contextId | string | `"00000000-0000-0000-0000-000000000001"` | Stable participant context UUID; do not change after deployment |
+| tractusx-connector.participant.bpnl | string | `"BPNL00000003AZQP"` | Business Partner Number (BPN) of the connector |
+| tractusx-connector.controlplane.env | map | `{"TX_EDC_IAM_DCP_CREDENTIALSERVICE_URL":"http://ssi-dim-wallet-stub.tx.test/api"}` | Extra environment variables that will be pass onto deployment pods |
 | tractusx-connector.controlplane.bdrs.server.url | string | `"http://ssi-dim-wallet-stub.tx.test/api/v1/directory"` | URL of the BPN/DID Resolution Service |
-| tractusx-connector.dataplane.env | map | `{"TX_IAM_IATP_CREDENTIALSERVICE_URL":"http://ssi-dim-wallet-stub.tx.test/api"}` | Extra environment variables that will be pass onto deployment pods |
+| tractusx-connector.dataplane.env | map | `{"TX_EDC_IAM_DCP_CREDENTIALSERVICE_URL":"http://ssi-dim-wallet-stub.tx.test/api"}` | Extra environment variables that will be pass onto deployment pods |
 
 ### EDC Installation Options
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | tractusx-connector.controlplane.endpoints.management.authKey | string | `"TEST1"` | Authentication key. Must be attached to each request as `X-Api-Key` header |
+| tractusx-connector.controlplane.endpoints.management.authKeySecretRef | object | `{"key":"","name":""}` | Optional existing Secret name/key reference for the management API key; when configured, no literal is rendered |
+| tractusx-connector.dataplane.endpoints.proxy.authKeySecretRef | object | `{"key":"","name":""}` | Optional existing Secret name/key reference for the dataplane proxy key; when configured, no literal is rendered |
+| tractusx-connector.vault.hashicorp.tokenSecretRef | object | `{"key":"","name":""}` | Optional existing Secret name/key reference for the Vault token; when configured, no literal is rendered |
+| tractusx-connector.postgresql.auth.passwordSecretRef | object | `{"key":"","name":""}` | Optional existing Secret name/key reference for an external database password; when configured, no literal is rendered |
 | tractusx-connector.dataplane.token.signer.privatekey_alias | string | `"tokenSignerPrivateKey"` | Alias under which the private key (JWK or PEM format) is stored in the vault |
 | tractusx-connector.dataplane.token.verifier.publickey_alias | string | `"tokenSignerPublicKey"` | Alias under which the public key (JWK or PEM format) is stored in the vault, that belongs to the private key which was referred to at `dataplane.token.signer.privatekey_alias` |
 

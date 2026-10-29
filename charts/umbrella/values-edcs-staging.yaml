@@ -1185,13 +1185,14 @@ dataconsumerOne:
     tractusx-connector:
       nameOverride: dataconsumer-edc
       participant:
-        id: BPNL00000003AZQP
-      iatp:
         id: did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003AZQP
+        contextId: "23a298c4-b18e-5660-891c-b82e6ce13aa0"
+        bpnl: BPNL00000003AZQP
+      dcp:
         trustedIssuers:
           - did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003CRHK
         sts:
-          dim:
+          div:
             url: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api/sts
           oauth:
             token_url: https://ssi-dim-wallet-stub.staging.arena2036-x.de/oauth/token
@@ -1200,7 +1201,7 @@ dataconsumerOne:
               secret_alias: edc-wallet-secret
       controlplane:
         env:
-          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api
+          TX_EDC_IAM_DCP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api
           EDC_IAM_DID_WEB_USE_HTTPS: false
         bdrs:
           server:
@@ -1222,7 +1223,7 @@ dataconsumerOne:
               enabled: true
       dataplane:
         env:
-          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api
+          TX_EDC_IAM_DCP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api
           EDC_IAM_DID_WEB_USE_HTTPS: false
         ingresses:
           - enabled: true
@@ -1280,13 +1281,14 @@ tx-data-provider:
     tractusx-connector:
       nameOverride: dataprovider-edc
       participant:
-        id: BPNL00000003AYRE
-      iatp:
         id: did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003AYRE
+        contextId: "4a27791c-c676-5e8e-85ea-56897913eb2f"
+        bpnl: BPNL00000003AYRE
+      dcp:
         trustedIssuers:
           - did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003CRHK
         sts:
-          dim:
+          div:
             url: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api/sts
           oauth:
             token_url: https://ssi-dim-wallet-stub.staging.arena2036-x.de/oauth/token
@@ -1295,7 +1297,7 @@ tx-data-provider:
               secret_alias: edc-wallet-secret
       controlplane:
         env:
-          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api
+          TX_EDC_IAM_DCP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api
           EDC_IAM_DID_WEB_USE_HTTPS: false
         bdrs:
           server:
@@ -1317,7 +1319,7 @@ tx-data-provider:
               enabled: true
       dataplane:
         env:
-          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api
+          TX_EDC_IAM_DCP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api
           EDC_IAM_DID_WEB_USE_HTTPS: false
         ingresses:
           - enabled: true
@@ -1452,13 +1454,14 @@ dataconsumerTwo:
     tractusx-connector:
       nameOverride: dataconsumer-2-edc
       participant:
-        id: BPNL00000003AVTH
-      iatp:
         id: did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003AVTH
+        contextId: "a020cbf3-30ae-507e-9748-59124afe6bef"
+        bpnl: BPNL00000003AVTH
+      dcp:
         trustedIssuers:
           - did:web:ssi-dim-wallet-stub.staging.arena2036-x.de:BPNL00000003CRHK
         sts:
-          dim:
+          div:
             url: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api/sts
           oauth:
             token_url: https://ssi-dim-wallet-stub.staging.arena2036-x.de/oauth/token
@@ -1467,7 +1470,7 @@ dataconsumerTwo:
               secret_alias: edc-wallet-secret
       controlplane:
         env:
-          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api
+          TX_EDC_IAM_DCP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api
           EDC_IAM_DID_WEB_USE_HTTPS: false
         bdrs:
           server:
@@ -1489,7 +1492,7 @@ dataconsumerTwo:
               enabled: true
       dataplane:
         env:
-          TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api
+          TX_EDC_IAM_DCP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.staging.arena2036-x.de/api
           EDC_IAM_DID_WEB_USE_HTTPS: false
         ingresses:
           - enabled: true
