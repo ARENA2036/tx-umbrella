@@ -1,0 +1,9 @@
+dependencies:
+- name: digital-twin-registry
+  repository: https://eclipse-tractusx.github.io/charts/dev
+  version: 0.9.0
+- name: postgresql
+  repository: https://charts.bitnami.com/bitnami
+  version: 15.2.1
+digest: sha256:a36c094e64e0fdf1d1d2c32d5ae9716e27614b5c7ef585c6d1fb32ac7ab34cb4
+generated: "2026-10-29T17:49:01.938208+01:00"

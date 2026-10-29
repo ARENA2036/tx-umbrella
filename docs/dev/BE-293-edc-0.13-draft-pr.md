@@ -12,7 +12,7 @@ The reviewable migration scope is limited to:
 - A version-specific SecretRef patch for Connector secret inputs, with required references and no literal fallback.
 - Regression coverage for those mappings and fail-closed rendering.
 
-The DTR TLS correction is outside this EDC migration scope. Existing credential-bearing files and identity values must not be regenerated or rotated as part of this change.
+The DTR TLS correction is outside the EDC migration scope but is included separately in the local integration branch so the EDC profile can render with TLS enabled. It does not change DTR's pinned chart version. Existing credential-bearing files and identity values must not be regenerated or rotated as part of this change.
 
 ## Validation evidence
 

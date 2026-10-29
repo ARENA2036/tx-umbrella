@@ -81,6 +81,15 @@ class Connector013MigrationTests(unittest.TestCase):
         self.assertRegex(umbrella_lock, r"(?m)^  version: 0\.4\.3$")
         self.assertRegex(umbrella_lock, r"(?m)^  version: 1\.25\.3$")
 
+    def test_nested_bundle_dependencies_are_locked_for_complete_render(self) -> None:
+        dtr_lock = current_text("charts/digital-twin-bundle/Chart.lock")
+        persistence_lock = current_text("charts/data-persistence-layer-bundle/Chart.lock")
+        identity_lock = current_text("charts/identity-and-trust-bundle/Chart.lock")
+        self.assertRegex(dtr_lock, r"(?m)^  version: 0\.9\.0$")
+        self.assertRegex(dtr_lock, r"(?m)^  version: 15\.2\.1$")
+        self.assertRegex(persistence_lock, r"(?m)^  version: 0\.1\.0$")
+        self.assertRegex(identity_lock, r"(?m)^  version: 0\.1\.14$")
+
     def test_connector_optional_services_are_distinct_from_bundle_services(self) -> None:
         """Disabling Connector-owned dependencies does not disable bundle services."""
         chart = current_text("charts/dataspace-connector-bundle/Chart.yaml")
