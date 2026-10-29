@@ -68,6 +68,7 @@ TX_DATA_PROVIDER_DIR="$CHARTS_DIR/tx-data-provider"
 UMBRELLA_DIR="$CHARTS_DIR/umbrella"
 CONNECTOR_PATCH="./hack/patches/tractusx-connector-0.13.0-secret-refs.patch"
 WALLET_INGRESS_PATCH="./hack/patches/ssi-dim-wallet-stub-0.1.14-ingress-annotations.patch"
+PORTAL_IDENTITYHUB_PATCH="./hack/patches/portal-2.6.0-identityhub-secret-refs.patch"
 
 # Apply the local SecretRef extension only to the pinned Connector 0.13.0 package.
 # This is intentionally version-specific: a package mismatch or changed upstream template fails closed.
@@ -153,6 +154,55 @@ patch_wallet_package() {
   rm -rf "$tmp"
 }
 
+# Add the opt-in Portal -> real IdentityHub configuration contract to the pinned
+# Portal 2.6.0 package. Credentials are accepted only as external Secret refs;
+# no secret values or Helm-managed credential Secret are introduced.
+patch_portal_identityhub_package() {
+  local package="$1" chart_yaml tmp
+  [[ -f "$package" ]] || { echo "Missing $package" >&2; exit 1; }
+  chart_yaml="$(tar xOf "$package" portal/Chart.yaml 2>/dev/null)" || {
+    echo "Could not read Portal chart metadata" >&2
+    exit 1
+  }
+  grep -q '^name: portal$' <<<"$chart_yaml" || {
+    echo "Unexpected chart in Portal package" >&2
+    exit 1
+  }
+  grep -q '^version: 2.6.0$' <<<"$chart_yaml" || {
+    echo "IdentityHub configuration patch requires Portal chart 2.6.0" >&2
+    exit 1
+  }
+  tmp="$(mktemp -d "${TMPDIR:-/tmp}/portal-260-identityhub.XXXXXX")"
+  if ! tar xzf "$package" -C "$tmp"; then
+    rm -rf "$tmp"
+    echo "Could not extract Portal chart package" >&2
+    exit 1
+  fi
+  if patch -F 0 --dry-run --batch --forward -p1 -d "$tmp/portal" < "$PORTAL_IDENTITYHUB_PATCH" >/dev/null 2>&1; then
+    if ! patch -F 0 --batch --forward -p1 -d "$tmp/portal" < "$PORTAL_IDENTITYHUB_PATCH" >/dev/null; then
+      rm -rf "$tmp"
+      echo "Could not apply Portal IdentityHub configuration patch" >&2
+      exit 1
+    fi
+    if ! find "$tmp/portal" -exec touch -t 200001010000 {} +; then
+      rm -rf "$tmp"
+      echo "Could not normalize patched Portal chart timestamps" >&2
+      exit 1
+    fi
+    if ! helm package "$tmp/portal" -d "$(dirname "$package")" >/dev/null; then
+      rm -rf "$tmp"
+      echo "Could not package patched Portal chart" >&2
+      exit 1
+    fi
+    echo "   applied $(basename "$PORTAL_IDENTITYHUB_PATCH") to $(basename "$package")"
+  elif ! patch -F 0 --dry-run --batch --reverse -p1 -d "$tmp/portal" < "$PORTAL_IDENTITYHUB_PATCH" >/dev/null 2>&1; then
+    rm -rf "$tmp"
+    echo "Portal IdentityHub patch does not apply to $package; refusing to continue." >&2
+    exit 1
+  fi
+  rm -rf "$tmp"
+}
+
 echo "🔄 Updating Helm repositories..."
 helm repo update
 
@@ -175,5 +225,7 @@ helm dependency update "$TX_DATA_PROVIDER_DIR" --skip-refresh
 
 echo -e "\n📦 Updating dependencies for chart: $UMBRELLA_DIR"
 helm dependency update "$UMBRELLA_DIR" --skip-refresh
+
+patch_portal_identityhub_package "$UMBRELLA_DIR/charts/portal-2.6.0.tgz"
 
 echo -e "\n✅ All charts up to date!"
