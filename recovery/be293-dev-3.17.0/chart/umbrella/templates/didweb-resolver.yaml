@@ -1,0 +1,143 @@
+{{- /*
+* Copyright (c) 2026 Contributors to the Eclipse Foundation
+*
+* See the NOTICE file(s) distributed with this work for additional
+* information regarding copyright ownership.
+*
+* This program and the accompanying materials are made available under the
+* terms of the Apache License, Version 2.0 which is available at
+* https://www.apache.org/licenses/LICENSE-2.0.
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+* WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+* License for the specific language governing permissions and limitations
+* under the License.
+*
+* SPDX-License-Identifier: Apache-2.0
+*/}}
+
+{{ if .Values.didwebResolver.enabled }}
+# In-cluster did:web Universal Resolver shim (SANDBOX ONLY).
+#
+# VALIDATE_DID_DOCUMENT resolves a participant did:web through a Universal Resolver. Here the DIDs
+# are `did:web:*.tx.test`, which only resolve INSIDE the cluster and are served Host-header-dependently
+# by the IdentityHub, so no public resolver (dev.uniresolver.io) can reach them (decisions record D11).
+# This serves GET /1.0/identifiers/{did} for did:web by fetching the IH did.json over the cluster
+# network and wrapping it in the Universal-Resolver envelope the Portal expects. The worker points
+# here via portal.backend.processesworker.dim.universalResolverAddress (didweb-resolver:8080).
+#
+# NOT for production: it fetches whatever host the DID names, over cleartext http, with no allowlist /
+# no egress restriction — fine only on a throwaway local kind cluster. Prod: publish DIDs on a public
+# HTTPS host (EDC_IAM_DID_WEB_USE_HTTPS=true) and point at a real Universal Resolver; if a shim is ever
+# kept, add a *.tx.test suffix allowlist, refuse redirects, and an egress NetworkPolicy. See the
+# "Production hardening" section of docs/internal/BE-293-cross-repo-changes-and-decisions.md.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: didweb-resolver-script
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: didweb-resolver
+data:
+  resolver.py: |
+    # did:web -> Universal-Resolver-API shim. Resolves did:web:{host}[:{seg}...] by fetching
+    # http://{host}/{seg/.../}did.json (or /.well-known/did.json for a bare host) with Host:{host}.
+    # ThreadingHTTPServer so one slow upstream fetch cannot serialize the readiness probe.
+    import http.server, urllib.request, urllib.parse, json, sys
+    def log(msg):
+        print("[didweb-resolver] " + msg, file=sys.stderr, flush=True)
+    def resolve(did_enc):
+        d = urllib.parse.unquote(did_enc)
+        if not d.startswith("did:web:"):
+            return None, "unsupportedDidMethod"
+        parts = d[len("did:web:"):].split(":")
+        host = urllib.parse.unquote(parts[0])
+        segs = [urllib.parse.unquote(p) for p in parts[1:]]
+        path = ("/".join(segs) + "/did.json") if segs else ".well-known/did.json"
+        url = "http://%s/%s" % (host, path)
+        try:
+            req = urllib.request.Request(url, headers={"Host": host, "Accept": "application/json"})
+            with urllib.request.urlopen(req, timeout=10) as r:
+                body = r.read()
+            if not body:
+                log("resolve %s -> empty body from %s (notFound)" % (d, url))
+                return None, "notFound"
+            return json.loads(body), None
+        except Exception as e:
+            log("resolve %s -> fetch %s failed: %r (notFound)" % (d, url, e))
+            return None, "notFound"
+    class H(http.server.BaseHTTPRequestHandler):
+        def do_GET(self):
+            if self.path.rstrip("/") in ("", "/health", "/ready"):
+                self.send_response(200); self.end_headers(); self.wfile.write(b"ok"); return
+            if "/1.0/identifiers/" not in self.path:
+                self.send_response(404); self.end_headers(); return
+            did = self.path.split("/1.0/identifiers/", 1)[1]
+            doc, err = resolve(did)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json"); self.end_headers()
+            if err:
+                out = {"didDocument": None, "didResolutionMetadata": {"error": err}, "didDocumentMetadata": {}}
+            else:
+                out = {"didDocument": doc, "didResolutionMetadata": {"contentType": "application/did+json"}, "didDocumentMetadata": {}}
+            self.wfile.write(json.dumps(out).encode())
+        def log_message(self, fmt, *args):
+            log((fmt % args) if args else fmt)
+    log("listening on :{{ .Values.didwebResolver.port }}")
+    http.server.ThreadingHTTPServer(("0.0.0.0", {{ .Values.didwebResolver.port }}), H).serve_forever()
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: didweb-resolver
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: didweb-resolver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: didweb-resolver
+  template:
+    metadata:
+      labels:
+        app: didweb-resolver
+    spec:
+      containers:
+        - name: resolver
+          image: {{ .Values.didwebResolver.image | quote }}
+          command: ["python", "/app/resolver.py"]
+          ports:
+            - containerPort: {{ .Values.didwebResolver.port }}
+          volumeMounts:
+            - name: script
+              mountPath: /app
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.didwebResolver.port }}
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.didwebResolver.resources | nindent 12 }}
+      volumes:
+        - name: script
+          configMap:
+            name: didweb-resolver-script
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: didweb-resolver
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: didweb-resolver
+spec:
+  selector:
+    app: didweb-resolver
+  ports:
+    - port: {{ .Values.didwebResolver.port }}
+      targetPort: {{ .Values.didwebResolver.port }}
+{{ end }}

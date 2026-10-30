@@ -11,3 +11,8 @@ target/
 **/values-local.yaml
 **/your-values.yaml
 hack/smtp.sh
+
+# Real BE-293 environment values and credentials must never be committed.
+*.private.yaml
+*.secrets.yaml
+!recovery/be293-dev-3.17.0/values/values-be293-dev.secrets.example.yaml

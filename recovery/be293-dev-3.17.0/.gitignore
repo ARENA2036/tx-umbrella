@@ -1,0 +1,10 @@
+# Recovered dependency packages are part of the baseline (the repo root ignores **/*.tgz).
+!chart/umbrella/charts/*.tgz
+!chart/umbrella/Chart.lock
+# Real credentials must never be committed. Keep the filled-in secrets overlay outside Git.
+*.secrets.yaml
+*.private.yaml
+!values/values-be293-dev.secrets.example.yaml
+# Local render output may contain placeholder or real values.
+render/
+*.rendered.yaml
