@@ -1,0 +1,113 @@
+# #############################################################################
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
+#
+# SPDX-License-Identifier: Apache-2.0
+# #############################################################################
+#
+# Always-rendered ConfigMap that carries the wallet-mode selection as a
+# label on the release. Its primary purpose is to force-run the
+# `umbrella.validateWallet` template on every `helm install` / `helm upgrade`
+# so that misconfigured wallet selections (both wallets enabled, or
+# wallet.mode out of sync with the enabled chart) fail fast with a clear
+# message.
+{{- include "umbrella.validateWallet" . }}
+{{- include "umbrella.validateIdentityHubImageOverlay" . }}
+{{- include "umbrella.validatePortalWalletProvider" . }}
+{{- include "umbrella.validateAp6PlatformContract" . }}
+{{- include "umbrella.validateK8sDev01PlatformContract" . }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-wallet-mode
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+    app.kubernetes.io/instance: {{ .Release.Name | quote }}
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    tractusx.eclipse.org/wallet-mode: {{ .Values.wallet.mode | default "stub" | quote }}
+data:
+  wallet-mode: {{ .Values.wallet.mode | default "stub" | quote }}
+  operator-bpn: {{ .Values.wallet.operatorBpn | default "" | quote }}
+{{- if eq .Values.wallet.mode "identityHub" }}
+  # Framework-agreement contract version baked into the DataExchangeGovernance /
+  # FrameworkAgreement credentials. Single source of truth for the seed Job;
+  # MUST match the dataspace policy's FrameworkAgreement version (exact match).
+  framework-contract-version: {{ .Values.wallet.frameworkContractVersion | default "1.0" | quote }}
+  # Public (ingress) URLs — used for did:web resolution and EDC-to-EDC traffic.
+  identity-hub-base-url: {{ .Values.wallet.identityHub.shared.baseUrl | quote }}
+  identity-hub-identity-api: {{ printf "%s/api/identity" .Values.wallet.identityHub.shared.baseUrl | quote }}
+  issuer-service-base-url: {{ .Values.wallet.identityHub.shared.issuerServiceBaseUrl | quote }}
+  issuer-service-admin-api: {{ printf "%s/api/admin" .Values.wallet.identityHub.shared.issuerServiceBaseUrl | quote }}
+  issuer-service-identity-api: {{ printf "%s/api/identity" .Values.wallet.identityHub.shared.issuerServiceBaseUrl | quote }}
+  # Internal (in-cluster service) URLs — used by the seeding Job so it
+  # does not depend on ingress being correctly wired. Service name is
+  # prefixed with the umbrella release name to match the upstream chart.
+  {{- $ihSvc := printf "%s-%s" .Release.Name .Values.wallet.identityHub.shared.internalIdentityHubService }}
+  {{- $isSvc := printf "%s-%s" .Release.Name .Values.wallet.identityHub.shared.internalIssuerServiceService }}
+  {{- $ports := .Values.wallet.identityHub.shared.ports }}
+  identity-hub-internal-base-url: {{ printf "http://%s:%d" $ihSvc (int $ports.ihIdentity) | quote }}
+  identity-hub-internal-identity-api: {{ printf "http://%s:%d/api/identity" $ihSvc (int $ports.ihIdentity) | quote }}
+  identity-hub-internal-credentials-api: {{ printf "http://%s:%d/api/credentials" $ihSvc (int $ports.ihCredentials) | quote }}
+  identity-hub-internal-sts-url: {{ printf "http://%s:%d/api/sts" $ihSvc (int $ports.ihSts) | quote }}
+  # IssuerService split: the tenant identity API is used to bootstrap the
+  # issuer's own ParticipantContext; the issuer-admin API is used to
+  # register holders + define credentials. Confirmed against the upstream
+  # `tractusx-issuerservice` chart README — the issuer-admin endpoint
+  # is mounted at `/api/admin` (port 8086), NOT `/api/issueradmin`
+  # (which is only the bruno-collection variable name).
+  issuer-service-internal-identity-api: {{ printf "http://%s:%d/api/identity" $isSvc (int $ports.isIdentity) | quote }}
+  issuer-service-internal-issueradmin-api: {{ printf "http://%s:%d/api/admin" $isSvc (int $ports.isIssuerAdmin) | quote }}
+  issuer-service-internal-issuance-api: {{ printf "http://%s:%d/api/issuance" $isSvc (int $ports.isIssuance) | quote }}
+  issuer-did: {{ include "umbrella.wallet.issuerDid" (dict "ctx" .) | quote }}
+  # The issuer's own ParticipantContext id (used as path segment in
+  # /api/issueradmin/v1alpha/participants/{ctx}/holders etc.). The seed
+  # Job creates this context in its setup phase before the per-holder loop.
+  issuer-participant-id: {{ printf "issuer-%s" (lower .Values.wallet.operatorBpn) | quote }}
+  issuer-participant-id-b64: {{ printf "issuer-%s" (lower .Values.wallet.operatorBpn) | b64enc | replace "=" "" | replace "+" "-" | replace "/" "_" | quote }}
+  # DEV static-token mode deliberately leaves this blank. Connector tokens are
+  # mounted directly from SecretKeyRefs and must never be copied into this
+  # ConfigMap for the IdentityHub seed Job.
+  shared-vault-token: {{ .Values.wallet.identityHub.shared.vaultToken | default "" | quote }}
+  participants.json: |
+{{- $root := . }}
+    {
+{{- $keys := keys .Values.wallet.participants | sortAlpha }}
+{{- range $i, $pid := $keys }}
+{{- $p := index $root.Values.wallet.participants $pid }}
+{{- $did := include "umbrella.wallet.didFor" (dict "ctx" $root "pid" $pid) }}
+{{- $cs := include "umbrella.wallet.credentialServiceUrl" (dict "ctx" $root "pid" $pid) }}
+{{- $ctxId := include "umbrella.wallet.participantIdFor" (dict "ctx" $root "pid" $pid) }}
+{{- $b64 := include "umbrella.wallet.base64ParticipantId" (dict "ctx" $root "pid" $pid) }}
+{{- $vaultUrl := tpl ($p.vaultUrl | default "") $root }}
+{{- $vaultToken := $p.vaultToken | default "" }}
+      {{ $pid | quote }}: {
+        "bpn": {{ $p.bpn | quote }},
+        "role": {{ $p.role | quote }},
+        "did": {{ $did | quote }},
+        "participantId": {{ $ctxId | quote }},
+        "participantIdB64": {{ $b64 | quote }},
+        "credentialServiceUrl": {{ $cs | quote }},
+{{- if eq $root.Values.wallet.identityHub.topology "perParticipant" }}
+        "ihIdentityApiInternal": {{ include "umbrella.wallet.ihIdentityApiInternalFor" (dict "ctx" $root "pid" $pid) | quote }},
+        "ihCredentialsApiInternal": {{ include "umbrella.wallet.ihCredentialsApiInternalFor" (dict "ctx" $root "pid" $pid) | quote }},
+        "ihPodLabel": {{ include "umbrella.wallet.ihPodLabelFor" (dict "ctx" $root "pid" $pid) | quote }},
+{{- end }}
+        "vaultFolder": {{ $p.vaultFolder | default "" | quote }},
+        "vaultUrl": {{ $vaultUrl | quote }},
+        "vaultToken": {{ $vaultToken | quote }},
+        "credentials": {{ $p.credentials | toJson }}
+      }{{- if lt (add $i 1) (len $keys) }},{{- end }}
+{{- end }}
+    }
+  # Unique set of credential types declared across all participants —
+  # consumed by the seeding Job to build one CredentialDefinition per
+  # type on the IssuerService (walkthrough §06).
+  credential-types.json: |
+{{- $allTypes := list }}
+{{- range $pid, $p := .Values.wallet.participants }}
+{{-   range $p.credentials }}
+{{-     $allTypes = append $allTypes . }}
+{{-   end }}
+{{- end }}
+    {{ $allTypes | uniq | sortAlpha | toJson }}
+{{- end }}

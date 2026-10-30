@@ -1,0 +1,7 @@
+# Never commit real environment values or credentials.
+*.private.yaml
+*.secrets.yaml
+!recovery/be293-dev-3.17.0/values/values-be293-dev.secrets.example.yaml
+# Rendered manifests can contain real values.
+render/
+*.rendered.yaml

@@ -1,0 +1,248 @@
+###############################################################
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License, Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0.
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+###############################################################
+#
+# CoreDNS `*.tx.test` in-cluster rewrite (local-dev only)
+#
+# WHY: `.tx.test` hostnames exposed by umbrella ingresses only live in the
+# host's /etc/hosts (via kind port-forward). CoreDNS does not resolve them
+# from INSIDE pods. When the Identity Hub performs did:web resolution against
+# `did:web:issuer-service.tx.test:<BPN>` (DCP Credential-Issuance Protocol,
+# §8 of the Issuer API walkthrough), the HTTP GET fails with
+# `UnknownHostException` and the HolderCredentialRequest oscillates
+# CREATED -> ERROR forever. Same issue would hit connector -> IdentityHub
+# STS / CredentialService calls once the connector leaves the stub wallet.
+#
+# WHAT: patches kube-system/coredns ConfigMap to add an idempotent `hosts {}`
+# block mapping every umbrella ingress host to the ingress-nginx-controller
+# ClusterIP, then restarts CoreDNS to pick up the change.
+#
+# SCOPE: runs when `wallet.mode == identityHub` OR `bpdm.enabled` (the
+# onboarding/Portal profile). The IdentityHub needs it for did:web resolution;
+# BPDM needs it because its services call each other in-cluster via their
+# ingress URLs (e.g. the pool's dependency check hits
+# `http://business-partners.tx.test/orchestrator`) and fail with
+# `UnknownHostException` / "Orchestrator Service: Down" without it. The lean
+# stub data-exchange profile (no BPDM) still skips it — its wallet traffic
+# stays host-side via ingress. Follow-up (see docs/common/concept/
+# 1609-local-test-findings.md) will explore a proper CoreDNS overlay for
+# the kind cluster so this Job can be deprecated.
+#
+# Refs: sig-release #1609, umbrella findings doc B1.
+###############################################################
+{{- $be293 := .Values.be293 | default dict }}
+{{- $coreDnsPatch := $be293.coreDnsPatch | default dict }}
+{{- $coreDnsPatchEnabled := true }}
+{{- if hasKey $coreDnsPatch "enabled" }}
+{{- $coreDnsPatchEnabled = $coreDnsPatch.enabled }}
+{{- end }}
+{{- if and $coreDnsPatchEnabled (or (eq (.Values.wallet).mode "identityHub") (.Values.bpdm).enabled) }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "app.fullname" . }}-coredns-patcher
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+    app.kubernetes.io/instance: {{ .Release.Name | quote }}
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-25"
+    "helm.sh/hook-delete-policy": before-hook-creation
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "app.fullname" . }}-coredns-patcher
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+    app.kubernetes.io/instance: {{ .Release.Name | quote }}
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-25"
+    "helm.sh/hook-delete-policy": before-hook-creation
+rules:
+  # Read the ingress-nginx-controller service to discover its ClusterIP.
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list"]
+  # Read/patch kube-system/coredns ConfigMap.
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "patch", "update"]
+  # Restart the coredns deployment after the patch, then `rollout status`
+  # (a watch, which needs list+watch — without them the hook times out with
+  # "cannot list deployments in kube-system").
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "patch"]
+  # Read umbrella-ns ingresses to enumerate .tx.test hostnames.
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "app.fullname" . }}-coredns-patcher
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+    app.kubernetes.io/instance: {{ .Release.Name | quote }}
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-25"
+    "helm.sh/hook-delete-policy": before-hook-creation
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "app.fullname" . }}-coredns-patcher
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "app.fullname" . }}-coredns-patcher
+    namespace: {{ .Release.Namespace }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "app.fullname" . }}-post-install-coredns-tx-test-patch
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+    app.kubernetes.io/instance: {{ .Release.Name | quote }}
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+  annotations:
+    # Runs post-install with the earliest weight so that subsequent hooks
+    # (identityhub-seed weight -3, bdrs-setup weight -5) and the IdentityHub
+    # CredentialRequest state machine see a working DNS for .tx.test.
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "-20"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      name: "{{ .Release.Name }}-coredns-patch"
+      labels:
+        app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+        app.kubernetes.io/instance: {{ .Release.Name | quote }}
+    spec:
+      serviceAccountName: {{ include "app.fullname" . }}-coredns-patcher
+      restartPolicy: Never
+      containers:
+        - name: patch-coredns
+          # alpine/k8s bundles kubectl + jq + python3 + bash, which we use below.
+          image: "alpine/k8s:1.29.2"
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -euo pipefail
+              NS="{{ .Release.Namespace }}"
+              MARK_BEGIN="# BEGIN umbrella-tx-test"
+              MARK_END="# END umbrella-tx-test"
+
+              echo ">>> Waiting for ingress-nginx-controller service ..."
+              for i in $(seq 1 60); do
+                if kubectl -n ingress-nginx get svc ingress-nginx-controller \
+                     -o jsonpath='{.spec.clusterIP}' 2>/dev/null | grep -qE '^[0-9.]+$'; then
+                  break
+                fi
+                sleep 2
+              done
+              INGRESS_IP=$(kubectl -n ingress-nginx get svc ingress-nginx-controller \
+                -o jsonpath='{.spec.clusterIP}')
+              if [ -z "$INGRESS_IP" ]; then
+                echo "ERROR: ingress-nginx-controller ClusterIP not found"
+                exit 1
+              fi
+              echo ">>> ingress-nginx-controller ClusterIP: $INGRESS_IP"
+
+              echo ">>> Waiting for umbrella ingresses to appear ..."
+              for i in $(seq 1 60); do
+                COUNT=$(kubectl -n "$NS" get ingress -o jsonpath='{range .items[*]}{.spec.rules[*].host}{"\n"}{end}' 2>/dev/null | grep -c '\.tx\.test$' || true)
+                if [ "${COUNT:-0}" -ge 1 ]; then
+                  break
+                fi
+                sleep 2
+              done
+              HOSTS=$(kubectl -n "$NS" get ingress \
+                -o jsonpath='{range .items[*]}{.spec.rules[*].host}{"\n"}{end}' \
+                | grep -E '\.tx\.test$' | sort -u)
+              if [ -z "$HOSTS" ]; then
+                echo "ERROR: no .tx.test ingresses found in namespace $NS"
+                exit 1
+              fi
+              echo ">>> Registering hosts:"
+              echo "$HOSTS" | sed 's/^/    /'
+
+              echo ">>> Fetching current CoreDNS Corefile ..."
+              kubectl -n kube-system get cm coredns -o jsonpath='{.data.Corefile}' > /tmp/corefile.orig
+
+              # Build the new Corefile using python for reliable text handling.
+              # The script is stored in an env var so YAML block-scalar
+              # indentation does not affect python's whitespace parsing.
+              export INGRESS_IP HOSTS MARK_BEGIN MARK_END
+              PY_SCRIPT='
+              import os, re, sys
+              orig = open("/tmp/corefile.orig").read()
+              ip = os.environ["INGRESS_IP"]
+              hosts = [h for h in os.environ["HOSTS"].splitlines() if h]
+              mb, me = os.environ["MARK_BEGIN"], os.environ["MARK_END"]
+              pat = re.compile(
+                  r"^[ \t]*" + re.escape(mb) + r".*?" + re.escape(me) + r"[ \t]*\n",
+                  re.DOTALL | re.MULTILINE,
+              )
+              cleaned = pat.sub("", orig)
+              lines = ["    " + mb, "    hosts {"]
+              lines += ["        " + ip + " " + h for h in hosts]
+              lines += ["        fallthrough", "    }", "    " + me]
+              block = "\n".join(lines) + "\n"
+              new = re.sub(
+                  r"(^\.:53\s*\{\s*\n)",
+                  lambda m: m.group(1) + block,
+                  cleaned,
+                  count=1,
+                  flags=re.MULTILINE,
+              )
+              sys.stdout.write(new)
+              '
+              # Strip common leading whitespace that YAML injected.
+              python3 -c "import sys,textwrap; exec(textwrap.dedent(sys.stdin.read()))" \
+                <<< "$PY_SCRIPT" > /tmp/corefile.new
+
+              if cmp -s /tmp/corefile.orig /tmp/corefile.new; then
+                echo ">>> No change required."
+              else
+                echo ">>> Corefile diff:"
+                diff /tmp/corefile.orig /tmp/corefile.new || true
+                echo ">>> Patching kube-system/coredns ConfigMap ..."
+                PATCH=$(jq -n --arg c "$(cat /tmp/corefile.new)" '{data:{Corefile:$c}}')
+                kubectl -n kube-system patch cm coredns \
+                  --type merge \
+                  --patch "$PATCH"
+
+                echo ">>> Restarting coredns to pick up new Corefile ..."
+                kubectl -n kube-system rollout restart deployment coredns
+                kubectl -n kube-system rollout status deployment coredns --timeout=120s
+              fi
+              echo ">>> Done."
+{{- end }}
