@@ -1,0 +1,14 @@
+# be293-target platform inputs. TEMPLATE ONLY: every value below must come from the
+# target-cluster operator. Copy to <name>.private.yaml (git-ignored), fill it, then run
+#   ruby tools/build_target_values.rb <name>.private.yaml <out-dir>
+# Already confirmed and fixed in the chart contract (not set here): namespace be293,
+# ClusterIssuer letsencrypt-prod, cluster-default StorageClass.
+# No credentials belong in this file.
+dnsZone: "<<SET-BY-OPERATOR:dns-zone>>"                 # e.g. hosts become identity-hub.<dnsZone>
+ingressClass: "<<SET-BY-OPERATOR:ingress-class>>"       # kubectl get ingressclass
+externalDns: "<<SET-BY-OPERATOR:true-or-false>>"        # does ExternalDNS create the DNS records?
+registryHost: "<<SET-BY-OPERATOR:registry-host>>"       # registry holding the 14 mirrored BE-293 images
+imageRepository: "<<SET-BY-OPERATOR:registry-host/path>>"
+pullSecretName: "<<SET-BY-OPERATOR:pull-secret-name>>"  # pre-provisioned in namespace be293
+vaultAddress: "<<SET-BY-OPERATOR:vault-address>>"       # in-namespace release: http://be293-vault:8200
+helmHooksApproved: "<<SET-BY-OPERATOR:true-or-false>>"  # approval of the Helm hooks (see BLOCKERS B-04, B-11)

@@ -1,0 +1,11 @@
+# TEST FIXTURE ONLY - NOT A DEPLOYMENT INPUT. Syntactically valid, non-existent coordinates
+# (".internal" is reserved for private use) that let tests/run_tests.sh render the
+# be293-target profile offline. Real values come from the target-cluster operator.
+dnsZone: be293.ci-fixture.internal
+ingressClass: ci-fixture-ingress
+externalDns: true
+registryHost: registry.ci-fixture.internal
+imageRepository: registry.ci-fixture.internal/be293/be293-images
+pullSecretName: ci-fixture-pull
+vaultAddress: http://be293-vault:8200
+helmHooksApproved: true
