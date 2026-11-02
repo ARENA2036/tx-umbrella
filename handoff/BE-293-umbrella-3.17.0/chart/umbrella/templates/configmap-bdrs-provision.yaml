@@ -1,0 +1,10 @@
+{{- if and (index .Values "bdrs-server").enabled (dig "be293Provisioning" "enabled" false (index .Values "bdrs-server")) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: umbrella-bdrs-provision
+  namespace: {{ .Release.Namespace }}
+data:
+  provision.sh: |
+{{ .Files.Get "files/be293-bdrs-vault-provision.sh" | indent 4 }}
+{{- end }}

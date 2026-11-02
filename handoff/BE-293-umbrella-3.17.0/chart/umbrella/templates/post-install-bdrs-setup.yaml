@@ -1,0 +1,163 @@
+# #############################################################################
+  # Copyright (c) 2021,2024 Contributors to the Eclipse Foundation
+  #
+  # See the NOTICE file(s) distributed with this work for additional
+  # information regarding copyright ownership.
+  #
+  # This program and the accompanying materials are made available under the
+  # terms of the Apache License, Version 2.0 which is available at
+  # https://www.apache.org/licenses/LICENSE-2.0.
+  #
+  # Unless required by applicable law or agreed to in writing, software
+  # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  # License for the specific language governing permissions and limitations
+  # under the License.
+  #
+  # SPDX-License-Identifier: Apache-2.0
+  # #############################################################################
+---
+{{- /*
+   Variant-aware: the umbrella ships two mutually-exclusive BDRS charts —
+   `bdrs-server-memory` (in-memory; direct `server.endpoints.management.authKey`)
+   and `bdrs-server` (PostgreSQL-backed durable; management key held in its Vault,
+   so the plaintext value for seeding is carried in `seeding.managementKey`). This
+   hook seeds whichever is enabled, via the same management API. `dig` gives safe
+   access (the default `bdrs-server` block has no `seeding` map).
+*/ -}}
+{{- $mem := index .Values "bdrs-server-memory" -}}
+{{- $pg := index .Values "bdrs-server" -}}
+{{- $memOn := and $mem.enabled (dig "seeding" "enabled" false $mem) -}}
+{{- $pgOn := and $pg.enabled (dig "seeding" "enabled" false $pg) -}}
+{{ if or $memOn $pgOn }}
+{{- $bdrs := ternary $pg $mem $pgOn -}}
+{{- $bdrsUrl := tpl (dig "seeding" "url" "" $bdrs) . -}}
+{{- $bdrsKey := $pgOn | ternary (dig "seeding" "managementKey" "" $pg) (dig "server" "endpoints" "management" "authKey" "" $mem) -}}
+{{- $bpnList := dig "seeding" "bpnList" (list) $bdrs -}}
+{{- $fullName := include "app.fullname" . }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ $fullName }}-post-install-bdrs-setup
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+    app.kubernetes.io/instance: {{ .Release.Name | quote }}
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+  annotations:
+    # This is what defines this resource as a hook. Without this line, the
+    # job is considered part of the release. Run on upgrade too so the
+    # (in-memory) BDRS directory is re-seeded when the release is upgraded.
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    metadata:
+      name: "{{ .Release.Name }}"
+      labels:
+        app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+        app.kubernetes.io/instance: {{ .Release.Name | quote }}
+        helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: post-install-job
+          # alpine/k8s ships curl + jq (the busybox `wget` in alpine:3.19 can
+          # neither retry-on-status nor inflate the gzip-encoded management GET
+          # used for post-seed verification). Same image the IdentityHub seed
+          # hook already uses, so nothing new is vendored/pulled.
+          image: "alpine/k8s:1.31.3"
+          imagePullPolicy: IfNotPresent
+          {{- if and $pgOn (dig "seeding" "existingSecret" "" $pg) }}
+          env:
+            - name: BDRS_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ dig "seeding" "existingSecret" "" $pg | quote }}
+                  key: {{ dig "seeding" "existingSecretKey" "api-key" $pg | quote }}
+          {{- end }}
+          command:
+            - "/bin/sh"
+            - "-c"
+            - |
+              set -eu
+
+              BDRS_URL="{{ $bdrsUrl }}"
+              {{- if and $pgOn (dig "seeding" "existingSecret" "" $pg) }}
+              API_KEY="$BDRS_API_KEY"
+              {{- else }}
+              API_KEY="{{ $bdrsKey }}"
+              {{- end }}
+              DIR_EP="$BDRS_URL/api/management/bpn-directory"
+              # Expected BPNs — rendered from seeding.bpnList so it stays in
+              # lock-step with the POSTs below.
+              EXPECTED_BPNS="{{- range $index, $element := $bpnList }} {{ index $element "bpn" }}{{- end }}"
+
+              log() { echo "[bdrs-setup] $*"; }
+
+              # -----------------------------------------------------------------
+              # 1. Wait for the BDRS management endpoint to be Ready.
+              #    This Job runs at hook-weight -5, so the BDRS pod may still be
+              #    starting. The previous no-wait version fired the first POST
+              #    into a connection-refused and swallowed it (-O - discards the
+              #    error), which is how the provider's own BPN went missing while
+              #    the Job still reported Completed.
+              # -----------------------------------------------------------------
+              log "waiting for BDRS management endpoint at $DIR_EP ..."
+              ready=0
+              for i in $(seq 1 60); do
+                code=$(curl -sS -o /dev/null -w '%{http_code}' -H "x-api-key: $API_KEY" "$DIR_EP" || echo 000)
+                if [ "$code" = "200" ]; then ready=1; log "BDRS reachable (HTTP $code, attempt $i)"; break; fi
+                log "  not ready yet (attempt $i/60, last=$code)"; sleep 2
+              done
+              [ "$ready" = "1" ] || { log "FATAL: BDRS management endpoint never became ready" >&2; exit 1; }
+
+              # -----------------------------------------------------------------
+              # 2. POST each BPN->DID mapping, retrying until 2xx. 409 (already
+              #    present) is idempotent-success so post-upgrade re-seeds pass.
+              # -----------------------------------------------------------------
+              post_bpn() {
+                bpn="$1"; did="$2"; code=000
+                for i in $(seq 1 30); do
+                  code=$(curl -sS -o /tmp/resp -w '%{http_code}' \
+                    -X POST "$DIR_EP" \
+                    -H "Content-Type: application/json" -H "x-api-key: $API_KEY" \
+                    -d "{\"bpn\":\"$bpn\",\"did\":\"$did\"}" || echo 000)
+                  case "$code" in
+                    2??) log "seeded $bpn -> $did (HTTP $code)"; return 0 ;;
+                    409) log "$bpn already present (HTTP 409, idempotent)"; return 0 ;;
+                    *)   log "  POST $bpn failed (attempt $i/30, HTTP $code) — retrying"; sleep 2 ;;
+                  esac
+                done
+                log "FATAL: could not seed $bpn after retries (last HTTP $code)" >&2
+                cat /tmp/resp >&2 || true
+                return 1
+              }
+              {{- range $index, $element := $bpnList }}
+              post_bpn "{{ index $element "bpn" }}" "{{ index $element "did" }}"
+              {{- end }}
+
+              # -----------------------------------------------------------------
+              # 3. Verify EVERY expected BPN actually landed in the directory.
+              #    The mgmt GET returns gzip-encoded JSON — `curl --compressed`
+              #    transparently inflates it. The BDRS directory (bdrs-server
+              #    0.6.0) is a flat object keyed by BPN ({"<bpn>":"<did>"}), so
+              #    the BPNs are the object KEYS (`jq -r 'keys[]'`), not a `bpn`
+              #    field. Fail the Job LOUDLY if any expected BPN is missing so
+              #    the miss surfaces here, not later at data-transfer time as
+              #    "No BPN entry found for agreement".
+              # -----------------------------------------------------------------
+              log "verifying directory contents ..."
+              DIR_BPNS=$(curl -sS --compressed -H "x-api-key: $API_KEY" "$DIR_EP" | jq -r 'keys[]' | sort -u)
+              missing=""
+              for bpn in $EXPECTED_BPNS; do
+                printf '%s\n' "$DIR_BPNS" | grep -Fxq "$bpn" || missing="$missing $bpn"
+              done
+              if [ -n "$missing" ]; then
+                log "FATAL: BDRS directory is missing expected BPN(s):$missing" >&2
+                log "directory currently holds:" >&2
+                printf '%s\n' "$DIR_BPNS" >&2
+                exit 1
+              fi
+              log "SEED SUMMARY: all expected BPNs present in BDRS directory:$EXPECTED_BPNS"
+{{ end }}

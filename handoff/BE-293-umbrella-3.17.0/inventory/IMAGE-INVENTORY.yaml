@@ -1,0 +1,128 @@
+# BE-293 Umbrella 3.17.0 (DEV revision 21) — container image inventory and source lock.
+#
+# Evidence (read-only, 2026-11-02):
+#   reference       = image string rendered by revision 21 (helm get manifest/hooks). Private BE-293 images are
+#                     shown with the reserved example repository registry.example.invalid/be293/be293-images;
+#                     the real private repository is supplied by the platform owner (BE293_IMAGE_REPOSITORY).
+#   resolvedDigest  = digest DEV actually runs (pod status imageID). For tag-only upstream images this is the
+#                     digest to mirror; tags can move.
+#   source          = build source as recorded in the source checkout's publication manifest
+#                     (hack/be293-dockerhub-publication.yaml) and lock files (hack/portal-provisioning/*.lock.json).
+#                     Those files are UNTRACKED in the source checkout; nothing here was rebuilt or re-verified.
+# The publication manifest requires SBOM, provenance and vulnerability evidence; none was found for any image.
+#
+# Target action for every image: mirror BY DIGEST into the approved target registry, then point the overlay at it.
+# The chart guard (deploymentProfile k8s-dev-01) rejects private images outside be293.privateImages.approvedRepository
+# and requires digest references for them.
+
+privateImages:   # built for BE-293; all require pull Secret be293-dockerhub-pull
+  - reference: registry.example.invalid/be293/be293-images:edc-controlplane-72755ae-r3@sha256:d7d2d4dffc834ad2f1407bc06c56f152cd3b8885c329cf0d29c07b8cc20b88d4
+    usedBy: [dataprovider/dataconsumer-1/dataconsumer-2 edc-controlplane, edc-dataplane (init container)]
+    component: Tractus-X EDC control plane 0.13.0-SNAPSHOT (chart tractusx-connector 0.13.0-rc2)
+    source: {repository: Federity-X/public-tractusx-edc, revision: 72755ae7c3a38f38a483ff9b67b4caeafb86aa69, snapshot: clean-git-archive, codeChanges: none}
+    lock: documented (publication manifest)
+  - reference: registry.example.invalid/be293/be293-images:edc-dataplane-72755ae-r3@sha256:0fb581135290cccbb8676e526e69297aa25cba0677403a29fd0ea21a11b9862e
+    usedBy: [dataprovider/dataconsumer-1/dataconsumer-2 edc-dataplane]
+    component: Tractus-X EDC data plane 0.13.0-SNAPSHOT
+    source: {repository: Federity-X/public-tractusx-edc, revision: 72755ae7c3a38f38a483ff9b67b4caeafb86aa69, snapshot: clean-git-archive, codeChanges: none}
+    lock: documented (publication manifest)
+  - reference: registry.example.invalid/be293/be293-images:identityhub-3633af-r1@sha256:5c0548957e0d7af94259345d4f9ab0a4f85851b974b822cb7d9cc1f62a999805
+    usedBy: [be293-app-identity-hub-postgres]
+    component: Tractus-X IdentityHub 0.3.2 + portal-credential-callback extension
+    source: {repository: Federity-X/public-tractusx-identityhub, revision: 3633af6196a3654c65dd07f90d1eec6e7767426d, snapshot: clean-git-archive}
+    lock: documented (publication manifest)
+  - reference: registry.example.invalid/be293/be293-images:issuerservice-3633af-r1@sha256:8ee7427215933001710f2f7ce89d7508f192919154fb904cc832e4963f444d94
+    usedBy: [be293-app-issuer-service]
+    component: Tractus-X IssuerService 0.3.2 + keypair-api
+    source: {repository: Federity-X/public-tractusx-identityhub, revision: 3633af6196a3654c65dd07f90d1eec6e7767426d,
+             patch: hack/patches/identityhub-0.3.2-issuerservice-keypair-api.patch, patchSha256: eedac799ae3afd6a1a072b9a779ee15e1fb2c1dd03df1b9eabda4ee0318fad63}
+    lock: documented (publication manifest); patch file untracked in the source checkout
+  - reference: registry.example.invalid/be293/be293-images:portal-administration-cp-933aeeb25-8f847539c0@sha256:c2a975855ccad2b8582d23c2b0db72cad97d6bc0ed1d5a523d7fc701674bf2c7
+    usedBy: [be293-app-portal-administration-service]
+    component: Portal administration service (IdentityHub onboarding + Connector provisioning API)
+    source: {repository: Federity-X/public-portal-backend, revision: 933aeeb25 (local-only commit, not pushed),
+             patch: hack/patches/portal-backend-933aeeb-connector-provisioning.patch, patchSha256: 8f847539c094 (prefix)}
+    lock: documented (hack/portal-provisioning/administration.lock.json, untracked)
+  - reference: registry.example.invalid/be293/be293-images:portal-migrations-cp-933aeeb25-8f847539c0@sha256:8da02f527042675c8baacbc71c53883d71537163e9ab50b5a742397db9a4678f
+    usedBy: [Job be293-app-portal-portal-migrations (post-install,post-upgrade hook)]
+    component: Portal database migrations incl. 20261024150921_BE293ConnectorProvisioningRequests
+    source: {repository: Federity-X/public-portal-backend, revision: 933aeeb25 (local-only), patch: portal-backend-933aeeb-connector-provisioning.patch}
+    lock: documented (hack/portal-provisioning/migrations.lock.json, untracked)
+    note: The live hook Job of 2026-10-16 ran an older digest (sha256:bb575d9c…, tag portal-migrations-0421c50-r1). A separate,
+          non-Helm Job ran tag portal-migrations-cp-933aeeb25-3689fcfd91 (sha256:fb49a068…) on 2026-10-26. On a fresh install the
+          hook runs THIS reference once.
+  - reference: registry.example.invalid/be293/be293-images:portal-processes-worker-0421c50-security2-r1@sha256:652b4eb3d3e860e08bca71461a877cbed522e157d72606a63f9b585c309291ff
+    usedBy: [CronJob be293-app-portal-processes-worker]
+    source: {repository: Federity-X/public-portal-backend, revision: 0421c5030f94fdad26447d067ac9fbb3660f96b7,
+             patch: hack/patches/portal-processes-worker-security2.patch (Dockerfile/csproj only), patchSha256: ee4a39ed60885d3b03134ff2f33d43605dbc02bf368eca5a514aee96ee460d72}
+    lock: documented (publication manifest)
+  - reference: registry.example.invalid/be293/be293-images:portal-registration-claimfix-r1@sha256:68921f36be9d1caa229a7e448a10c675f789ca4c615169fada25fe4232a77d46
+    usedBy: [be293-app-portal-registration-service]
+    source: UNKNOWN (described as the OIDC `sub` claim fix; no lock file)
+    lock: MISSING
+  - reference: registry.example.invalid/be293/be293-images:portal-marketplace-claimfix-r1@sha256:1d21bef2267f6fa3d9a8d19d053444ebea043d52ecf1e8f746aafa2aa5e73013
+    usedBy: [be293-app-portal-marketplace-app-service]
+    source: UNKNOWN (OIDC `sub` claim fix; no lock file)
+    lock: MISSING
+  - reference: registry.example.invalid/be293/be293-images:portal-notification-claimfix-r1@sha256:ff98b2b5bfb83151b28e5baa027ed2ca5abc4273b399fb18425c1b85499a515e
+    usedBy: [be293-app-portal-notification-service]
+    source: UNKNOWN (OIDC `sub` claim fix; no lock file)
+    lock: MISSING
+  - reference: registry.example.invalid/be293/be293-images:digital-twin-registry-9ac65a-r1@sha256:8cb96a2e90a833a97f2056a33cfedc96dc636f74b11f5ba5a53081debb2047ac
+    usedBy: [be293-app-dataprovider-dtr]
+    component: Digital Twin Registry (chart 0.10.0) with cursor-pagination fix and sortDirection
+    source: {repository: Federity-X/public-sldt-digital-twin-registry, revision: 9ac65a347982b9ff5f63c035ee2a357bfc848d4e, snapshot: clean-git-archive}
+    lock: documented (publication manifest)
+  - reference: registry.example.invalid/be293/be293-images@sha256:d4402c82f16b968a2a19bc1072bcb3dbcf1d09865c6b19e6c65389a2db30d6ff
+    usedBy: [be293-app-dataprovider-submodelserver]
+    component: simple-data-backend (submodel server, JPA/PostgreSQL)
+    source: {repository: Federity-X/public-tractus-x-umbrella, revision: 13cfd0f3b77a88916d966b164806f0cdef6d3cb6, snapshot: be293-release-snapshot,
+             inventory: hack/be293-submodel-artifact.json (untracked)}
+    lock: documented (publication manifest, tagPrefix submodel-jpa); digest-to-entry mapping INFERRED
+  - reference: registry.example.invalid/be293/be293-images@sha256:9d5aa09ce5dbfccc8d34771526d5835f12294bbf7b91f1d0a0a511a726cd1447
+    usedBy: [Jobs centralidp/sharedidp realm-seeding-7]
+    source: UNKNOWN (Keycloak realm seeding; possibly portal-iam seeding + CA-chain patch)
+    lock: MISSING
+    note: Both revision-7 seeding Jobs FAILED on DEV.
+  - reference: registry.example.invalid/be293/be293-images@sha256:aaeef929374630ccd057dcf6c0b783f9148c5928f492c5a3650938de384512e5
+    usedBy: [Jobs centralidp/sharedidp realm-seeding-13]
+    source: UNKNOWN (Keycloak realm seeding)
+    lock: MISSING
+
+upstreamImages:   # public images; mirror by resolvedDigest
+  - {reference: "tractusx/bdrs-server@sha256:e73c566f3b20f9e0f3db21d6e49911d01fe22fd4c01f463e2a52e26914cfd206", usedBy: [bdrs-server]}
+  - {reference: "docker.io/tractusx/bpdm-gate:7.2.0", resolvedDigest: "sha256:5199857b8bfed7b064a155fd9d0858507ed6d8b7a1e15229505cf321f1feffed"}
+  - {reference: "docker.io/tractusx/bpdm-pool:7.2.0", resolvedDigest: "sha256:964d5929b963307bceffd49b04594f452f6faf0aaf5614a14c94f31e5cc899c8"}
+  - {reference: "docker.io/tractusx/bpdm-orchestrator:7.2.0", resolvedDigest: "sha256:2725cc6aefef3692938f5a5a48399daaec01bbbc4e6f7636463c2eadd3b63b04"}
+  - {reference: "docker.io/tractusx/bpdm-cleaning-service-dummy:7.2.0", resolvedDigest: "sha256:658ae29db035795cef853ce1d0eda63fcd924650fc0c10b3ba46d11529fa295e"}
+  - {reference: "docker.io/tractusx/sldt-bpn-discovery:0.6.1", resolvedDigest: "sha256:a4ee89d76181cbd2e376106aed304933a9ff4d8cff3b2bc1b568f41c0e812b3e"}
+  - {reference: "docker.io/tractusx/sldt-discovery-finder:0.6.1", resolvedDigest: "sha256:6c50fc69d572fb78e89fa0f88b47998892545eb634f787cdbf40ec29727316a9"}
+  - {reference: "docker.io/tractusx/portal-frontend:v2.6.0", resolvedDigest: "sha256:d0fe6dd295603fa8489b7af04179df1e80ae60246f0a6922957c1db5df395b95"}
+  - {reference: "docker.io/tractusx/portal-frontend-registration:v2.2.2", resolvedDigest: "sha256:36bf200b4b64becab2606c60121ad59cd145492907e35cf86b208ad1bc22269a"}
+  - {reference: "docker.io/tractusx/portal-assets:v2.6.0", resolvedDigest: "sha256:27cf6ef97e1d9710b4440b964bfe92e0ceba1fffb139b3924066ba576bb3dbc3"}
+  - {reference: "docker.io/tractusx/portal-services-service:v2.6.0", resolvedDigest: "sha256:ebd4dd791d2aaa30eacac2f65bd1d0b6b32bc80e91b04bd5a39cc8d4622dea16"}
+  - {reference: "docker.io/tractusx/portal-maintenance-service:v2.6.0", resolvedDigest: "sha256:d46b60a83539bbe68fa789db07ece025c980326bbceaf56685e4edb960ecb6a4"}
+  - {reference: "docker.io/tractusx/portal-provisioning-migrations:v2.6.0", resolvedDigest: "sha256:cbb0c469d5fc4af106a08a2fb8b9b5530877bf47e9698bff5bc0549e7e716992"}
+  - {reference: "docker.io/tractusx/portal-iam:v4.2.0", resolvedDigest: "sha256:e197cf4b73aa08fa7eb987b761c3bc8c805382f121207dd9f45e1617d565124b", usedBy: [Keycloak themes/init, sharedidp seeding]}
+  - {reference: "docker.io/tractusx/umbrella-init-container:2.3.0-init", resolvedDigest: "sha256:9db5f2fdaea3f43f3b17f7d1ef58238dc0da69f1b7ab5c7492febc227b5210ba"}
+  - {reference: "tractusx/sdfactory:2.1.26", resolvedDigest: "sha256:960a180db22a9e5d4f7e05396cf4bd0135fbcce82db7469ab10110c09f0c5257"}
+  - {reference: "docker.io/bitnamilegacy/keycloak:25.0.6-debian-12-r0", resolvedDigest: "sha256:f9c6583ae2b5079824b35f13ecef3ad96e90af185b8df7ae0b686e83c33e257b"}
+  - {reference: "docker.io/bitnamilegacy/postgresql:15-debian-11", resolvedDigest: "sha256:e5dd504985505a6e30b36a474a1764e9f93fd2367acf5d196dd14827cac7eac4"}
+  - {reference: "docker.io/bitnamilegacy/postgresql:15.4.0-debian-11-r45", resolvedDigest: "sha256:5dba7e6a514d5d628d484d23212dcaf3d7c5816af1d4970649547a03a99f78dc"}
+  - {reference: "docker.io/bitnamilegacy/postgresql@sha256:feff5aed093bcb118bd98b168a21a92bd4e82cfd35f0b6cd0032e2e63a4488ec", usedBy: [submodel-postgresql]}
+  - {reference: "docker.io/postgres:18.0@sha256:1ffc019dae94eca6b09a49ca67d37398951346de3c3d0cfe23d8d4ca33da83fb", usedBy: [identityhub-postgresql, issuer-postgresql]}
+  - {reference: "docker.io/postgres:18.3@sha256:a9abf4275f9e99bff8e6aed712b3b7dfec9cac1341bba01c1ffdfce9ff9fc34a", usedBy: [bdrs-postgresql]}
+  - {reference: "alpine/k8s:1.31.3", resolvedDigest: "sha256:7f485a380b3b890b8f4d0de63e242b79db728ef1e0fc5ae30d30cbe5f9e2d242", usedBy: [bdrs-server init, IdentityHub seed hook, BDRS setup hook]}
+  - {reference: "alpine/curl:latest", resolvedDigest: "sha256:e17bf3bdfef2efda277af9b73149ece806d30354b3eebd002555f66a8cabb357", usedBy: [realm-seeding init], note: "floating tag"}
+  - {reference: "busybox:1.28", resolvedDigest: "sha256:141c253bc4c3fd0a201d32dc1f493bcf3fff003b6df416dea4f41046e0f37d47"}
+  - {reference: "busybox:1.36", resolvedDigest: "sha256:73aaf090f3d85aa34ee199857f03fa3a95c8ede2ffd4cc2cdb5b94e566b11662"}
+  - {reference: "python:3.12-alpine", resolvedDigest: "sha256:1b668429b3511ab407d8e00648891631b0b1a4d7e15e3ca70f38ab5b91ad4ab4", usedBy: [didweb-resolver]}
+  - {reference: "python:3.11", resolvedDigest: UNKNOWN, usedBy: [post-install testdata Job], note: "no running pod; tag only"}
+  - {reference: "rnwood/smtp4dev:3.6.1", resolvedDigest: "sha256:912304153668068188d83b612fe0b7c4ec852dddb45fb2946895c7a72e89c6f2"}
+  - {reference: "hashicorp/vault:1.20.1", resolvedDigest: "sha256:50e1ecbe385742293c4a7e18c90f55d4dcc39724a05c6ab35933305fe7622cf3", usedBy: [be293-vault release]}
+
+helmTestHookImages:   # only used by `helm test`; not required for runtime
+  - busybox
+  - curlimages/curl
+  - docker.io/tractusx/bpdm-system-tester:7.2.0
+  - python:3.8-slim

@@ -1,0 +1,37 @@
+# Source: public-tractus-x-umbrella hack/manifests/be293-issuer-statuslist-ingress.yaml (tracked);
+# DNS suffix replaced by the reserved example domain. Spec identical to the live Ingress (2026-11-02).
+# Not Helm-managed. Apply after the be293-app release exists (backends are its Services).
+# Environment identifiers use the reserved example domain (RFC 6761); render a private copy with
+#   tools/apply_environment.rb <this file> <name>.private.yaml   (BE293_DNS_SUFFIX etc. as for the values overlay)
+# ClusterIssuer `letsencrypt-dev` and the ingress class `nginx` are the DEV platform contract; adapt them for the target.
+# BE-293 k8s-dev-01: public StatusList route for the IssuerService (applied 2026-10-22).
+# Issued credentials reference https://issuer-service.be293.dev.example.invalid/statuslist/<id>;
+# holders' CredentialWatchdog downloads it and moves credentials to ERROR on failure.
+# Mirrors be293-issuer-legacy-did (class + TLS secret). Deliberately no cert-manager or
+# ExternalDNS annotations: that Ingress already owns the certificate and the DNS record.
+# Not Helm-managed; created with `kubectl create` after a server-side dry-run.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: be293-issuer-statuslist
+  namespace: be293
+  labels:
+    app.kubernetes.io/part-of: be293
+    app.kubernetes.io/component: issuer-statuslist
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - issuer-service.be293.dev.example.invalid
+      secretName: issuer-service-legacy-did-be293-tls
+  rules:
+    - host: issuer-service.be293.dev.example.invalid
+      http:
+        paths:
+          - path: /statuslist
+            pathType: Prefix
+            backend:
+              service:
+                name: be293-app-issuer-service
+                port:
+                  name: statuslist
