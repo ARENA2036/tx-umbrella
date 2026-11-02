@@ -12,6 +12,7 @@ Generated 2026-11-02 by `tools/generate_manifest.rb`. It lists every file in thi
 | `.gitignore` | `39b4c965f0ff2f779c584738c4c389145f48acc35bbbb0bdc02d753e22d34a00` | documentation | new |
 | `BLOCKERS.md` | `6989b7bda9c331628b7c6a3182b9e76a387861889db9e7ea428c4435b1638718` | documentation | new |
 | `COMPONENT-MATRIX.md` | `cd7e7a1d6d8109f4274b5ecd140bb3e31da4e6fd5a89dfe55576d15454ef3c02` | documentation | new |
+| `CONTRIBUTION-ATTRIBUTION.md` | `2061e18f2dd2eb2d09ed98d13b9f4d3667e717ad79555931b7dc44c62e6f20eb` | documentation | new |
 | `DEPLOYMENT-CHECKLIST.md` | `f1a6177d0ccd6a4d697b8cb2d83b544a58ac44847e1cdf14bf59566701bec9d4` | documentation | new |
 | `README.md` | `5ec928b0dde9af8340aab8a6f68b423aaf612dcadf3ab34ff19e3a6fd9c75b4e` | documentation | new |
 | `chart/umbrella/.helmignore` | `c0b8b8fa7404e9c6991645067897e53c3c99d98529aa6a3b45c0bb0932df98ad` | copied unchanged | recovery/be293-dev-3.17.0/chart/umbrella/.helmignore (Git, commit 60c0b81) |
