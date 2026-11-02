@@ -101,7 +101,7 @@ every release revision Secret:
 
 Never commit `/Users/payam/be293-dev-values.yaml` or any copy of it.
 
-## Safe next steps for Saud
+## Safe next steps for deployment
 
 1. **Do not run** `helm upgrade be293-app ./charts/umbrella ...` from this branch.
 2. Pick a direction. This needs an owner decision:
