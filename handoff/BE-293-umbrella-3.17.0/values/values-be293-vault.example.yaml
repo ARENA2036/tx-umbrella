@@ -1,0 +1,47 @@
+# Values for the separate Vault release `be293-vault` (chart charts/umbrella-infrastructure 0.1.0,
+# HashiCorp Vault chart 0.30.1, Vault 1.20.1, single node, Raft storage, TLS disabled in-cluster).
+# Source: public-tractus-x-umbrella charts/values-be293-vault-dev.yaml (untracked). Copied unchanged;
+# it contains no credentials. It reproduces the live DEV release (5/5 objects, read-only check 2026-11-02).
+# Adapt for the target: storageClass (DEV: premium-perf1-stackit), size, resources.
+# Vault initialization, unsealing, policies and tokens are NOT done by this chart: see docs/VAULT-CONTRACT.md.
+external-secrets:
+  enabled: false
+vault:
+  enabled: true
+  injector:
+    enabled: false
+  server:
+    image:
+      repository: hashicorp/vault
+      tag: "1.20.1"
+      pullPolicy: IfNotPresent
+    dev:
+      enabled: false
+    authDelegator:
+      enabled: false
+    standalone:
+      enabled: true
+      config: |
+        ui = false
+        disable_mlock = true
+        listener "tcp" {
+          tls_disable = 1
+          address = "[::]:8200"
+          cluster_address = "[::]:8201"
+        }
+        storage "raft" {
+          path = "/vault/data"
+          node_id = "be293-vault-0"
+        }
+    dataStorage:
+      enabled: true
+      storageClass: premium-perf1-stackit
+      size: 2Gi
+      mountPath: /vault/data
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: 1
+        memory: 1Gi

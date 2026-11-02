@@ -1,0 +1,54 @@
+# Source: public-tractus-x-umbrella hack/manifests/be293-identityhub-did-documents-ingress.yaml (untracked);
+# DNS suffix replaced by the reserved example domain. Spec identical to the live Ingress (2026-11-02).
+# Not Helm-managed. Apply after the be293-app release exists (backends are its Services).
+# Environment identifiers use the reserved example domain (RFC 6761); render a private copy with
+#   tools/apply_environment.rb <this file> <name>.private.yaml   (BE293_DNS_SUFFIX etc. as for the values overlay)
+# ClusterIssuer `letsencrypt-dev` and the ingress class `nginx` are the DEV platform contract; adapt them for the target.
+# BE-293 k8s-dev-01: did:web documents for Portal-onboarded participants.
+#
+# be293-identityhub-legacy-did routes only four Exact paths (the seeded BPNs), so a
+# newly onboarded company's did:web:identity-hub.be293.dev.example.invalid:<BPN>
+# cannot be resolved (VALIDATE_DID_DOCUMENT, and IssuerService verifying the holder).
+# This Ingress adds exactly one path shape: /<BPNL + 12 [0-9A-Z]>/did.json.
+#
+# Containment:
+# - Backend is the IdentityHub `did` port (8084), which serves only DID documents.
+#   Identity (8082), credentials (8083) and STS (8087) are different ports and are not
+#   reachable through this Ingress whatever the path.
+# - No rewrite: IdentityHub derives the DID from the request host and path.
+# - ingress-nginx prefixes regex paths with ^: `location ~* "^/BPNL[0-9A-Z]{12}/did\.json$"`
+#   (case-insensitive, anchored at both ends).
+# - use-regex applies to every path of this host in ingress-nginx. Exact paths (all
+#   of be293-identityhub-legacy-did) stay exact `location =` blocks; a Prefix path on
+#   this host would turn into a regex, so apply-ingress refuses if one exists.
+# Mirrors be293-identityhub-legacy-did (class + TLS secret); no cert-manager or
+# ExternalDNS annotations: that Ingress already owns the certificate and DNS record.
+# Not Helm-managed; created by `hack/be293-onboarding-fixes.zsh apply-ingress` after
+# a live comparison with the legacy Ingress and a server-side dry-run.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: be293-identityhub-did-documents
+  namespace: be293
+  labels:
+    app.kubernetes.io/part-of: be293
+    app.kubernetes.io/component: identityhub-did-documents
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - identity-hub.be293.dev.example.invalid
+      secretName: identity-hub-legacy-did-be293-tls
+  rules:
+    - host: identity-hub.be293.dev.example.invalid
+      http:
+        paths:
+          - path: /BPNL[0-9A-Z]{12}/did\.json$
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: be293-app-identity-hub-postgres
+                port:
+                  name: did

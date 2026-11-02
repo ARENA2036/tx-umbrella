@@ -1,0 +1,34 @@
+# Source: reconstructed from live Ingress be293/be293-issuer-legacy-did (k8s-dev-01, read-only
+# `kubectl get -o json`, 2026-11-02); status, uid, resourceVersion, timestamps and managedFields dropped.
+# Role: publishes the issuer DID (did:web:issuer-service.<dns>:BPNL00000003CRHK) and owns the TLS
+# certificate and DNS record for the issuer host. Ingress 13 reuses its TLS Secret. REQUIRED.
+# Not Helm-managed. Apply after the be293-app release exists (backends are its Services).
+# Environment identifiers use the reserved example domain (RFC 6761); render a private copy with
+#   tools/apply_environment.rb <this file> <name>.private.yaml   (BE293_DNS_SUFFIX etc. as for the values overlay)
+# ClusterIssuer `letsencrypt-dev` and the ingress class `nginx` are the DEV platform contract; adapt them for the target.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: be293-issuer-legacy-did
+  namespace: be293
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-dev
+    external-dns.alpha.kubernetes.io/hostname: issuer-service.be293.dev.example.invalid
+    external-dns.alpha.kubernetes.io/ttl: "300"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - issuer-service.be293.dev.example.invalid
+      secretName: issuer-service-legacy-did-be293-tls
+  rules:
+    - host: issuer-service.be293.dev.example.invalid
+      http:
+        paths:
+          - path: /BPNL00000003CRHK/did.json
+            pathType: Exact
+            backend:
+              service:
+                name: be293-app-issuer-service
+                port:
+                  name: did

@@ -1,0 +1,102 @@
+{
+  "ConfigMap/be293-vault-config": {
+    "hook": null,
+    "images": [
+
+    ],
+    "env": [
+
+    ],
+    "secretRefs": [
+
+    ],
+    "vct": [
+
+    ]
+  },
+  "Pod/be293-vault-server-test": {
+    "hook": "test",
+    "images": [
+      "hashicorp/vault:1.20.1"
+    ],
+    "env": [
+      "be293-vault-server-test:VAULT_ADDR"
+    ],
+    "secretRefs": [
+
+    ],
+    "vct": [
+
+    ]
+  },
+  "Service/be293-vault": {
+    "hook": null,
+    "images": [
+
+    ],
+    "env": [
+
+    ],
+    "secretRefs": [
+
+    ],
+    "vct": [
+
+    ]
+  },
+  "Service/be293-vault-internal": {
+    "hook": null,
+    "images": [
+
+    ],
+    "env": [
+
+    ],
+    "secretRefs": [
+
+    ],
+    "vct": [
+
+    ]
+  },
+  "ServiceAccount/be293-vault": {
+    "hook": null,
+    "images": [
+
+    ],
+    "env": [
+
+    ],
+    "secretRefs": [
+
+    ],
+    "vct": [
+
+    ]
+  },
+  "StatefulSet/be293-vault": {
+    "hook": null,
+    "images": [
+      "hashicorp/vault:1.20.1"
+    ],
+    "env": [
+      "vault:HOME",
+      "vault:HOSTNAME(ref)",
+      "vault:HOST_IP(ref)",
+      "vault:POD_IP(ref)",
+      "vault:SKIP_CHOWN",
+      "vault:SKIP_SETCAP",
+      "vault:VAULT_ADDR",
+      "vault:VAULT_API_ADDR",
+      "vault:VAULT_CLUSTER_ADDR",
+      "vault:VAULT_K8S_NAMESPACE(ref)",
+      "vault:VAULT_K8S_POD_NAME(ref)"
+    ],
+    "secretRefs": [
+
+    ],
+    "vct": [
+      "data:2Gi:premium-perf1-stackit"
+    ]
+  }
+}
