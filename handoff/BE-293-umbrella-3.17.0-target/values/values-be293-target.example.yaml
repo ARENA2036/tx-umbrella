@@ -17,88 +17,48 @@
 # SPDX-License-Identifier: Apache-2.0
 # #############################################################################
 ---
-# BE-293 — SANITIZED EXAMPLE, NOT DEPLOYABLE. be293-target profile values for
-# BE-293 Umbrella 3.17.0.
+# BE-293 — SANITIZED EXAMPLE, NOT DEPLOYABLE. Umbrella 3.17.0 target values.
 #
-# Derived by tools/derive_target_example.rb from
-# ../BE-293-umbrella-3.17.0/values/values-be293-dev.example.yaml. Keys follow
-# the official Tractus-X order (charts/umbrella/values.yaml, then each
-# subchart's values.yaml); this is formatting only. Re-running the derive tool
-# produces the same data in alphabetical key order.
+# Structure and section placement follow Federity-X PR #2:
+# charts/umbrella/values-adopter-portal-onboarding-identityhub.yaml.
+# This is a FULL target overlay (not the small Federity-X onboarding overlay).
+# Additional deployment and persistence settings are kept after the PR #2 sections.
 #
-# Confirmed by the target-cluster operator: namespace be293, ClusterIssuer
-# letsencrypt-prod, cluster-default StorageClass. Everything else is a reserved
-# example name (example.invalid) or a <<SET-BY-OPERATOR:...>> marker, and the
-# chart guard rejects both. Do not deploy this file: build the private overlay
-# with tools/build_target_values.rb. Credentials come from the secrets overlay
-# (../BE-293-umbrella-3.17.0/values/values-be293-dev.secrets.example.yaml).
+# Derived from ../BE-293-umbrella-3.17.0/values/values-be293-dev.example.yaml.
+# Running tools/derive_target_example.rb again currently resets ordering.
+#
+# Namespace be293, ClusterIssuer letsencrypt-prod, default StorageClass.
+# All other sample domains, operator markers and secrets placeholders must be
+# replaced through tools/build_target_values.rb and the private secrets overlay.
+# Do not deploy this example directly.
 
-_edcRuntimeConfiguration:
-  initContainers:
-    - command:
-        - "/bin/sh"
-        - "-ec"
-        - 'umask 0077; : > /work/configuration.properties'
-      image: registry.example.invalid/be293/be293-images:edc-controlplane-72755ae-r3@sha256:d7d2d4dffc834ad2f1407bc06c56f152cd3b8885c329cf0d29c07b8cc20b88d4
-      imagePullPolicy: Always
-      name: initialize-runtime-configuration
-      securityContext:
-        allowPrivilegeEscalation: false
-        capabilities:
-          drop:
-            - ALL
-        readOnlyRootFilesystem: true
-        runAsGroup: 10001
-        runAsNonRoot: true
-        runAsUser: 10001
-      volumeMounts:
-        - mountPath: "/work"
-          name: edc-runtime-configuration
-  volumeMounts:
-    - mountPath: "/app/configuration.properties"
-      name: edc-runtime-configuration
-      subPath: configuration.properties
-  volumes:
-    - emptyDir: {}
-      name: edc-runtime-configuration
+# In-cluster did:web resolver shim (same component as Federity-X PR #2).
+didwebResolver:
+  enabled: true
 
-be293:
-  deploymentProfile: be293-target
-  coreDnsPatch:
-    enabled: false
-  target:
-    namespace: be293
-    clusterIssuer: letsencrypt-prod
-    storageClassPolicy: cluster-default
-    dnsZone: be293.target.example.invalid
-    ingressClass: "<<SET-BY-OPERATOR:ingress-class>>"
-    externalDns: 
-    registryHost: registry.example.invalid
-    imageRepository: registry.example.invalid/be293/be293-images
-    pullSecretName: "<<SET-BY-OPERATOR:pull-secret-name>>"
-    vaultAddress: "<<SET-BY-OPERATOR:vault-address>>"
-    vaultAuthMode: secret-backed-static-token
-    secretDelivery: preprovisioned-kubernetes-secrets
-    helmHooksApproved: false
-    externalIngresses:
-      identityHubDidBpns:
-        - BPNL00000003CRHK
-        - BPNL00000003AYRE
-        - BPNL00000003AZQP
-        - BPNL00000003AVTH
-  routing:
-    dnsZone: be293.target.example.invalid
-    mode: dns-pending-public-contract
-    publicIngressEnabled: false
-  privateImages:
-    enabled: true
-    pullSecretName: "<<SET-BY-OPERATOR:pull-secret-name>>"
-    registry: registry.example.invalid
-    repository: registry.example.invalid/be293/be293-images
-    requireDigestReferences: true
-
+# ---- wallet: IdentityHub (shared, persistent target topology) ----
 wallet:
   mode: identityHub
+  identityHub:
+    imagesOverridden: true
+    shared:
+      host: identity-hub.be293.target.example.invalid
+      baseUrl: http://identity-hub.be293.target.example.invalid
+      stsUrl: http://identity-hub.be293.target.example.invalid/api/sts
+      tokenUrl: http://identity-hub.be293.target.example.invalid/oauth/token
+      credentialServiceUrl: http://identity-hub.be293.target.example.invalid/api
+      didBase: did:web:identity-hub.be293.target.example.invalid
+      issuerServiceHost: issuer-service.be293.target.example.invalid
+      issuerServiceBaseUrl: http://issuer-service.be293.target.example.invalid
+      internalIdentityHubService: identity-hub-postgres
+      ports:
+        ihIdentity: 8082
+        ihCredentials: 8083
+        ihDid: 8084
+        ihSts: 8087
+      credentialServiceParticipantContextIdEncoding: plain
+      vaultToken: ''
+
   operatorBpn: BPNL00000003CRHK
   participants:
     provider:
@@ -120,28 +80,588 @@ wallet:
     tokenUrl: http://ssi-dim-wallet-stub.be293.target.example.invalid/oauth/token
     credentialServiceUrl: http://ssi-dim-wallet-stub.be293.target.example.invalid/api
     didBase: did:web:ssi-dim-wallet-stub.be293.target.example.invalid
-  identityHub:
-    imagesOverridden: true
-    shared:
-      host: identity-hub.be293.target.example.invalid
-      baseUrl: http://identity-hub.be293.target.example.invalid
-      stsUrl: http://identity-hub.be293.target.example.invalid/api/sts
-      tokenUrl: http://identity-hub.be293.target.example.invalid/oauth/token
-      credentialServiceUrl: http://identity-hub.be293.target.example.invalid/api
-      didBase: did:web:identity-hub.be293.target.example.invalid
-      issuerServiceHost: issuer-service.be293.target.example.invalid
-      issuerServiceBaseUrl: http://issuer-service.be293.target.example.invalid
-      internalIdentityHubService: identity-hub-postgres
-      ports:
-        ihIdentity: 8082
-        ihCredentials: 8083
-        ihDid: 8084
-        ihSts: 8087
-      credentialServiceParticipantContextIdEncoding: plain
-      vaultToken: ''
 
+# ---- onboarding components (as in Federity-X PR #2) ----
+bpdm:
+  enabled: true
+  postgres:
+    primary:
+      persistence:
+        enabled: true
+        storageClass: ''
+        accessModes:
+          - ReadWriteOnce
+        size: 5Gi
+  bpdm-gate:
+    ingress:
+      enabled: false
+      hosts:
+        - host: business-partners.be293.target.example.invalid
+    applicationConfig:
+      bpdm:
+        security:
+          auth-server-url: https://centralidp-be293.target.example.invalid/auth
+        client:
+          pool:
+            base-url: http://be293-app-bpdm-pool
+          orchestrator:
+            base-url: http://be293-app-bpdm-orchestrator
+    recoveryPreserveExistingSecret: true
+  bpdm-pool:
+    ingress:
+      enabled: false
+      hosts:
+        - host: business-partners.be293.target.example.invalid
+    applicationConfig:
+      bpdm:
+        security:
+          auth-server-url: https://centralidp-be293.target.example.invalid/auth
+        client:
+          orchestrator:
+            base-url: http://be293-app-bpdm-orchestrator
+    recoveryPreserveExistingSecret: true
+  bpdm-orchestrator:
+    ingress:
+      enabled: false
+      hosts:
+        - host: business-partners.be293.target.example.invalid
+    applicationConfig:
+      bpdm:
+        security:
+          auth-server-url: https://centralidp-be293.target.example.invalid/auth
+    recoveryPreserveExistingSecret: true
+  bpdm-cleaning-service-dummy:
+    applicationConfig:
+      bpdm:
+        client:
+          orchestrator:
+            base-url: http://be293-app-bpdm-orchestrator
+            provider:
+              issuer-uri: https://centralidp-be293.target.example.invalid/auth/realms/CX-Central
+    recoveryPreserveExistingSecret: true
+
+bdrs-server-memory:
+  enabled: false
+  server:
+    trustedIssuers:
+      - did:web:issuer-service.be293.target.example.invalid:BPNL00000003CRHK
+    env:
+      EDC_IAM_DID_WEB_USE_HTTPS: false
+    endpoints:
+      management:
+        authKey: "<<SET-FROM-SECRET-STORE:dev-overlay:bdrs-server-memory.server.endpoints.management.authKey>>"
+    ingresses:
+      - enabled: false
+        hostname: bdrs-server.be293.target.example.invalid
+        endpoints:
+          - directory
+          - management
+        className: nginx
+        tls:
+          enabled: false
+
+  seeding:
+    enabled: true
+    bpnList:
+      - bpn: BPNL00000003CRHK
+        did: did:web:identity-hub.be293.target.example.invalid:BPNL00000003CRHK
+      - bpn: BPNL00000003AYRE
+        did: did:web:identity-hub.be293.target.example.invalid:BPNL00000003AYRE
+      - bpn: BPNL00000003AZQP
+        did: did:web:identity-hub.be293.target.example.invalid:BPNL00000003AZQP
+      - bpn: BPNL00000003AVTH
+        did: did:web:identity-hub.be293.target.example.invalid:BPNL00000003AVTH
+selfdescription:
+  enabled: true
+  sdfactory:
+    secret:
+      jwkSetUri: http://centralidp.be293.target.example.invalid/auth/realms/CX-Central/protocol/openid-connect/certs
+      preserveExisting: true
+      env:
+        TX_PORTAL_CALLBACK_BASE_URL: http://portal-backend.be293.target.example.invalid
+        TX_PORTAL_CALLBACK_TOKEN_URL: http://centralidp.be293.target.example.invalid/auth/realms/CX-Central/protocol/openid-connect/token
+      iatp:
+        sts:
+          oauth:
+            client:
+              id: did:web:identity-hub.be293.target.example.invalid:BPNL00000003CRHK
+      ingresses:
+        - enabled: false
+          hostname: identity-hub.be293.target.example.invalid
+        - enabled: false
+          hostname: identity-hub-admin.be293.target.example.invalid
+  ingress:
+    enabled: false
+    hosts:
+      - host: sdfactory.be293.target.example.invalid
+
+smtp4dev:
+  enabled: true
+  ingress:
+    url: smtp.be293.target.example.invalid
+    enabled: false
+
+bpndiscovery:
+  enabled: true
+  postgresql:
+    image:
+      registry: docker.io
+      repository: bitnamilegacy/postgresql
+      tag: 15-debian-11
+
+    primary:
+      persistence:
+        enabled: true
+        size: 5Gi
+        storageClass: ''
+        accessModes:
+          - ReadWriteOnce
+  bpndiscovery:
+    host: semantics.be293.target.example.invalid
+    ingress:
+      enabled: false
+    idp:
+      issuerUri: https://centralidp-be293.target.example.invalid/auth/realms/CX-Central
+    discoveryfinderClient:
+      baseUrl: semantics.be293.target.example.invalid/discoveryfinder
+      provider:
+        tokenUri: https://centralidp-be293.target.example.invalid/auth/realms/CX-Central/protocol/openid-connect/token
+discoveryfinder:
+  enabled: true
+  postgresql:
+    image:
+      registry: docker.io
+      repository: bitnamilegacy/postgresql
+      tag: 15-debian-11
+
+    primary:
+      persistence:
+        enabled: true
+        size: 5Gi
+        storageClass: ''
+        accessModes:
+          - ReadWriteOnce
+  discoveryfinder:
+    host: semantics.be293.target.example.invalid
+    properties:
+      discoveryfinder:
+        initialEndpoints:
+          - endpointAddress: http://portal-backend.be293.target.example.invalid/api/administration/Connectors/discovery
+            documentation: http://portal-backend.be293.target.example.invalid/api/administration/swagger/index.html
+    idp:
+      issuerUri: http://centralidp.be293.target.example.invalid/auth/realms/CX-Central
+    ingress:
+      enabled: false
+
+# The standalone credential issuer is disabled in favor of IssuerService.
+ssi-credential-issuer:
+  enabled: false
+  portalBackendAddress: http://portal-backend.be293.target.example.invalid
+  walletAddress: http://ssi-dim-wallet-stub.be293.target.example.invalid
+  walletTokenAddress: http://ssi-dim-wallet-stub.be293.target.example.invalid/oauth/token
+  service:
+    credential:
+      issuerDid: did:web:ssi-dim-wallet-stub.be293.target.example.invalid:BPNL00000003CRHK
+      statusListUrl: http://ssi-dim-wallet-stub.be293.target.example.invalid/status-list/BPNL00000003CRHK/8a6c7486-1e1f-4555-bdd2-1a178182651e
+  centralidp:
+    address: http://centralidp.be293.target.example.invalid
+  ingress:
+    enabled: false
+    annotations:
+      nginx.ingress.kubernetes.io/cors-allow-origin: http://*.be293.target.example.invalid
+    hosts:
+      - host: ssi-credential-issuer.be293.target.example.invalid
+
+# ---- IdentityHub + IssuerService (PostgreSQL-backed target services) ----
+identity-and-trust-bundle:
+  enabled: true
+  ssi-dim-wallet-stub:
+    enabled: false
+    wallet:
+      host: ssi-dim-wallet-stub.be293.target.example.invalid
+      ingress:
+        enabled: false
+      didHost: ssi-dim-wallet-stub.be293.target.example.invalid
+      stubUrl: http://ssi-dim-wallet-stub.be293.target.example.invalid
+      portal:
+        host: http://portal-backend.be293.target.example.invalid
+      keycloak:
+        authServerUrl: http://centralidp.be293.target.example.invalid/auth
+  identity-hub:
+    enabled: false
+    identityhub:
+      image:
+        pullPolicy: Always
+      iatp:
+        sts:
+          oauth:
+            client:
+              id: did:web:identity-hub.be293.target.example.invalid:BPNL00000003CRHK
+      ingresses:
+        - enabled: false
+          hostname: identity-hub.be293.target.example.invalid
+        - enabled: false
+          hostname: identity-hub-admin.be293.target.example.invalid
+  issuer-service:
+    enabled: true
+    issuerservice:
+      image:
+        repository: registry.example.invalid/be293/be293-images
+        tag: issuerservice-3633af-r1@sha256:8ee7427215933001710f2f7ce89d7508f192919154fb904cc832e4963f444d94
+        pullPolicy: Always
+      initContainers:
+        - name: wait-for-postgres
+          image: busybox:1.36
+          command:
+            - sh
+            - "-c"
+            - |
+              echo "[wait-for-postgres] waiting for be293-app-issuer-postgresql:5432 ...";
+              until nc -z be293-app-issuer-postgresql 5432; do
+                echo "[wait-for-postgres] not ready, retry in 2s"; sleep 2;
+              done;
+              echo "[wait-for-postgres] postgres is reachable";
+      ingresses:
+        - enabled: false
+        - enabled: false
+      env:
+        EDC_IH_API_SUPERUSER_KEY: "<<SET-FROM-SECRET-STORE:dev-overlay:identity-and-trust-bundle.issuer-service.issuerservice.env.EDC_IH_API_SUPERUSER_KEY>>"
+      envValueFrom:
+        EDC_DATASOURCE_ATTESTATIONDEFINITIONS_PASSWORD:
+          secretKeyRef:
+            key: postgres-password
+            name: be293-issuerservice-postgres
+        EDC_DATASOURCE_CREDENTIALDEFINITIONS_PASSWORD:
+          secretKeyRef:
+            key: postgres-password
+            name: be293-issuerservice-postgres
+        EDC_DATASOURCE_CREDENTIALS_PASSWORD:
+          secretKeyRef:
+            key: postgres-password
+            name: be293-issuerservice-postgres
+        EDC_DATASOURCE_CUSTOMATTESTATIONS_PASSWORD:
+          secretKeyRef:
+            key: postgres-password
+            name: be293-issuerservice-postgres
+        EDC_DATASOURCE_DIDRESOURCE_PASSWORD:
+          secretKeyRef:
+            key: postgres-password
+            name: be293-issuerservice-postgres
+        EDC_DATASOURCE_HOLDER_PASSWORD:
+          secretKeyRef:
+            key: postgres-password
+            name: be293-issuerservice-postgres
+        EDC_DATASOURCE_ISSUANCEPROCESS_PASSWORD:
+          secretKeyRef:
+            key: postgres-password
+            name: be293-issuerservice-postgres
+        EDC_DATASOURCE_JTI_PASSWORD:
+          secretKeyRef:
+            key: postgres-password
+            name: be293-issuerservice-postgres
+        EDC_DATASOURCE_KEYPAIR_PASSWORD:
+          secretKeyRef:
+            key: postgres-password
+            name: be293-issuerservice-postgres
+        EDC_DATASOURCE_PARTICIPANT_PASSWORD:
+          secretKeyRef:
+            key: postgres-password
+            name: be293-issuerservice-postgres
+        EDC_DATASOURCE_PARTICIPANTCONTEXT_PASSWORD:
+          secretKeyRef:
+            key: postgres-password
+            name: be293-issuerservice-postgres
+        EDC_DATASOURCE_PARTICIPANTCONTEXTCONFIG_PASSWORD:
+          secretKeyRef:
+            key: postgres-password
+            name: be293-issuerservice-postgres
+        EDC_DATASOURCE_STSCLIENT_PASSWORD:
+          secretKeyRef:
+            key: postgres-password
+            name: be293-issuerservice-postgres
+      runtimeSecret:
+        enabled: true
+        name: be293-issuerservice-runtime
+    install:
+      vault: false
+    postgresql:
+      primary:
+        persistence:
+          enabled: true
+          storageClass: ''
+      auth:
+        existingSecret: be293-issuerservice-postgres
+        secretKeys:
+          passwordKey: postgres-password
+    vault:
+      server:
+        authDelegator:
+          enabled: false
+      hashicorp:
+        url: "<<SET-BY-OPERATOR:vault-address>>"
+        paths:
+          secret: "/v1/secret"
+    imagePullSecrets:
+      - name: "<<SET-BY-OPERATOR:pull-secret-name>>"
+    statuslist:
+      signing_key:
+        alias: issuer-bpnl00000003crhk-key-1
+      callback:
+        address: https://issuer-service.be293.target.example.invalid/statuslist
+    pgadmin4:
+      enabled: false
+
+  identity-hub-postgres:
+    enabled: true
+    install:
+      postgresql: true
+      vault: false
+    imagePullSecrets:
+      - name: "<<SET-BY-OPERATOR:pull-secret-name>>"
+    identityhub:
+      image:
+        repository: registry.example.invalid/be293/be293-images
+        tag: identityhub-3633af-r1@sha256:5c0548957e0d7af94259345d4f9ab0a4f85851b974b822cb7d9cc1f62a999805
+        pullPolicy: Always
+      replicaCount: 1
+      env:
+        EDC_IH_API_SUPERUSER_KEY: "<<SET-FROM-SECRET-STORE:dev-overlay:identity-and-trust-bundle.identity-hub-postgres.identityhub.env.EDC_IH_API_SUPERUSER_KEY>>"
+        TX_PORTAL_CALLBACK_BASE_URL: http://be293-app-portal-administration-service:8080
+        TX_PORTAL_CALLBACK_TOKEN_URL: https://centralidp-be293.target.example.invalid/auth/realms/CX-Central/protocol/openid-connect/token
+        TX_PORTAL_CALLBACK_CLIENT_ID: sa-cl24-01
+      livenessProbe:
+        initialDelaySeconds: 90
+        periodSeconds: 15
+        timeoutSeconds: 10
+        failureThreshold: 6
+      readinessProbe:
+        initialDelaySeconds: 90
+        periodSeconds: 15
+        timeoutSeconds: 10
+        failureThreshold: 6
+      endpoints:
+        identity:
+          authKeyAlias: super-user-apikey
+        accounts:
+          authKeyAlias: sup3r$3cr3t
+      envValueFrom:
+        EDC_DATASOURCE_CREDENTIALREQUEST_PASSWORD:
+          secretKeyRef:
+            key: postgres-password
+            name: be293-identityhub-postgres
+        EDC_DATASOURCE_CREDENTIALS_PASSWORD:
+          secretKeyRef:
+            key: postgres-password
+            name: be293-identityhub-postgres
+        EDC_DATASOURCE_DIDRESOURCE_PASSWORD:
+          secretKeyRef:
+            key: postgres-password
+            name: be293-identityhub-postgres
+        EDC_DATASOURCE_JTI_PASSWORD:
+          secretKeyRef:
+            key: postgres-password
+            name: be293-identityhub-postgres
+        EDC_DATASOURCE_KEYPAIR_PASSWORD:
+          secretKeyRef:
+            key: postgres-password
+            name: be293-identityhub-postgres
+        EDC_DATASOURCE_PARTICIPANTCONTEXT_PASSWORD:
+          secretKeyRef:
+            key: postgres-password
+            name: be293-identityhub-postgres
+        EDC_DATASOURCE_PARTICIPANTCONTEXTCONFIG_PASSWORD:
+          secretKeyRef:
+            key: postgres-password
+            name: be293-identityhub-postgres
+        EDC_DATASOURCE_STSCLIENT_PASSWORD:
+          secretKeyRef:
+            key: postgres-password
+            name: be293-identityhub-postgres
+      runtimeSecret:
+        enabled: true
+        name: be293-identityhub-runtime
+      ingresses:
+        - enabled: false
+          hostname: identity-hub.be293.target.example.invalid
+          endpoints:
+            - credentials
+            - did
+            - sts
+          className: nginx
+          tls:
+            enabled: false
+        - enabled: false
+          hostname: identity-hub-admin.be293.target.example.invalid
+          endpoints:
+            - identity
+            - accounts
+          className: nginx
+          tls:
+            enabled: false
+      resources:
+        limits:
+          cpu: 1
+          memory: 2Gi
+        requests:
+          cpu: 250m
+          memory: 512Mi
+      iatp:
+        sts:
+          oauth:
+            client:
+              enabled: false
+              id: did:web:identity-hub.be293.target.example.invalid:BPNL00000003CRHK
+              secret: "<<SET-FROM-SECRET-STORE:dev-overlay:identity-and-trust-bundle.identity-hub-postgres.identityhub.iatp.sts.oauth.client.secret>>"
+              secret_alias: "<<SET-FROM-SECRET-STORE:dev-overlay:identity-and-trust-bundle.identity-hub-postgres.identityhub.iatp.sts.oauth.client.secret_alias>>"
+              x_api_key: "<<SET-FROM-SECRET-STORE:dev-overlay:identity-and-trust-bundle.identity-hub-postgres.identityhub.iatp.sts.oauth.client.x_api_key>>"
+      didweb:
+        https: false
+    postgresql:
+      jdbcUrl: jdbc:postgresql://{{ .Release.Name }}-identityhub-postgresql:5432/ih
+      primary:
+        persistence:
+          enabled: true
+          storageClass: ''
+      auth:
+        existingSecret: be293-identityhub-postgres
+        secretKeys:
+          passwordKey: postgres-password
+      nameOverride: identityhub-postgresql
+    vault:
+      hashicorp:
+        url: "<<SET-BY-OPERATOR:vault-address>>"
+
+# ---- Portal backend: BE-293 images + IdentityHub onboarding ----
 portal:
   enabled: true
+  backend:
+    walletProvider: IdentityHub
+    registration:
+      image:
+        name: registry.example.invalid/be293/be293-images
+        registrationservicetag: portal-registration-claimfix-r1@sha256:68921f36be9d1caa229a7e448a10c675f789ca4c615169fada25fe4232a77d46
+        pullPolicy: Always
+        pullSecrets:
+          - name: "<<SET-BY-OPERATOR:pull-secret-name>>"
+    administration:
+      image:
+        name: registry.example.invalid/be293/be293-images
+        administrationservicetag: portal-administration-cp-933aeeb25-8f847539c0@sha256:c2a975855ccad2b8582d23c2b0db72cad97d6bc0ed1d5a523d7fc701674bf2c7
+        pullPolicy: Always
+        pullSecrets:
+          - name: "<<SET-BY-OPERATOR:pull-secret-name>>"
+      issuerdid: did:web:ssi-dim-wallet-stub.be293.target.example.invalid:BPNL00000003CRHK
+      connectorProvisioning:
+        connectorLocationId: DE
+        devOperatorRequestsEnabled: true
+        hostCompanyId: 2dc4249f-b5ca-4d42-bef1-7a7a950a4f87
+    portalmigrations:
+      image:
+        name: registry.example.invalid/be293/be293-images
+        portalmigrationstag: portal-migrations-cp-933aeeb25-8f847539c0@sha256:8da02f527042675c8baacbc71c53883d71537163e9ab50b5a742397db9a4678f
+        pullPolicy: Always
+        pullSecrets:
+          - name: "<<SET-BY-OPERATOR:pull-secret-name>>"
+      seeding:
+        seedTestData:
+          useOwnConfigMap:
+            companies:
+              dataconsumerOne:
+                connectorUrl: http://dataconsumer-1-controlplane.be293.target.example.invalid/api/v1/dsp
+              tx-data-provider:
+                connectorUrl: http://dataprovider-controlplane.be293.target.example.invalid/api/v1/dsp
+              dataconsumerTwo:
+                connectorUrl: http://dataconsumer-2-controlplane.be293.target.example.invalid/api/v1/dsp
+              company4:
+                connectorUrl: http://company4-controlplane.be293.target.example.invalid/api/v1/dsp
+              company5:
+                connectorUrl: http://company5-controlplane.be293.target.example.invalid/api/v1/dsp
+              company6:
+                connectorUrl: http://company6-controlplane.be293.target.example.invalid/api/v1/dsp
+              company7:
+                connectorUrl: http://company7-controlplane.be293.target.example.invalid/api/v1/dsp
+              company8:
+                connectorUrl: http://company8-controlplane.be293.target.example.invalid/api/v1/dsp
+              company9:
+                connectorUrl: http://company9-controlplane.be293.target.example.invalid/api/v1/dsp
+              company10:
+                connectorUrl: http://company10-controlplane.be293.target.example.invalid/api/v1/dsp
+              company11:
+                connectorUrl: http://company11-controlplane.be293.target.example.invalid/api/v1/dsp
+              company12:
+                connectorUrl: http://company12-controlplane.be293.target.example.invalid/api/v1/dsp
+              company13:
+                connectorUrl: http://company13-controlplane.be293.target.example.invalid/api/v1/dsp
+              company14:
+                connectorUrl: http://company14-controlplane.be293.target.example.invalid/api/v1/dsp
+              company15:
+                connectorUrl: http://company15-controlplane.be293.target.example.invalid/api/v1/dsp
+              company16:
+                connectorUrl: http://company16-controlplane.be293.target.example.invalid/api/v1/dsp
+    processesworker:
+      image:
+        name: registry.example.invalid/be293/be293-images
+        processesworkertag: portal-processes-worker-0421c50-security2-r1@sha256:652b4eb3d3e860e08bca71461a877cbed522e157d72606a63f9b585c309291ff
+        pullPolicy: Always
+        pullSecrets:
+          - name: "<<SET-BY-OPERATOR:pull-secret-name>>"
+      identityHub:
+        enabled: true
+        baseAddress: http://be293-app-identity-hub-postgres:8082/api/identity
+        didDocumentBaseLocation: identity-hub.be293.target.example.invalid
+        credentialServiceBaseAddress: http://be293-app-identity-hub-postgres:8083/api/credentials
+        issuerDid: did:web:issuer-service.be293.target.example.invalid:BPNL00000003CRHK
+        bpnCredentialDefinitionId: tx-bpncredential
+        membershipCredentialDefinitionId: tx-membershipcredential
+        bpnCredentialType: BpnCredential
+        membershipCredentialType: MembershipCredential
+        issuerAdminBaseAddress: http://be293-app-issuer-service:8086/api/admin
+        issuerAdminApiKey: "<<SET-FROM-SECRET-STORE:dev-overlay:portal.backend.processesworker.identityHub.issuerAdminApiKey>>"
+        issuerParticipantId: issuer-bpnl00000003crhk
+        frameworkContractVersion: '1.0'
+        apiKey: "<<SET-FROM-SECRET-STORE:dev-overlay:portal.backend.processesworker.identityHub.apiKey>>"
+        universalResolverAddress: http://didweb-resolver:8080/
+        maxValidationTimeInDays: 7
+        issuerAdminApiKeySecretKey: identityhub-api-key
+      dim:
+        universalResolverAddress: http://didweb-resolver:8080/
+        baseAddress: http://ssi-dim-wallet-stub.be293.target.example.invalid
+      bpnDidResolver:
+        apiKey: "<<SET-FROM-SECRET-STORE:dev-overlay:portal.backend.processesworker.bpnDidResolver.apiKey>>"
+    keycloak:
+      central:
+        jwtBearerOptions:
+          requireHttpsMetadata: 'true'
+    appmarketplace:
+      image:
+        name: registry.example.invalid/be293/be293-images
+        appmarketplaceservicetag: portal-marketplace-claimfix-r1@sha256:1d21bef2267f6fa3d9a8d19d053444ebea043d52ecf1e8f746aafa2aa5e73013
+        pullPolicy: Always
+        pullSecrets:
+          - name: "<<SET-BY-OPERATOR:pull-secret-name>>"
+    notification:
+      image:
+        name: registry.example.invalid/be293/be293-images
+        notificationservicetag: portal-notification-claimfix-r1@sha256:ff98b2b5bfb83151b28e5baa027ed2ca5abc4273b399fb18425c1b85499a515e
+        pullPolicy: Always
+        pullSecrets:
+          - name: "<<SET-BY-OPERATOR:pull-secret-name>>"
+    mailing:
+      host: smtp4dev
+      port: 25
+    provisioning:
+      sharedRealm:
+        smtpServer:
+          host: smtp4dev
+          port: 25
+          auth: false
+          starttls: false
+    ingress:
+      enabled: false
+      annotations:
+        nginx.ingress.kubernetes.io/cors-allow-origin: http://localhost:3000, http://*.be293.target.example.invalid
+      hosts:
+        - host: portal-backend.be293.target.example.invalid
   postgresql:
     auth:
       externalSecretManaged: true
@@ -179,139 +699,80 @@ portal:
         nginx.ingress.kubernetes.io/cors-allow-origin: http://*.be293.target.example.invalid
       hosts:
         - host: portal.be293.target.example.invalid
-  backend:
-    keycloak:
-      central:
-        jwtBearerOptions:
-          requireHttpsMetadata: 'true'
-    registration:
-      image:
-        name: registry.example.invalid/be293/be293-images
-        registrationservicetag: portal-registration-claimfix-r1@sha256:68921f36be9d1caa229a7e448a10c675f789ca4c615169fada25fe4232a77d46
-        pullPolicy: Always
-        pullSecrets:
-          - name: "<<SET-BY-OPERATOR:pull-secret-name>>"
-    administration:
-      issuerdid: did:web:ssi-dim-wallet-stub.be293.target.example.invalid:BPNL00000003CRHK
-      image:
-        name: registry.example.invalid/be293/be293-images
-        administrationservicetag: portal-administration-cp-933aeeb25-8f847539c0@sha256:c2a975855ccad2b8582d23c2b0db72cad97d6bc0ed1d5a523d7fc701674bf2c7
-        pullPolicy: Always
-        pullSecrets:
-          - name: "<<SET-BY-OPERATOR:pull-secret-name>>"
-      connectorProvisioning:
-        connectorLocationId: DE
-        devOperatorRequestsEnabled: true
-        hostCompanyId: 2dc4249f-b5ca-4d42-bef1-7a7a950a4f87
-    appmarketplace:
-      image:
-        name: registry.example.invalid/be293/be293-images
-        appmarketplaceservicetag: portal-marketplace-claimfix-r1@sha256:1d21bef2267f6fa3d9a8d19d053444ebea043d52ecf1e8f746aafa2aa5e73013
-        pullPolicy: Always
-        pullSecrets:
-          - name: "<<SET-BY-OPERATOR:pull-secret-name>>"
-    notification:
-      image:
-        name: registry.example.invalid/be293/be293-images
-        notificationservicetag: portal-notification-claimfix-r1@sha256:ff98b2b5bfb83151b28e5baa027ed2ca5abc4273b399fb18425c1b85499a515e
-        pullPolicy: Always
-        pullSecrets:
-          - name: "<<SET-BY-OPERATOR:pull-secret-name>>"
-    processesworker:
-      dim:
-        baseAddress: http://ssi-dim-wallet-stub.be293.target.example.invalid
-        universalResolverAddress: http://didweb-resolver:8080/
-      bpnDidResolver:
-        apiKey: "<<SET-FROM-SECRET-STORE:dev-overlay:portal.backend.processesworker.bpnDidResolver.apiKey>>"
-      image:
-        name: registry.example.invalid/be293/be293-images
-        processesworkertag: portal-processes-worker-0421c50-security2-r1@sha256:652b4eb3d3e860e08bca71461a877cbed522e157d72606a63f9b585c309291ff
-        pullPolicy: Always
-        pullSecrets:
-          - name: "<<SET-BY-OPERATOR:pull-secret-name>>"
-      identityHub:
-        apiKey: "<<SET-FROM-SECRET-STORE:dev-overlay:portal.backend.processesworker.identityHub.apiKey>>"
-        baseAddress: http://be293-app-identity-hub-postgres:8082/api/identity
-        bpnCredentialDefinitionId: tx-bpncredential
-        bpnCredentialType: BpnCredential
-        credentialServiceBaseAddress: http://be293-app-identity-hub-postgres:8083/api/credentials
-        didDocumentBaseLocation: identity-hub.be293.target.example.invalid
-        enabled: true
-        frameworkContractVersion: '1.0'
-        issuerAdminApiKey: "<<SET-FROM-SECRET-STORE:dev-overlay:portal.backend.processesworker.identityHub.issuerAdminApiKey>>"
-        issuerAdminApiKeySecretKey: identityhub-api-key
-        issuerAdminBaseAddress: http://be293-app-issuer-service:8086/api/admin
-        issuerDid: did:web:issuer-service.be293.target.example.invalid:BPNL00000003CRHK
-        issuerParticipantId: issuer-bpnl00000003crhk
-        maxValidationTimeInDays: 7
-        membershipCredentialDefinitionId: tx-membershipcredential
-        membershipCredentialType: MembershipCredential
-        universalResolverAddress: http://didweb-resolver:8080/
-    mailing:
-      host: smtp4dev
-      port: 25
-    portalmigrations:
-      seeding:
-        seedTestData:
-          useOwnConfigMap:
-            companies:
-              dataconsumerOne:
-                connectorUrl: http://dataconsumer-1-controlplane.be293.target.example.invalid/api/v1/dsp
-              tx-data-provider:
-                connectorUrl: http://dataprovider-controlplane.be293.target.example.invalid/api/v1/dsp
-              dataconsumerTwo:
-                connectorUrl: http://dataconsumer-2-controlplane.be293.target.example.invalid/api/v1/dsp
-              company4:
-                connectorUrl: http://company4-controlplane.be293.target.example.invalid/api/v1/dsp
-              company5:
-                connectorUrl: http://company5-controlplane.be293.target.example.invalid/api/v1/dsp
-              company6:
-                connectorUrl: http://company6-controlplane.be293.target.example.invalid/api/v1/dsp
-              company7:
-                connectorUrl: http://company7-controlplane.be293.target.example.invalid/api/v1/dsp
-              company8:
-                connectorUrl: http://company8-controlplane.be293.target.example.invalid/api/v1/dsp
-              company9:
-                connectorUrl: http://company9-controlplane.be293.target.example.invalid/api/v1/dsp
-              company10:
-                connectorUrl: http://company10-controlplane.be293.target.example.invalid/api/v1/dsp
-              company11:
-                connectorUrl: http://company11-controlplane.be293.target.example.invalid/api/v1/dsp
-              company12:
-                connectorUrl: http://company12-controlplane.be293.target.example.invalid/api/v1/dsp
-              company13:
-                connectorUrl: http://company13-controlplane.be293.target.example.invalid/api/v1/dsp
-              company14:
-                connectorUrl: http://company14-controlplane.be293.target.example.invalid/api/v1/dsp
-              company15:
-                connectorUrl: http://company15-controlplane.be293.target.example.invalid/api/v1/dsp
-              company16:
-                connectorUrl: http://company16-controlplane.be293.target.example.invalid/api/v1/dsp
-      image:
-        name: registry.example.invalid/be293/be293-images
-        portalmigrationstag: portal-migrations-cp-933aeeb25-8f847539c0@sha256:8da02f527042675c8baacbc71c53883d71537163e9ab50b5a742397db9a4678f
-        pullPolicy: Always
-        pullSecrets:
-          - name: "<<SET-BY-OPERATOR:pull-secret-name>>"
-    provisioning:
-      sharedRealm:
-        smtpServer:
-          host: smtp4dev
-          port: 25
-          auth: false
-          starttls: false
-    ingress:
-      enabled: false
-      annotations:
-        nginx.ingress.kubernetes.io/cors-allow-origin: http://localhost:3000, http://*.be293.target.example.invalid
-      hosts:
-        - host: portal-backend.be293.target.example.invalid
-    walletProvider: IdentityHub
   bpnDidResolver:
     managementApiAddress: http://bdrs-server:8081
     existingSecret: be293-bdrs-management
     existingSecretKey: api-key
 
+# ---- Additional target-only umbrella configuration (not in PR #2 overlay) ----
+
+# ---- Target-only shared EDC runtime configuration ----
+_edcRuntimeConfiguration:
+  initContainers:
+    - command:
+        - "/bin/sh"
+        - "-ec"
+        - 'umask 0077; : > /work/configuration.properties'
+      image: registry.example.invalid/be293/be293-images:edc-controlplane-72755ae-r3@sha256:d7d2d4dffc834ad2f1407bc06c56f152cd3b8885c329cf0d29c07b8cc20b88d4
+      imagePullPolicy: Always
+      name: initialize-runtime-configuration
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+        readOnlyRootFilesystem: true
+        runAsGroup: 10001
+        runAsNonRoot: true
+        runAsUser: 10001
+      volumeMounts:
+        - mountPath: "/work"
+          name: edc-runtime-configuration
+  volumeMounts:
+    - mountPath: "/app/configuration.properties"
+      name: edc-runtime-configuration
+      subPath: configuration.properties
+  volumes:
+    - emptyDir: {}
+      name: edc-runtime-configuration
+
+# ---- BE-293 target-only platform contract (not part of upstream overlay) ----
+be293:
+  deploymentProfile: be293-target
+  coreDnsPatch:
+    enabled: false
+  target:
+    namespace: be293
+    clusterIssuer: letsencrypt-prod
+    storageClassPolicy: cluster-default
+    dnsZone: be293.target.example.invalid
+    ingressClass: "<<SET-BY-OPERATOR:ingress-class>>"
+    externalDns:
+    registryHost: registry.example.invalid
+    imageRepository: registry.example.invalid/be293/be293-images
+    pullSecretName: "<<SET-BY-OPERATOR:pull-secret-name>>"
+    vaultAddress: "<<SET-BY-OPERATOR:vault-address>>"
+    vaultAuthMode: secret-backed-static-token
+    secretDelivery: preprovisioned-kubernetes-secrets
+    helmHooksApproved: false
+    externalIngresses:
+      identityHubDidBpns:
+        - BPNL00000003CRHK
+        - BPNL00000003AYRE
+        - BPNL00000003AZQP
+        - BPNL00000003AVTH
+  routing:
+    dnsZone: be293.target.example.invalid
+    mode: dns-pending-public-contract
+    publicIngressEnabled: false
+  privateImages:
+    enabled: true
+    pullSecretName: "<<SET-BY-OPERATOR:pull-secret-name>>"
+    registry: registry.example.invalid
+    repository: registry.example.invalid/be293/be293-images
+    requireDigestReferences: true
+
+# ---- Other services and integration overlays (target-only settings) ----
 centralidp:
   enabled: true
   keycloak:
@@ -418,157 +879,6 @@ sharedidp:
       - name: "<<SET-BY-OPERATOR:pull-secret-name>>"
     keycloakServiceTlsCaKey: ca.crt
     keycloakServiceTlsCaSecret: be293-app-sharedidp-crt
-
-bpndiscovery:
-  enabled: true
-  bpndiscovery:
-    host: semantics.be293.target.example.invalid
-    ingress:
-      enabled: false
-    idp:
-      issuerUri: https://centralidp-be293.target.example.invalid/auth/realms/CX-Central
-    discoveryfinderClient:
-      baseUrl: semantics.be293.target.example.invalid/discoveryfinder
-      provider:
-        tokenUri: https://centralidp-be293.target.example.invalid/auth/realms/CX-Central/protocol/openid-connect/token
-  postgresql:
-    primary:
-      persistence:
-        enabled: true
-        size: 5Gi
-        storageClass: ''
-        accessModes:
-          - ReadWriteOnce
-    image:
-      registry: docker.io
-      repository: bitnamilegacy/postgresql
-      tag: 15-debian-11
-
-discoveryfinder:
-  enabled: true
-  discoveryfinder:
-    host: semantics.be293.target.example.invalid
-    properties:
-      discoveryfinder:
-        initialEndpoints:
-          - endpointAddress: http://portal-backend.be293.target.example.invalid/api/administration/Connectors/discovery
-            documentation: http://portal-backend.be293.target.example.invalid/api/administration/swagger/index.html
-    idp:
-      issuerUri: http://centralidp.be293.target.example.invalid/auth/realms/CX-Central
-    ingress:
-      enabled: false
-  postgresql:
-    primary:
-      persistence:
-        enabled: true
-        size: 5Gi
-        storageClass: ''
-        accessModes:
-          - ReadWriteOnce
-    image:
-      registry: docker.io
-      repository: bitnamilegacy/postgresql
-      tag: 15-debian-11
-
-selfdescription:
-  enabled: true
-  sdfactory:
-    secret:
-      jwkSetUri: http://centralidp.be293.target.example.invalid/auth/realms/CX-Central/protocol/openid-connect/certs
-      preserveExisting: true
-      env:
-        TX_PORTAL_CALLBACK_BASE_URL: http://portal-backend.be293.target.example.invalid
-        TX_PORTAL_CALLBACK_TOKEN_URL: http://centralidp.be293.target.example.invalid/auth/realms/CX-Central/protocol/openid-connect/token
-      iatp:
-        sts:
-          oauth:
-            client:
-              id: did:web:identity-hub.be293.target.example.invalid:BPNL00000003CRHK
-      ingresses:
-        - enabled: false
-          hostname: identity-hub.be293.target.example.invalid
-        - enabled: false
-          hostname: identity-hub-admin.be293.target.example.invalid
-  ingress:
-    enabled: false
-    hosts:
-      - host: sdfactory.be293.target.example.invalid
-
-ssi-credential-issuer:
-  enabled: false
-  portalBackendAddress: http://portal-backend.be293.target.example.invalid
-  walletAddress: http://ssi-dim-wallet-stub.be293.target.example.invalid
-  walletTokenAddress: http://ssi-dim-wallet-stub.be293.target.example.invalid/oauth/token
-  service:
-    credential:
-      issuerDid: did:web:ssi-dim-wallet-stub.be293.target.example.invalid:BPNL00000003CRHK
-      statusListUrl: http://ssi-dim-wallet-stub.be293.target.example.invalid/status-list/BPNL00000003CRHK/8a6c7486-1e1f-4555-bdd2-1a178182651e
-  centralidp:
-    address: http://centralidp.be293.target.example.invalid
-  ingress:
-    enabled: false
-    annotations:
-      nginx.ingress.kubernetes.io/cors-allow-origin: http://*.be293.target.example.invalid
-    hosts:
-      - host: ssi-credential-issuer.be293.target.example.invalid
-
-bpdm:
-  enabled: true
-  postgres:
-    primary:
-      persistence:
-        enabled: true
-        storageClass: ''
-        accessModes:
-          - ReadWriteOnce
-        size: 5Gi
-  bpdm-gate:
-    ingress:
-      enabled: false
-      hosts:
-        - host: business-partners.be293.target.example.invalid
-    applicationConfig:
-      bpdm:
-        security:
-          auth-server-url: https://centralidp-be293.target.example.invalid/auth
-        client:
-          pool:
-            base-url: http://be293-app-bpdm-pool
-          orchestrator:
-            base-url: http://be293-app-bpdm-orchestrator
-    recoveryPreserveExistingSecret: true
-  bpdm-pool:
-    ingress:
-      enabled: false
-      hosts:
-        - host: business-partners.be293.target.example.invalid
-    applicationConfig:
-      bpdm:
-        security:
-          auth-server-url: https://centralidp-be293.target.example.invalid/auth
-        client:
-          orchestrator:
-            base-url: http://be293-app-bpdm-orchestrator
-    recoveryPreserveExistingSecret: true
-  bpdm-orchestrator:
-    ingress:
-      enabled: false
-      hosts:
-        - host: business-partners.be293.target.example.invalid
-    applicationConfig:
-      bpdm:
-        security:
-          auth-server-url: https://centralidp-be293.target.example.invalid/auth
-    recoveryPreserveExistingSecret: true
-  bpdm-cleaning-service-dummy:
-    applicationConfig:
-      bpdm:
-        client:
-          orchestrator:
-            base-url: http://be293-app-bpdm-orchestrator
-            provider:
-              issuer-uri: https://centralidp-be293.target.example.invalid/auth/realms/CX-Central
-    recoveryPreserveExistingSecret: true
 
 dataconsumerOne:
   enabled: true
@@ -1203,37 +1513,7 @@ pgadmin4:
     hosts:
       - host: pgadmin4.be293.target.example.invalid
 
-bdrs-server-memory:
-  enabled: false
-  seeding:
-    enabled: true
-    bpnList:
-      - bpn: BPNL00000003CRHK
-        did: did:web:identity-hub.be293.target.example.invalid:BPNL00000003CRHK
-      - bpn: BPNL00000003AYRE
-        did: did:web:identity-hub.be293.target.example.invalid:BPNL00000003AYRE
-      - bpn: BPNL00000003AZQP
-        did: did:web:identity-hub.be293.target.example.invalid:BPNL00000003AZQP
-      - bpn: BPNL00000003AVTH
-        did: did:web:identity-hub.be293.target.example.invalid:BPNL00000003AVTH
-  server:
-    trustedIssuers:
-      - did:web:issuer-service.be293.target.example.invalid:BPNL00000003CRHK
-    env:
-      EDC_IAM_DID_WEB_USE_HTTPS: false
-    endpoints:
-      management:
-        authKey: "<<SET-FROM-SECRET-STORE:dev-overlay:bdrs-server-memory.server.endpoints.management.authKey>>"
-    ingresses:
-      - enabled: false
-        hostname: bdrs-server.be293.target.example.invalid
-        endpoints:
-          - directory
-          - management
-        className: nginx
-        tls:
-          enabled: false
-
+# ---- Persistent BDRS implementation (replaces memory BDRS) ----
 bdrs-server:
   enabled: true
   install:
@@ -1331,7 +1611,7 @@ bdrs-server:
         - ReadWriteOnce
     auth:
       database: bdrs
-      password: 
+      password:
       existingSecret: be293-bdrs-postgres-admin
     fullnameOverride: bdrs-postgresql
     customUser:
@@ -1381,7 +1661,7 @@ bdrs-server:
         enabled: false
     hashicorp:
       url: "<<SET-BY-OPERATOR:vault-address>>"
-      token: 
+      token:
       paths:
         secret: "/v1/secret"
         health: "/v1/sys/health"
@@ -1423,274 +1703,9 @@ identity-hub-consumer1-postgres:
     image:
       pullPolicy: Always
 
-identity-and-trust-bundle:
-  enabled: true
-  ssi-dim-wallet-stub:
-    wallet:
-      host: ssi-dim-wallet-stub.be293.target.example.invalid
-      ingress:
-        enabled: false
-      didHost: ssi-dim-wallet-stub.be293.target.example.invalid
-      stubUrl: http://ssi-dim-wallet-stub.be293.target.example.invalid
-      portal:
-        host: http://portal-backend.be293.target.example.invalid
-      keycloak:
-        authServerUrl: http://centralidp.be293.target.example.invalid/auth
-    enabled: false
-  identity-hub:
-    enabled: false
-    identityhub:
-      iatp:
-        sts:
-          oauth:
-            client:
-              id: did:web:identity-hub.be293.target.example.invalid:BPNL00000003CRHK
-      ingresses:
-        - enabled: false
-          hostname: identity-hub.be293.target.example.invalid
-        - enabled: false
-          hostname: identity-hub-admin.be293.target.example.invalid
-      image:
-        pullPolicy: Always
-  identity-hub-postgres:
-    enabled: true
-    install:
-      postgresql: true
-      vault: false
-    imagePullSecrets:
-      - name: "<<SET-BY-OPERATOR:pull-secret-name>>"
-    identityhub:
-      image:
-        repository: registry.example.invalid/be293/be293-images
-        pullPolicy: Always
-        tag: identityhub-3633af-r1@sha256:5c0548957e0d7af94259345d4f9ab0a4f85851b974b822cb7d9cc1f62a999805
-      livenessProbe:
-        initialDelaySeconds: 90
-        periodSeconds: 15
-        timeoutSeconds: 10
-        failureThreshold: 6
-      readinessProbe:
-        initialDelaySeconds: 90
-        periodSeconds: 15
-        timeoutSeconds: 10
-        failureThreshold: 6
-      endpoints:
-        identity:
-          authKeyAlias: super-user-apikey
-        accounts:
-          authKeyAlias: sup3r$3cr3t
-      env:
-        EDC_IH_API_SUPERUSER_KEY: "<<SET-FROM-SECRET-STORE:dev-overlay:identity-and-trust-bundle.identity-hub-postgres.identityhub.env.EDC_IH_API_SUPERUSER_KEY>>"
-        TX_PORTAL_CALLBACK_BASE_URL: http://be293-app-portal-administration-service:8080
-        TX_PORTAL_CALLBACK_CLIENT_ID: sa-cl24-01
-        TX_PORTAL_CALLBACK_TOKEN_URL: https://centralidp-be293.target.example.invalid/auth/realms/CX-Central/protocol/openid-connect/token
-      envValueFrom:
-        EDC_DATASOURCE_CREDENTIALREQUEST_PASSWORD:
-          secretKeyRef:
-            key: postgres-password
-            name: be293-identityhub-postgres
-        EDC_DATASOURCE_CREDENTIALS_PASSWORD:
-          secretKeyRef:
-            key: postgres-password
-            name: be293-identityhub-postgres
-        EDC_DATASOURCE_DIDRESOURCE_PASSWORD:
-          secretKeyRef:
-            key: postgres-password
-            name: be293-identityhub-postgres
-        EDC_DATASOURCE_JTI_PASSWORD:
-          secretKeyRef:
-            key: postgres-password
-            name: be293-identityhub-postgres
-        EDC_DATASOURCE_KEYPAIR_PASSWORD:
-          secretKeyRef:
-            key: postgres-password
-            name: be293-identityhub-postgres
-        EDC_DATASOURCE_PARTICIPANTCONTEXT_PASSWORD:
-          secretKeyRef:
-            key: postgres-password
-            name: be293-identityhub-postgres
-        EDC_DATASOURCE_PARTICIPANTCONTEXTCONFIG_PASSWORD:
-          secretKeyRef:
-            key: postgres-password
-            name: be293-identityhub-postgres
-        EDC_DATASOURCE_STSCLIENT_PASSWORD:
-          secretKeyRef:
-            key: postgres-password
-            name: be293-identityhub-postgres
-      runtimeSecret:
-        enabled: true
-        name: be293-identityhub-runtime
-      ingresses:
-        - enabled: false
-          hostname: identity-hub.be293.target.example.invalid
-          endpoints:
-            - credentials
-            - did
-            - sts
-          className: nginx
-          tls:
-            enabled: false
-        - enabled: false
-          hostname: identity-hub-admin.be293.target.example.invalid
-          endpoints:
-            - identity
-            - accounts
-          className: nginx
-          tls:
-            enabled: false
-      resources:
-        limits:
-          cpu: 1
-          memory: 2Gi
-        requests:
-          cpu: 250m
-          memory: 512Mi
-      replicaCount: 1
-      iatp:
-        sts:
-          oauth:
-            client:
-              enabled: false
-              id: did:web:identity-hub.be293.target.example.invalid:BPNL00000003CRHK
-              secret: "<<SET-FROM-SECRET-STORE:dev-overlay:identity-and-trust-bundle.identity-hub-postgres.identityhub.iatp.sts.oauth.client.secret>>"
-              secret_alias: "<<SET-FROM-SECRET-STORE:dev-overlay:identity-and-trust-bundle.identity-hub-postgres.identityhub.iatp.sts.oauth.client.secret_alias>>"
-              x_api_key: "<<SET-FROM-SECRET-STORE:dev-overlay:identity-and-trust-bundle.identity-hub-postgres.identityhub.iatp.sts.oauth.client.x_api_key>>"
-      didweb:
-        https: false
-    postgresql:
-      jdbcUrl: jdbc:postgresql://{{ .Release.Name }}-identityhub-postgresql:5432/ih
-      primary:
-        persistence:
-          enabled: true
-          storageClass: ''
-      auth:
-        existingSecret: be293-identityhub-postgres
-        secretKeys:
-          passwordKey: postgres-password
-      nameOverride: identityhub-postgresql
-    vault:
-      hashicorp:
-        url: "<<SET-BY-OPERATOR:vault-address>>"
-  issuer-service:
-    enabled: true
-    install:
-      vault: false
-    postgresql:
-      primary:
-        persistence:
-          enabled: true
-          storageClass: ''
-      auth:
-        existingSecret: be293-issuerservice-postgres
-        secretKeys:
-          passwordKey: postgres-password
-    vault:
-      server:
-        authDelegator:
-          enabled: false
-      hashicorp:
-        url: "<<SET-BY-OPERATOR:vault-address>>"
-        paths:
-          secret: "/v1/secret"
-    issuerservice:
-      initContainers:
-        - name: wait-for-postgres
-          image: busybox:1.36
-          command:
-            - sh
-            - "-c"
-            - |
-              echo "[wait-for-postgres] waiting for be293-app-issuer-postgresql:5432 ...";
-              until nc -z be293-app-issuer-postgresql 5432; do
-                echo "[wait-for-postgres] not ready, retry in 2s"; sleep 2;
-              done;
-              echo "[wait-for-postgres] postgres is reachable";
-      ingresses:
-        - enabled: false
-        - enabled: false
-      image:
-        repository: registry.example.invalid/be293/be293-images
-        pullPolicy: Always
-        tag: issuerservice-3633af-r1@sha256:8ee7427215933001710f2f7ce89d7508f192919154fb904cc832e4963f444d94
-      env:
-        EDC_IH_API_SUPERUSER_KEY: "<<SET-FROM-SECRET-STORE:dev-overlay:identity-and-trust-bundle.issuer-service.issuerservice.env.EDC_IH_API_SUPERUSER_KEY>>"
-      envValueFrom:
-        EDC_DATASOURCE_ATTESTATIONDEFINITIONS_PASSWORD:
-          secretKeyRef:
-            key: postgres-password
-            name: be293-issuerservice-postgres
-        EDC_DATASOURCE_CREDENTIALDEFINITIONS_PASSWORD:
-          secretKeyRef:
-            key: postgres-password
-            name: be293-issuerservice-postgres
-        EDC_DATASOURCE_CREDENTIALS_PASSWORD:
-          secretKeyRef:
-            key: postgres-password
-            name: be293-issuerservice-postgres
-        EDC_DATASOURCE_CUSTOMATTESTATIONS_PASSWORD:
-          secretKeyRef:
-            key: postgres-password
-            name: be293-issuerservice-postgres
-        EDC_DATASOURCE_DIDRESOURCE_PASSWORD:
-          secretKeyRef:
-            key: postgres-password
-            name: be293-issuerservice-postgres
-        EDC_DATASOURCE_HOLDER_PASSWORD:
-          secretKeyRef:
-            key: postgres-password
-            name: be293-issuerservice-postgres
-        EDC_DATASOURCE_ISSUANCEPROCESS_PASSWORD:
-          secretKeyRef:
-            key: postgres-password
-            name: be293-issuerservice-postgres
-        EDC_DATASOURCE_JTI_PASSWORD:
-          secretKeyRef:
-            key: postgres-password
-            name: be293-issuerservice-postgres
-        EDC_DATASOURCE_KEYPAIR_PASSWORD:
-          secretKeyRef:
-            key: postgres-password
-            name: be293-issuerservice-postgres
-        EDC_DATASOURCE_PARTICIPANT_PASSWORD:
-          secretKeyRef:
-            key: postgres-password
-            name: be293-issuerservice-postgres
-        EDC_DATASOURCE_PARTICIPANTCONTEXT_PASSWORD:
-          secretKeyRef:
-            key: postgres-password
-            name: be293-issuerservice-postgres
-        EDC_DATASOURCE_PARTICIPANTCONTEXTCONFIG_PASSWORD:
-          secretKeyRef:
-            key: postgres-password
-            name: be293-issuerservice-postgres
-        EDC_DATASOURCE_STSCLIENT_PASSWORD:
-          secretKeyRef:
-            key: postgres-password
-            name: be293-issuerservice-postgres
-      runtimeSecret:
-        enabled: true
-        name: be293-issuerservice-runtime
-    imagePullSecrets:
-      - name: "<<SET-BY-OPERATOR:pull-secret-name>>"
-    statuslist:
-      signing_key:
-        alias: issuer-bpnl00000003crhk-key-1
-      callback:
-        address: https://issuer-service.be293.target.example.invalid/statuslist
-    pgadmin4:
-      enabled: false
-
-smtp4dev:
-  enabled: true
-  ingress:
-    url: smtp.be293.target.example.invalid
-    enabled: false
-
 cert-manager:
   enabled: false
 
 external-secrets:
   enabled: false
 
-didwebResolver:
-  enabled: true
