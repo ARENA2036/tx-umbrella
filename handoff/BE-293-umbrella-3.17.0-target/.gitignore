@@ -1,0 +1,16 @@
+# The vendored dependency packages and lock files ARE part of the handoff (the repository root ignores them).
+!chart/umbrella/charts/*.tgz
+!chart/umbrella/Chart.lock
+
+# Environment-specific and credential-bearing files must never be committed.
+*.private.yaml
+*.private.*
+*.secrets.yaml
+*.synthetic.secrets.yaml
+*.env
+# Local renders can contain real values.
+render/
+*.rendered.yaml
+*.render.yaml
+# Local verification output.
+.verify/

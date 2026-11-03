@@ -1,0 +1,1858 @@
+# #############################################################################
+# Copyright (c) 2023,2024 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License, Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0.
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+# #############################################################################
+---
+# BE-293 platform lifecycle controls. The CoreDNS patch is deliberately enabled
+# for the long-standing local .tx.test demonstration only. A shared cluster must
+# set this to false and use platform-owned DNS instead.
+be293:
+  deploymentProfile: local
+  coreDnsPatch:
+    enabled: true
+  # AP6 fields are an explicit operator contract. Their values stay empty in
+  # source; the AP6 profile fails closed until a private approved overlay fills
+  # them with platform-owned configuration.
+  platform:
+    dnsZone: ""
+    ingressClass: ""
+    tlsMode: ""
+    storageClass: ""
+    vaultAddress: ""
+    vaultAuthMode: ""
+    secretDelivery: ""
+    registryHost: ""
+  # be293-target profile contract (templates/_target-validate.tpl). Every field
+  # is empty in source so the profile fails closed until an operator overlay
+  # supplies confirmed values. It never reads the k8s-dev-01 `platform` block.
+  target:
+    namespace: ""
+    clusterIssuer: ""
+    # Only "cluster-default" is supported: no storageClassName is rendered, so
+    # the cluster's default StorageClass provisions every PVC.
+    storageClassPolicy: ""
+    dnsZone: ""
+    ingressClass: ""
+    externalDns: null
+    registryHost: ""
+    imageRepository: ""
+    pullSecretName: ""
+    vaultAddress: ""
+    vaultAuthMode: ""
+    secretDelivery: ""
+    helmHooksApproved: false
+    externalIngresses:
+      identityHubDidBpns: []
+
+# -----------------------------------------------------------------------------
+# Wallet indirection block (documentation + reference values).
+#
+# Tractus-X supports two wallet implementations:
+#   1. SSI DIM Wallet Stub  (centralized mock, default in this umbrella)
+#   2. Identity Hub         (real DCP-compliant wallet, eclipse-edc/IdentityHub)
+#
+# This block is a *single source of truth for documentation* of which wallet
+# is active and what its endpoints are. Helm values files are plain YAML
+# (not Go templates), so sub-chart values below cannot {{ tpl }}-reference
+# this block directly. Instead, pick a profile:
+#
+#   - charts/values-test-data-exchange.yaml               -> stub (default)
+#   - charts/values-test-data-exchange-identity-hub.yaml  -> Identity Hub
+#
+# Each profile hardcodes the per-subchart wallet URLs consistent with the
+# `wallet.mode` selected here. The mutual-exclusion validator in
+# templates/_wallet-validate.tpl enforces that exactly one wallet chart
+# (ssi-dim-wallet-stub OR identity-hub) is enabled.
+# -----------------------------------------------------------------------------
+wallet:
+  # Active wallet implementation. One of: "stub" | "identityHub".
+  # Must match the wallet chart enabled under identity-and-trust-bundle.
+  mode: stub
+
+  # Operator BPN = trusted issuer for the whole dataspace. Seeded into BDRS
+  # and used as issuer DID by Portal, Credential Issuer, and all EDCs.
+  operatorBpn: "BPNL00000003CRHK"
+
+  # Framework-agreement contract version embedded in the
+  # DataExchangeGovernance / FrameworkAgreement credentials issued by the seed
+  # Job. This MUST match the version in the dataspace access/usage policies'
+  # `FrameworkAgreement eq DataExchangeGovernance:<version>` constraint — the
+  # cx-policy FrameworkAgreementConstraintFunction does an EXACT string match on
+  # the version after ':', so a mismatch silently breaks contract negotiation.
+  # Surfaced to the seed Job via the `<release>-wallet-mode` ConfigMap.
+  frameworkContractVersion: "1.0"
+
+  # ---------------------------------------------------------------------------
+  # Single source of truth for participants (§5 Phase A of the #1609 plan).
+  #
+  # Consumed by:
+  #   - templates/_wallet-derive.tpl            (helpers compute DID / CS URL / STS URL)
+  #   - tx-data-provider post-install-identityhub-seed Job (creates ParticipantContexts)
+  #
+  # Keys must be stable lowercase slugs (used as k8s label values and API keys).
+  # ---------------------------------------------------------------------------
+  participants:
+    operator:
+      bpn: "BPNL00000003CRHK"
+      role: operator   # operator | provider | consumer
+      # Credential set requested from the IssuerService for this participant.
+      # NOTE: BpnCredential is mandatory — the tractusx-edc DSP catalog
+      # verifier requests MembershipCredential + BpnCredential +
+      # DataExchangeGovernanceCredential, and rejects the presentation
+      # (HTTP 401 Unauthorized) if any of the three is missing.
+      credentials:
+        - MembershipCredential
+        - BpnCredential
+        - DataExchangeGovernanceCredential
+        - FrameworkAgreementCredential
+    provider:
+      bpn: "BPNL00000003AYRE"
+      role: provider
+      credentials:
+        - MembershipCredential
+        - BpnCredential
+        - DataExchangeGovernanceCredential
+        - FrameworkAgreementCredential
+      # D23b: connector-local Vault coordinates. The IH seed Job writes the
+      # STS client_secret returned by the ParticipantContext-create 201
+      # response here under `secret/data/edc-wallet-secret`, so the
+      # connector's RemoteSecureTokenService can authenticate against IH.
+      # Template-expanded by charts/umbrella/templates/configmap-wallet-mode.yaml.
+      vaultUrl: "http://{{ .Release.Name }}-edc-dataprovider-vault:8200"
+      vaultToken: "<<SET-FROM-SECRET-STORE:umbrella-defaults:wallet.participants.provider.vaultToken>>"
+    consumer1:
+      bpn: "BPNL00000003AZQP"
+      role: consumer
+      credentials:
+        - MembershipCredential
+        - BpnCredential
+        - DataExchangeGovernanceCredential
+        - FrameworkAgreementCredential
+      vaultUrl: "http://{{ .Release.Name }}-edc-dataconsumer-1-vault:8200"
+      vaultToken: "<<SET-FROM-SECRET-STORE:umbrella-defaults:wallet.participants.consumer1.vaultToken>>"
+    consumer2:
+      bpn: "BPNL00000003AVTH"
+      role: consumer
+      credentials:
+        - MembershipCredential
+        - BpnCredential
+        - DataExchangeGovernanceCredential
+        - FrameworkAgreementCredential
+      vaultUrl: "http://{{ .Release.Name }}-edc-dataconsumer-2-vault:8200"
+      vaultToken: "<<SET-FROM-SECRET-STORE:umbrella-defaults:wallet.participants.consumer2.vaultToken>>"
+
+  # Endpoint reference for the SSI DIM Wallet Stub (mode=stub).
+  stub:
+    host: "ssi-dim-wallet-stub.tx.test"
+    serviceDns: "ssi-dim-wallet-service"                              # in-cluster Service
+    baseUrl: "http://ssi-dim-wallet-stub.tx.test"
+    stsUrl:  "http://ssi-dim-wallet-stub.tx.test/api/sts"
+    tokenUrl: "http://ssi-dim-wallet-stub.tx.test/oauth/token"
+    credentialServiceUrl: "http://ssi-dim-wallet-stub.tx.test/api"
+    didBase: "did:web:ssi-dim-wallet-stub.tx.test"                    # did:web:<didBase>:<BPN>
+
+  # Endpoint reference for Identity Hub (mode=identityHub).
+  # Two topologies: "shared" (multi-tenant) or "perParticipant" (one IH per BPN).
+  #
+  # Two URL families are tracked per topology:
+  #   * public*  — ingress hostnames used for did:web resolution and for
+  #                EDC-to-EDC cross-participant handshakes. Must resolve
+  #                both inside and outside the cluster.
+  #   * internal* — in-cluster Service DNS + named port. Used by the
+  #                 seeding Job and other in-cluster admin traffic. Does
+  #                 NOT depend on ingress working.
+  identityHub:
+    topology: shared
+    # TEMPORARY (#1609 demonstration era): sentinel proving the EDC-0.17.0-aligned
+    # local-image overlay is layered. The render fails when wallet.mode=identityHub
+    # without it (see templates/_wallet-validate.tpl → validateIdentityHubImageOverlay),
+    # because the released 0.16.0 pins cannot complete the DCP transfer. The overlay
+    # `values-test-data-exchange-identity-hub-local-0.17.0.yaml` sets this true.
+    # Remove both once connector 0.13.0 + IH/IS 0.17.0 are released and pinned.
+    imagesOverridden: false
+    shared:
+      # Public (ingress) identity — used for did:web documents.
+      host: "identity-hub.tx.test"
+      baseUrl: "http://identity-hub.tx.test"
+      stsUrl:  "http://identity-hub.tx.test/api/sts"
+      tokenUrl: "http://identity-hub.tx.test/oauth/token"
+      credentialServiceUrl: "http://identity-hub.tx.test/api"
+      didBase: "did:web:identity-hub.tx.test"
+      issuerServiceHost: "issuer-service.tx.test"
+      issuerServiceBaseUrl: "http://issuer-service.tx.test"
+      # In-cluster service names (must match the Helm release name of the
+      # IH / IS sub-charts). When deployed under umbrella with the aliases
+      # `identity-hub` and `issuer-service`, the upstream charts produce
+      # services named `<release>-identity-hub` and `<release>-issuer-service`.
+      # The {{.Release.Name}} prefix is injected at render time by the
+      # derived ConfigMap template.
+      internalIdentityHubService: "identity-hub"         # -> <release>-identity-hub
+      internalIssuerServiceService: "issuer-service"     # -> <release>-issuer-service
+      # Port map (matches identity-hub / tractusx-issuerservice-memory v0.2.0).
+      # NOTE: IS exposes BOTH a tenant identity API (`/api/identity` on 8087)
+      # AND an issuer-admin API (`/api/admin` on 8086). The latter is named
+      # `issueradmin` in bruno docs but mounted at `/api/admin` per the
+      # tractusx-issuerservice chart README.
+      ports:
+        ihIdentity: 8081        # /api/identity
+        ihCredentials: 8082     # /api/credentials
+        ihDid: 8083             # /
+        ihSts: 8087             # /api/sts
+        isIssuerAdmin: 8086     # /api/admin   (note: NOT /api/issueradmin)
+        isIdentity: 8087        # /api/identity
+        isIssuance: 8082        # /api/issuance
+    perParticipant:
+      # Map participant slug (the keys of wallet.participants:
+      # operator | provider | consumer1 | consumer2) -> ingress host for that
+      # participant's OWN Identity Hub. Populated only when
+      # topology=perParticipant (see
+      # values-test-data-exchange-identity-hub-per-participant.yaml).
+      # DIDs are constructed as did:web:<hosts[slug]> (host root, no BPN path).
+      hosts: {}
+      # Map participant slug -> in-cluster IdentityHub "name" (the Helm
+      # dependency alias). The upstream chart renders Service
+      # `<release>-<base>` and pod label `app.kubernetes.io/name=<base>`.
+      # The operator reuses the bundle's IdentityHub (alias `identity-hub`);
+      # provider/consumer1/consumer2 use the umbrella-level aliased IH deps.
+      # Consumed by the derived ConfigMap + seeding Job to reach each IH.
+      # Ports are chart-invariant, so the shared.ports map above is reused.
+      serviceBase:
+        operator:  "identity-hub"
+        provider:  "identity-hub-provider"
+        consumer1: "identity-hub-consumer1"
+        consumer2: "identity-hub-consumer2"
+
+portal:
+  enabled: false
+  replicaCount: 1
+  postgresql:
+    ## TEMPORALY UNTIL NEW PORTAL UPDATE
+    enabled: true
+    image:
+      registry: docker.io
+      repository: bitnamilegacy/postgresql
+      tag: "15-debian-11"
+    commonLabels:
+      app.kubernetes.io/version: "15"
+    ## UNTIL HERE
+    nameOverride: "portal-backend-postgresql"
+    architecture: standalone
+    auth:
+      password: "<<SET-FROM-SECRET-STORE:umbrella-defaults:portal.postgresql.auth.password>>"
+      portalPassword: "<<SET-FROM-SECRET-STORE:umbrella-defaults:portal.postgresql.auth.portalPassword>>"
+      replicationPassword: "<<SET-FROM-SECRET-STORE:umbrella-defaults:portal.postgresql.auth.replicationPassword>>"
+      provisioningPassword: "<<SET-FROM-SECRET-STORE:umbrella-defaults:portal.postgresql.auth.provisioningPassword>>"
+    primary:
+      persistence:
+        enabled: false
+  portalAddress: "http://portal.tx.test"
+  portalBackendAddress: "http://portal-backend.tx.test"
+  centralidp:
+    address: "http://centralidp.tx.test"
+  sharedidpAddress: "http://sharedidp.tx.test"
+  semanticsAddress: "http://semantics.tx.test"
+  bpdm:
+    poolAddress: "http://business-partners.tx.test"
+    poolApiPath: "/pool/v6"
+    portalGateAddress: "http://business-partners.tx.test"
+    portalGateApiPath: "/gate/v6"
+  custodianAddress: "http://ssi-dim-wallet-stub.tx.test"
+  dimWrapper:
+    baseAddress: "http://ssi-dim-wallet-stub.tx.test"
+    apiPath: "/api/dim"
+    tokenAddress: "http://ssi-dim-wallet-stub.tx.test/oauth/token"
+  decentralIdentityManagementAuthAddress: "http://ssi-dim-wallet-stub.tx.test/api/sts"
+  sdfactoryAddress: "http://sdfactory.tx.test"
+  # -- no configuration for clearinghouse because it's an external component
+  clearinghouseConnectDisabled: true
+  clearinghouse:
+    default:
+      baseAddress: "http://validation.tx.test"
+      # -- clientId and clientSecret aren't in the centralidp Keycloak
+      clientId: "clearinghouse-client-id-default"
+      clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:portal.clearinghouse.default.clientSecret>>"
+      tokenAddress: "http://someiam.tx.test/realms/example/protocol/openid-connect/token"
+      clearinghouseConnectDisabled: true
+  issuerComponentAddress: "http://ssi-credential-issuer.tx.test"
+  frontend:
+    ingress:
+      enabled: true
+      annotations:
+        # uncomment the following line for tls
+        # cert-manager.io/cluster-issuer: "my-ca-issuer"
+        nginx.ingress.kubernetes.io/rewrite-target: "/$1"
+        nginx.ingress.kubernetes.io/use-regex: "true"
+        nginx.ingress.kubernetes.io/enable-cors: "true"
+        nginx.ingress.kubernetes.io/cors-allow-origin: "http://*.tx.test"
+      # uncomment the following lines for tls
+      # tls:
+      #   # -- Provide tls secret.
+      #   - secretName: "portal.tx.test-tls"
+      #     # -- Provide host for tls secret.
+      #     hosts:
+      #       - "portal.tx.test"
+      hosts:
+        - host: "portal.tx.test"
+          paths:
+            - path: "/(.*)"
+              pathType: "ImplementationSpecific"
+              backend:
+                service: "portal"
+                port: 8080
+            - path: "/registration/(.*)"
+              pathType: "ImplementationSpecific"
+              backend:
+                service: "registration"
+                port: 8080
+            - path: "/((assets|documentation)/.*)"
+              pathType: "ImplementationSpecific"
+              backend:
+                service: "assets"
+                port: 8080
+  backend:
+    dotnetEnvironment: "Development"
+    keycloak:
+      central:
+        clientId: "sa-cl1-reg-2"
+        clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:portal.backend.keycloak.central.clientSecret>>"
+        jwtBearerOptions:
+          requireHttpsMetadata: "false"
+      shared:
+        clientId: "sa-cl1-reg-1"
+        clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:portal.backend.keycloak.shared.clientSecret>>"
+    registration:
+      logging:
+        default: "Debug"
+        bpdmLibrary: "Debug"
+        registrationService: "Debug"
+      swaggerEnabled: true
+    administration:
+      logging:
+        default: "Debug"
+        businessLogic: "Debug"
+        sdfactoryLibrary: "Debug"
+        bpdmLibrary: "Debug"
+        custodianLibrary: "Debug"
+      serviceAccount:
+        encryptionConfigs:
+          index0:
+            encryptionKey: "<<SET-FROM-SECRET-STORE:umbrella-defaults:portal.backend.administration.serviceAccount.encryptionConfigs.index0.encryptionKey>>"
+      issuerdid: "did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003CRHK"
+      swaggerEnabled: true
+    appmarketplace:
+      logging:
+        default: "Debug"
+        offersLibrary: "Debug"
+      swaggerEnabled: true
+    services:
+      logging:
+        default: "Debug"
+        offersLibrary: "Debug"
+      swaggerEnabled: true
+    notification:
+      logging:
+        default: "Debug"
+      swaggerEnabled: true
+    processesworker:
+      logging:
+        default: "Debug"
+        processesLibrary: "Debug"
+        bpdmLibrary: "Debug"
+        clearinghouseLibrary: "Debug"
+        custodianLibrary: "Debug"
+        sdfactoryLibrary: "Debug"
+        offerProvider: "Debug"
+      bpdm:
+        clientId: &bpdmAdminClientId "sa-cl7-cx-5"
+        clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:portal.backend.processesworker.bpdm.clientSecret>>"
+      custodian:
+        clientId: "sa-cl5-custodian-2"
+        clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:portal.backend.processesworker.custodian.clientSecret>>"
+      sdfactory:
+        issuerBpn: "BPNL00000003CRHK"
+        clientId: "sa-cl8-cx-1"
+        clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:portal.backend.processesworker.sdfactory.clientSecret>>"
+      offerprovider:
+        clientId: "sa-cl2-03"
+        clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:portal.backend.processesworker.offerprovider.clientSecret>>"
+        encryptionConfigs:
+          index0:
+            encryptionKey: "<<SET-FROM-SECRET-STORE:umbrella-defaults:portal.backend.processesworker.offerprovider.encryptionConfigs.index0.encryptionKey>>"
+      dim:
+        clientId: "sa-cl2-05"
+        clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:portal.backend.processesworker.dim.clientSecret>>"
+        grantType: "client_credentials"
+        scope: "openid"
+        baseAddress: "http://ssi-dim-wallet-stub.tx.test"
+        universalResolverAddress: "https://dev.uniresolver.io/"
+        encryptionConfigs:
+          index0:
+            encryptionKey: "<<SET-FROM-SECRET-STORE:umbrella-defaults:portal.backend.processesworker.dim.encryptionConfigs.index0.encryptionKey>>"
+      issuerComponent:
+        clientId: "sa-cl2-04"
+        clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:portal.backend.processesworker.issuerComponent.clientSecret>>"
+        encryptionConfigs:
+          index0:
+            encryptionKey: "<<SET-FROM-SECRET-STORE:umbrella-defaults:portal.backend.processesworker.issuerComponent.encryptionConfigs.index0.encryptionKey>>"
+      bpnDidResolver:
+        # -- ApiKey for management endpoint of the bpnDidResolver. Secret-key 'bpndidresolver-api-key'.
+        apiKey: "<<SET-FROM-SECRET-STORE:umbrella-defaults:portal.backend.processesworker.bpnDidResolver.apiKey>>"
+      onboardingServiceProvider:
+        encryptionConfigs:
+          index0:
+            cipherMode: "CBC"
+            paddingMode: "PKCS7"
+            encryptionKey: "<<SET-FROM-SECRET-STORE:umbrella-defaults:portal.backend.processesworker.onboardingServiceProvider.encryptionConfigs.index0.encryptionKey>>"
+          index1:
+            encryptionKey: "<<SET-FROM-SECRET-STORE:umbrella-defaults:portal.backend.processesworker.onboardingServiceProvider.encryptionConfigs.index1.encryptionKey>>"
+      invitation:
+        encryptionConfigs:
+          index0:
+            encryptionKey: "<<SET-FROM-SECRET-STORE:umbrella-defaults:portal.backend.processesworker.invitation.encryptionConfigs.index0.encryptionKey>>"
+      mailing:
+        encryptionConfigs:
+          index0:
+            encryptionKey: "<<SET-FROM-SECRET-STORE:umbrella-defaults:portal.backend.processesworker.mailing.encryptionConfigs.index0.encryptionKey>>"
+    mailing:
+      host: "smtp.tx.test"
+      port: "587"
+      user: "smtp-user"
+      senderEmail: "smtp@tx.test"
+      password: "<<SET-FROM-SECRET-STORE:umbrella-defaults:portal.backend.mailing.password>>"
+    portalmigrations:
+      seeding:
+        seedTestData:
+          enabled: true
+          useOwnConfigMap:
+            configMap: "portal-testdata"
+            filename: "test"
+            companies:
+              # BPN is retrieved from participant id of the dataconsumerOne
+              dataconsumerOne:
+                name: "BPN_OEM_C"
+                connectorUrl: "http://dataconsumer-1-controlplane.tx.test/api/v1/dsp"
+                connectorName: "BPN OEM C Connector"
+              # BPN is retrieved from participant id of the tx-data-provider
+              tx-data-provider:
+                name: "BPN_OEM_A"
+                connectorUrl: "http://dataprovider-controlplane.tx.test/api/v1/dsp"
+                connectorName: "BPN OEM A Connector"
+              # BPN is retrieved from participant id of the dataconsumerTwo
+              dataconsumerTwo:
+                name: "BPN_OEM_B"
+                connectorUrl: "http://dataconsumer-2-controlplane.tx.test/api/v1/dsp"
+                connectorName: "BPN OEM B Connector"
+              company4:
+                name: "BPN_IRS_TEST"
+                bpn: "BPNL00000003AWSS"
+                connectorUrl: "http://company4-controlplane.tx.test/api/v1/dsp"
+                connectorName: "BPN IRS TEST Connector"
+              company5:
+                name: "BPN_N_TIER_A"
+                bpn: "BPNL00000003B0Q0"
+                connectorUrl: "http://company5-controlplane.tx.test/api/v1/dsp"
+                connectorName: "BPN N TIER A Connector"
+              company6:
+                name: "BPN_TRACEX_A_SITE_A"
+                bpn: "BPNS0000000008ZZ"
+                connectorUrl: "http://company6-controlplane.tx.test/api/v1/dsp"
+                connectorName: "BPN TRACEX A SITE A Connector"
+              company7:
+                name: "BPN_TRACEX_B"
+                bpn: "BPNL00000003CNKC"
+                connectorUrl: "http://company7-controlplane.tx.test/api/v1/dsp"
+                connectorName: "BPN TRACEX B Connector"
+              company8:
+                name: "BPN_DISMANTLER"
+                bpn: "BPNL00000003B6LU"
+                connectorUrl: "http://company8-controlplane.tx.test/api/v1/dsp"
+                connectorName: "BPN DISMANTLER Connector"
+              company9:
+                name: "BPN_TRACEX_A"
+                bpn: "BPNL00000003CML1"
+                connectorUrl: "http://company9-controlplane.tx.test/api/v1/dsp"
+                connectorName: "BPN TRACEX A Connector"
+              company10:
+                name: "BPN_TRACEX_B_SITE_A"
+                bpn: "BPNS00000008BDFH"
+                connectorUrl: "http://company10-controlplane.tx.test/api/v1/dsp"
+                connectorName: "BPN TRACEX B SITE A Connector"
+              company11:
+                name: "BPN_TIER_A"
+                bpn: "BPNL00000003B2OM"
+                connectorUrl: "http://company11-controlplane.tx.test/api/v1/dsp"
+                connectorName: "BPN TIER A Connector"
+              company12:
+                name: "BPN_TIER_C"
+                bpn: "BPNL00000003CSGV"
+                connectorUrl: "http://company12-controlplane.tx.test/api/v1/dsp"
+                connectorName: "BPN TIER C Connector"
+              company13:
+                name: "BPN_TIER_B"
+                bpn: "BPNL00000003B5MJ"
+                connectorUrl: "http://company13-controlplane.tx.test/api/v1/dsp"
+                connectorName: "BPN TIER B Connector"
+              company14:
+                name: "BPN_SUB_TIER_B"
+                bpn: "BPNL00000003AXS3"
+                connectorUrl: "http://company14-controlplane.tx.test/api/v1/dsp"
+                connectorName: "BPN SUB TIER B Connector"
+              company15:
+                name: "BPN_SUB_TIER_A"
+                bpn: "BPNL00000003B3NX"
+                connectorUrl: "http://company15-controlplane.tx.test/api/v1/dsp"
+                connectorName: "BPN SUB TIER A Connector"
+              company16:
+                name: "BPN_SUB_TIER_C"
+                bpn: "BPNL00000000BJTL"
+                connectorUrl: "http://company16-controlplane.tx.test/api/v1/dsp"
+                connectorName: "BPN SUB TIER C Connector"
+      logging:
+        default: "Debug"
+    provisioning:
+      sharedRealm:
+        smtpServer:
+          host: "smtp.tx.test"
+          port: "587"
+          user: "smtp-user"
+          password: "<<SET-FROM-SECRET-STORE:umbrella-defaults:portal.backend.provisioning.sharedRealm.smtpServer.password>>"
+          from: "smtp@tx.test"
+          replyTo: "smtp@tx.test"
+    # -- docs: http://portal-backend.tx.test/api/administration/swagger/index.html
+    # http://portal-backend.tx.test/api/registration/swagger/index.html
+    # http://portal-backend.tx.test/api/apps/swagger/index.html
+    # http://portal-backend.tx.test/api/services/swagger/index.html
+    # http://portal-backend.tx.test/api/notification/swagger/index.html
+    ingress:
+      enabled: true
+      name: "portal-backend"
+      annotations:
+        # uncomment the following line for tls
+        # cert-manager.io/cluster-issuer: "my-ca-issuer"
+        nginx.ingress.kubernetes.io/use-regex: "true"
+        nginx.ingress.kubernetes.io/enable-cors: "true"
+        nginx.ingress.kubernetes.io/proxy-body-size: "8m"
+        nginx.ingress.kubernetes.io/cors-allow-origin: "http://localhost:3000, http://*.tx.test"
+      # uncomment the following lines for tls
+      # tls:
+      #   # -- Provide tls secret.
+      #   - secretName: "portal-backend.tx.test-tls"
+      #     # -- Provide host for tls secret.
+      #     hosts:
+      #       - "portal-backend.tx.test"
+      hosts:
+        - host: "portal-backend.tx.test"
+          paths:
+            - path: "/api/registration"
+              pathType: "Prefix"
+              backend:
+                service: "registration-service"
+                port: 8080
+            - path: "/api/administration"
+              pathType: "Prefix"
+              backend:
+                service: "administration-service"
+                port: 8080
+            - path: "/api/notification"
+              pathType: "Prefix"
+              backend:
+                service: "notification-service"
+                port: 8080
+            - path: "/api/provisioning"
+              pathType: "Prefix"
+              backend:
+                service: "provisioning-service"
+                port: 8080
+            - path: "/api/apps"
+              pathType: "Prefix"
+              backend:
+                service: "marketplace-app-service"
+                port: 8080
+            - path: "/api/services"
+              pathType: "Prefix"
+              backend:
+                service: "services-service"
+                port: 8080
+
+centralidp:
+  enabled: false
+  keycloak:
+    nameOverride: "centralidp"
+    replicaCount: 1
+    auth:
+      adminPassword: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.keycloak.auth.adminPassword>>"
+    postgresql:
+      nameOverride: "centralidp-postgresql"
+      auth:
+        password: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.keycloak.postgresql.auth.password>>"
+        postgresPassword: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.keycloak.postgresql.auth.postgresPassword>>"
+      architecture: standalone
+      primary:
+        persistence:
+          enabled: false
+    ingress:
+      enabled: true
+      ingressClassName: "nginx"
+      hostname: "centralidp.tx.test"
+      annotations:
+        # uncomment the following line for tls
+        # cert-manager.io/cluster-issuer: "my-ca-issuer"
+        nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+        nginx.ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, OPTIONS"
+        nginx.ingress.kubernetes.io/cors-allow-origin: "http://centralidp.tx.test"
+        nginx.ingress.kubernetes.io/enable-cors: "true"
+        nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+        nginx.ingress.kubernetes.io/proxy-buffering: "on"
+        nginx.ingress.kubernetes.io/proxy-buffers-number: "20"
+        nginx.ingress.kubernetes.io/use-regex: "true"
+      tls: false
+    # uncomment the following line for tls
+    # initContainers:
+    #   - name: init-certs
+    #     image: docker.io/bitnami/keycloak:25.0.6-debian-12-r0
+    #     imagePullPolicy: IfNotPresent
+    #     command: ["/bin/bash"]
+    #     args:
+    #       - -ec
+    #       - |-
+    #         keytool -import -file "/certs/tls.crt" \
+    #                 -keystore "/opt/bitnami/keycloak/certs/keycloak.truststore.jks" \
+    #                 -storepass "${KEYCLOAK_SPI_TRUSTSTORE_PASSWORD}" \
+    #                 -noprompt
+    #     env:
+    #       - name: KEYCLOAK_SPI_TRUSTSTORE_PASSWORD
+    #         value: "changeit"
+    #     volumeMounts:
+    #       - name: certificates
+    #         mountPath: /certs
+    #       - name: shared-certs
+    #         mountPath: "/opt/bitnami/keycloak/certs"
+    # extraEnvVars:
+    #   - name: KEYCLOAK_SPI_TRUSTSTORE_FILE
+    #     value: "/opt/bitnami/keycloak/certs/keycloak.truststore.jks"
+    #   - name: KEYCLOAK_SPI_TRUSTSTORE_PASSWORD
+    #     value: "changeit"
+    # extraVolumes:
+    #   - name: certificates
+    #     secret:
+    #       secretName: root-secret
+    #       defaultMode: 420
+    #   - name: shared-certs
+    #     emptyDir: {}
+    # extraVolumeMounts:
+    #   - name: certificates
+    #     mountPath: /certs
+    #   - name: shared-certs
+    #     mountPath: "/opt/bitnami/keycloak/certs"
+  realmSeeding:
+    sslRequired: "none"
+    clients:
+      registration:
+        redirects:
+          - http://portal.tx.test/*
+      portal:
+        rootUrl: http://portal.tx.test/home
+        redirects:
+          - http://portal.tx.test/*
+      semantics:
+        redirects:
+          - http://portal.tx.test/*
+      miw:
+        clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.clients.miw.clientSecret>>"
+        redirects:
+          - http://managed-identity-wallets.tx.test/*
+      bpdm:
+        clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.clients.bpdm.clientSecret>>"
+        redirects:
+          - http://partners-pool.tx.test/*
+      bpdmGate:
+        clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.clients.bpdmGate.clientSecret>>"
+        redirects:
+          - http://partners-gate.tx.test/*
+      bpdmOrchestrator:
+        clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.clients.bpdmOrchestrator.clientSecret>>"
+    serviceAccounts:
+      clientSecrets:
+        - clientId: "sa-cl1-reg-2"
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.serviceAccounts.clientSecrets[0].clientSecret>>"
+        - clientId: "sa-cl2-01"
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.serviceAccounts.clientSecrets[1].clientSecret>>"
+        - clientId: "sa-cl2-02"
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.serviceAccounts.clientSecrets[2].clientSecret>>"
+        - clientId: "sa-cl2-03"
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.serviceAccounts.clientSecrets[3].clientSecret>>"
+        - clientId: "sa-cl2-04"
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.serviceAccounts.clientSecrets[4].clientSecret>>"
+        - clientId: "sa-cl2-05"
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.serviceAccounts.clientSecrets[5].clientSecret>>"
+        - clientId: "sa-cl2-06"
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.serviceAccounts.clientSecrets[6].clientSecret>>"
+        - clientId: "sa-cl3-cx-1"
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.serviceAccounts.clientSecrets[7].clientSecret>>"
+        - clientId: "sa-cl5-custodian-2"
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.serviceAccounts.clientSecrets[8].clientSecret>>"
+        - clientId: "sa-cl7-cx-1"
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.serviceAccounts.clientSecrets[9].clientSecret>>"
+        - clientId: "sa-cl7-cx-5"
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.serviceAccounts.clientSecrets[10].clientSecret>>"
+        - clientId: "sa-cl7-cx-7"
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.serviceAccounts.clientSecrets[11].clientSecret>>"
+        - clientId: "sa-cl8-cx-1"
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.serviceAccounts.clientSecrets[12].clientSecret>>"
+        - clientId: "sa-cl21-01"
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.serviceAccounts.clientSecrets[13].clientSecret>>"
+        - clientId: "sa-cl22-01"
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.serviceAccounts.clientSecrets[14].clientSecret>>"
+        - clientId: "sa-cl24-01"
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.serviceAccounts.clientSecrets[15].clientSecret>>"
+        - clientId: "sa-cl25-cx-1"
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.serviceAccounts.clientSecrets[16].clientSecret>>"
+        - clientId: "sa-cl25-cx-2"
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.serviceAccounts.clientSecrets[17].clientSecret>>"
+        - clientId: "sa-cl25-cx-3"
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.serviceAccounts.clientSecrets[18].clientSecret>>"
+    bpn: "BPNL00000003CRHK"
+    sharedidp: "http://sharedidp.tx.test"
+    # -- test service accounts for EDC - MIW which are obsolete since R24.05;
+    # uncomment once EDC uses SSI DIM Wallet Stub and the helm chart testing has been updated;
+    # currently the post-install testdata-upload-job fails if not available
+    extraServiceAccounts:
+      clientSecretsAndBpn:
+        - clientId: satest01
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.extraServiceAccounts.clientSecretsAndBpn[0].clientSecret>>"
+          bpn: BPNL00000003AZQP
+        - clientId: satest02
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.extraServiceAccounts.clientSecretsAndBpn[1].clientSecret>>"
+          bpn: BPNL00000003AYRE
+        - clientId: satest03
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.extraServiceAccounts.clientSecretsAndBpn[2].clientSecret>>"
+          bpn: BPNL00000003AVTH
+        - clientId: satest04
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.extraServiceAccounts.clientSecretsAndBpn[3].clientSecret>>"
+          bpn: BPNL00000003AWSS
+        - clientId: satest05
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.extraServiceAccounts.clientSecretsAndBpn[4].clientSecret>>"
+          bpn: BPNL00000003B0Q0
+        - clientId: satest06
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.extraServiceAccounts.clientSecretsAndBpn[5].clientSecret>>"
+          bpn: BPNS0000000008ZZ
+        - clientId: satest07
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.extraServiceAccounts.clientSecretsAndBpn[6].clientSecret>>"
+          bpn: BPNL00000003CNKC
+        - clientId: satest08
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.extraServiceAccounts.clientSecretsAndBpn[7].clientSecret>>"
+          bpn: BPNL00000003B6LU
+        - clientId: satest09
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.extraServiceAccounts.clientSecretsAndBpn[8].clientSecret>>"
+          bpn: BPNL00000003CML1
+        - clientId: satest10
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.extraServiceAccounts.clientSecretsAndBpn[9].clientSecret>>"
+          bpn: BPNS00000008BDFH
+        - clientId: satest11
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.extraServiceAccounts.clientSecretsAndBpn[10].clientSecret>>"
+          bpn: BPNL00000003B2OM
+        - clientId: satest12
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.extraServiceAccounts.clientSecretsAndBpn[11].clientSecret>>"
+          bpn: BPNL00000003CSGV
+        - clientId: satest13
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.extraServiceAccounts.clientSecretsAndBpn[12].clientSecret>>"
+          bpn: BPNL00000003B5MJ
+        - clientId: satest14
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.extraServiceAccounts.clientSecretsAndBpn[13].clientSecret>>"
+          bpn: BPNL00000003AXS3
+        - clientId: satest15
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.extraServiceAccounts.clientSecretsAndBpn[14].clientSecret>>"
+          bpn: BPNL00000003B3NX
+        - clientId: satest16
+          clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:centralidp.realmSeeding.extraServiceAccounts.clientSecretsAndBpn[15].clientSecret>>"
+          bpn: BPNL00000000BJTL
+    initContainer:
+      image:
+        name: docker.io/tractusx/umbrella-init-container:2.3.0-init
+        pullPolicy: IfNotPresent
+
+sharedidp:
+  enabled: false
+  keycloak:
+    nameOverride: "sharedidp"
+    auth:
+      adminPassword: "<<SET-FROM-SECRET-STORE:umbrella-defaults:sharedidp.keycloak.auth.adminPassword>>"
+    postgresql:
+      nameOverride: "sharedidp-postgresql"
+      auth:
+        password: "<<SET-FROM-SECRET-STORE:umbrella-defaults:sharedidp.keycloak.postgresql.auth.password>>"
+        postgresPassword: "<<SET-FROM-SECRET-STORE:umbrella-defaults:sharedidp.keycloak.postgresql.auth.postgresPassword>>"
+      architecture: standalone
+      primary:
+        persistence:
+          enabled: false
+    ingress:
+      enabled: true
+      ingressClassName: "nginx"
+      hostname: "sharedidp.tx.test"
+      annotations:
+        # uncomment the following line for tls
+        # cert-manager.io/cluster-issuer: "my-ca-issuer"
+        nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+        nginx.ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, OPTIONS"
+        nginx.ingress.kubernetes.io/cors-allow-origin: "http://sharedidp.tx.test"
+        nginx.ingress.kubernetes.io/enable-cors: "true"
+        nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+        nginx.ingress.kubernetes.io/proxy-buffering: "on"
+        nginx.ingress.kubernetes.io/proxy-buffers-number: "20"
+        nginx.ingress.kubernetes.io/use-regex: "true"
+      tls: false
+    # uncomment the following line for tls
+    # initContainers:
+    #   - name: init-certs
+    #     image: docker.io/bitnami/keycloak:25.0.6-debian-12-r0
+    #     imagePullPolicy: IfNotPresent
+    #     command: ["/bin/bash"]
+    #     args:
+    #       - -ec
+    #       - |-
+    #         keytool -import -file "/certs/tls.crt" \
+    #                 -keystore "/opt/bitnami/keycloak/certs/keycloak.truststore.jks" \
+    #                 -storepass "${KEYCLOAK_SPI_TRUSTSTORE_PASSWORD}" \
+    #                 -noprompt
+    #     env:
+    #       - name: KEYCLOAK_SPI_TRUSTSTORE_PASSWORD
+    #         value: "changeit"
+    #     volumeMounts:
+    #       - name: certificates
+    #         mountPath: /certs
+    #       - name: shared-certs
+    #         mountPath: "/opt/bitnami/keycloak/certs"
+    # extraEnvVars:
+    #   - name: KEYCLOAK_SPI_TRUSTSTORE_FILE
+    #     value: "/opt/bitnami/keycloak/certs/keycloak.truststore.jks"
+    #   - name: KEYCLOAK_SPI_TRUSTSTORE_PASSWORD
+    #     value: "changeit"
+    # extraVolumes:
+    #   - name: certificates
+    #     secret:
+    #       secretName: root-secret
+    #       defaultMode: 420
+    #   - name: shared-certs
+    #     emptyDir: {}
+    # extraVolumeMounts:
+    #   - name: certificates
+    #     mountPath: /certs
+    #   - name: shared-certs
+    #     mountPath: "/opt/bitnami/keycloak/certs"
+  realmSeeding:
+    realms:
+      cxOperator:
+        sslRequired: "none"
+        centralidp: "http://centralidp.tx.test"
+        initialUser:
+          username: "cx-operator@tx.test"
+          password: "<<SET-FROM-SECRET-STORE:umbrella-defaults:sharedidp.realmSeeding.realms.cxOperator.initialUser.password>>"
+        mailing:
+          host: "smtp.tx.test"
+          port: "587"
+          username: "smtp-user"
+          password: "<<SET-FROM-SECRET-STORE:umbrella-defaults:sharedidp.realmSeeding.realms.cxOperator.mailing.password>>"
+          from: "smtp@tx.test"
+          replyTo: "smtp@tx.test"
+      master:
+        serviceAccounts:
+          provisioning:
+            clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:sharedidp.realmSeeding.realms.master.serviceAccounts.provisioning.clientSecret>>"
+          saCxOperator:
+            clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:sharedidp.realmSeeding.realms.master.serviceAccounts.saCxOperator.clientSecret>>"
+
+bpndiscovery:
+  enabled: false
+  enablePostgres: true
+  bpndiscovery:
+    host: semantics.tx.test
+    ingress:
+      enabled: true
+      tls: false
+      urlPrefix: "/bpndiscovery"
+      className: "nginx"
+      annotations:
+        cert-manager.io/cluster-issuer: "my-ca-issuer"
+        nginx.ingress.kubernetes.io/rewrite-target: "/$2"
+        nginx.ingress.kubernetes.io/use-regex: "true"
+        nginx.ingress.kubernetes.io/enable-cors: "true"
+        nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+        nginx.ingress.kubernetes.io/x-forwarded-prefix: "/bpndiscovery"
+    authentication: true
+    idp:
+      issuerUri: "http://centralidp.tx.test/auth/realms/CX-Central"
+      publicClientId: "Cl22-CX-BPND"
+    bpndiscoveryEndpoint:
+      allowedTypes: oen,wmi,passtype,manufacturerPartId
+      description: Service to discover BPN for different kind of type numbers
+      endpointAddress: /bpndiscovery
+      documentation: /bpndiscovery/swagger-ui/index.html
+      timeToLive: "31536000"
+    discoveryfinderClient:
+      baseUrl: "semantics.tx.test/discoveryfinder"
+      registration:
+        clientId: sa-cl21-01
+        clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:bpndiscovery.bpndiscovery.discoveryfinderClient.registration.clientSecret>>"
+        authorizationGrantType: client_credentials
+      schedulerCronFrequency: "0 0 */1 * * *"
+      provider:
+        tokenUri: "http://centralidp.tx.test/auth/realms/CX-Central/protocol/openid-connect/token"
+    livenessProbe:
+      initialDelaySeconds: 200
+    readinessProbe:
+      initialDelaySeconds: 200
+  postgresql:
+    nameOverride: "bpndiscovery-postgresql"
+    primary:
+      persistence:
+        enabled: false
+        size: 8Gi
+    auth:
+      password: "<<SET-FROM-SECRET-STORE:umbrella-defaults:bpndiscovery.postgresql.auth.password>>"
+      postgresPassword: "<<SET-FROM-SECRET-STORE:umbrella-defaults:bpndiscovery.postgresql.auth.postgresPassword>>"
+
+discoveryfinder:
+  enabled: false
+  enablePostgres: true
+  discoveryfinder:
+    authentication: true
+    livenessProbe:
+      initialDelaySeconds: 200
+    readinessProbe:
+      initialDelaySeconds: 200
+    host: semantics.tx.test
+    properties:
+      discoveryfinder:
+        initialEndpoints:
+          - type: bpn
+            endpointAddress: http://portal-backend.tx.test/api/administration/Connectors/discovery
+            description: Service to discover connector endpoints based on bpns
+            documentation: http://portal-backend.tx.test/api/administration/swagger/index.html
+    idp:
+      issuerUri: "http://centralidp.tx.test/auth/realms/CX-Central"
+      publicClientId: "Cl21-CX-DF"
+    dataSource:
+      url: "jdbc:postgresql://{{ .Release.Name }}-discoveryfinder-postgresql:5432/discoveryfinder"
+    # -- docs: http://semantics.tx.test/discoveryfinder/swagger-ui/index.html
+    ingress:
+      enabled: true
+      tls: false
+      urlPrefix: "/discoveryfinder"
+      className: "nginx"
+      annotations:
+        cert-manager.io/cluster-issuer: "my-ca-issuer"
+        nginx.ingress.kubernetes.io/rewrite-target: "/$2"
+        nginx.ingress.kubernetes.io/use-regex: "true"
+        nginx.ingress.kubernetes.io/enable-cors: "true"
+        nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+        nginx.ingress.kubernetes.io/x-forwarded-prefix: "/discoveryfinder"
+  postgresql:
+    nameOverride: "discoveryfinder-postgresql"
+    primary:
+      persistence:
+        enabled: false
+        size: 8Gi
+    auth:
+      password: "<<SET-FROM-SECRET-STORE:umbrella-defaults:discoveryfinder.postgresql.auth.password>>"
+      postgresPassword: "<<SET-FROM-SECRET-STORE:umbrella-defaults:discoveryfinder.postgresql.auth.postgresPassword>>"
+
+selfdescription:
+  enabled: false
+  sdfactory:
+    secret:
+      # -- JWK Set URI
+      jwkSetUri: "http://centralidp.tx.test/auth/realms/CX-Central/protocol/openid-connect/certs"
+      # -- Details for Clearing House URI
+      clearingHouseUri: ""
+      # -- Details for Clearing House URL
+      clearingHouseServerUrl: ""
+      # -- Details for Clearing House Realm
+      clearingHouseRealm: ""
+      # -- Details for Clearing House Client ID
+      clearingHouseClientId: ""
+      # -- Details for Clearing House Client Secret
+      clearingHouseClientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:selfdescription.sdfactory.secret.clearingHouseClientSecret>>"
+      # -- Details for Verifying Client uri
+      verifycredentialsUri: ""
+  ingress:
+    enabled: true
+    hosts:
+      - host: "sdfactory.tx.test"
+        paths:
+          - path: "/"
+            pathType: "Prefix"
+    # uncomment the following lines for tls
+    # tls:
+    # - tlsName: sdfactory.tx.test-tls
+    #   hosts:
+    #     - sdfactory.tx.test
+    className: "nginx"
+    # annotations:
+    #   # uncomment the following line for tls
+    #   cert-manager.io/cluster-issuer: "my-ca-issuer"
+
+ssi-credential-issuer:
+  enabled: false
+  replicaCount: 1
+  portalBackendAddress: "http://portal-backend.tx.test"
+  walletAddress: "http://ssi-dim-wallet-stub.tx.test"
+  walletTokenAddress: "http://ssi-dim-wallet-stub.tx.test/oauth/token"
+  service:
+    swaggerEnabled: true
+    logging:
+      businessLogic: "Debug"
+      default: "Debug"
+    portal:
+      # -- Provide portal client-id from CX IAM centralidp.
+      # You must specify the technical user with the required roles for the interaction with the portal
+      clientId: "sa-cl24-01"
+      # -- Client-secret for portal client-id. Secret-key 'portal-client-secret'.
+      clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:ssi-credential-issuer.service.portal.clientSecret>>"
+    credential:
+      issuerDid: "did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003CRHK"
+      issuerBpn: "BPNL00000003CRHK"
+      statusListUrl: "http://ssi-dim-wallet-stub.tx.test/status-list/BPNL00000003CRHK/8a6c7486-1e1f-4555-bdd2-1a178182651e"
+      encryptionConfigIndex: 0
+      encryptionConfigs:
+        index0:
+          # EncryptionKey for wallet. Secret-key 'credential-encryption-key0'. Expected format is 256 bit (64 digits) hex.
+          encryptionKey: "<<SET-FROM-SECRET-STORE:umbrella-defaults:ssi-credential-issuer.service.credential.encryptionConfigs.index0.encryptionKey>>"
+  processesworker:
+    portal:
+      # -- Provide portal client-id from CX IAM centralidp.
+      # You must specify the technical user with the required roles for the interaction with the portal
+      clientId: "sa-cl24-01"
+      # -- Client-secret for portal client-id. Secret-key 'portal-client-secret'.
+      clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:ssi-credential-issuer.processesworker.portal.clientSecret>>"
+    logging:
+      default: "Debug"
+    wallet:
+      # -- Provide wallet client-id from CX IAM centralidp.
+      # You must specify the technical user with the required roles for the interaction with the managed-identity-wallet
+      clientId: "wallet-client-id"
+      # -- Client-secret for wallet client-id. Secret-key 'wallet-client-secret'.
+      clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:ssi-credential-issuer.processesworker.wallet.clientSecret>>"
+  migrations:
+    logging:
+      default: "Debug"
+  credentialExpiry:
+    logging:
+      default: "Debug"
+  postgresql:
+    enabled: true
+    nameOverride: issuer-postgresql
+    architecture: standalone
+    ## TEMPORALY UNTIL NEW SSI-CREDENTIAL-ISSUER UPDATE
+    image:
+      repository: bitnamilegacy/postgresql
+      tag: 15-debian-11
+    ## UNTIL HERE
+    primary:
+      persistence:
+        enabled: false
+    auth:
+      # -- Password for the root username 'postgres'. Secret-key 'postgres-password'.
+      postgrespassword: "<<SET-FROM-SECRET-STORE:umbrella-defaults:ssi-credential-issuer.postgresql.auth.postgrespassword>>"
+      # -- Password for the non-root username 'issuer'. Secret-key 'password'.
+      password: "<<SET-FROM-SECRET-STORE:umbrella-defaults:ssi-credential-issuer.postgresql.auth.password>>"
+  centralidp:
+    # -- Provide centralidp base address (CX IAM), without trailing '/auth'.
+    address: "http://centralidp.tx.test"
+    jwtBearerOptions:
+      requireHttpsMetadata: "false"
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      nginx.ingress.kubernetes.io/use-regex: "true"
+      nginx.ingress.kubernetes.io/enable-cors: "true"
+      nginx.ingress.kubernetes.io/proxy-body-size: "8m"
+      nginx.ingress.kubernetes.io/cors-allow-origin: "http://*.tx.test"
+    # -- Ingress TLS configuration
+    tls: []
+      # - secretName: ""
+      #   hosts:
+      #     - ""
+    hosts:
+      - host: "ssi-credential-issuer.tx.test"
+        paths:
+          - path: "/"
+            pathType: "Prefix"
+            backend:
+              port: 8080
+
+# Set up services for a business partner pool, golden record process
+# and a gate with which the Portal and the users can share business partner data
+bpdm:
+  enabled: false
+  postgres:
+    # We use the default name for BPDM postgres
+    fullnameOverride: &bpdmPostgresName "bpdm-postgres"
+    nameOverride:
+    auth:
+      # BPDM can't handle random initial passwords at the moment
+      # so need to set a fixed one here and use it in the app configs later
+      password: "<<SET-FROM-SECRET-STORE:umbrella-defaults:bpdm.postgres.auth.password>>"
+      postgresPassword: "<<SET-FROM-SECRET-STORE:umbrella-defaults:bpdm.postgres.auth.postgresPassword>>"
+    architecture: standalone
+    primary:
+      persistence:
+        enabled: false
+  centralidp:
+    # We use Central-IDP as authentication server
+    enabled: false
+  # Set up a Gate that acts as the Portal's Gate
+  bpdm-gate:
+    postgres:
+      # App uses BPDM postgres default name to find connection to the Postgres
+      fullnameOverride:
+      nameOverride: bpdm-postgres
+    ingress:
+      enabled: true
+      annotations:
+        nginx.ingress.kubernetes.io/rewrite-target: "/$2"
+        nginx.ingress.kubernetes.io/use-regex: "true"
+        nginx.ingress.kubernetes.io/x-forwarded-prefix: "/gate"
+      # The Portal expects its Gate on that specific url path so we provide it here through ingress
+      hosts:
+        - host: "business-partners.tx.test"
+          paths:
+            - path: "/gate(/|$)(.*)"
+              pathType: "ImplementationSpecific"
+    applicationConfig:
+      server:
+        # App should take the x-forward-header-prefix into account for Swagger-UI and redirects to work correctly
+        forward-headers-strategy: "FRAMEWORK"
+      bpdm:
+        datasource:
+          host: *bpdmPostgresName
+        bpn:
+          # This Gate has no owner restriction as other companies can write into the Gate under their own tenant
+          owner-bpn-l:
+        security:
+          # App's API is authenticated over Central-IDP
+          auth-server-url: "http://centralidp.tx.test/auth"
+          realm: "CX-Central"
+          # Is Central-IDPs name for the Gate client
+          # The Gate will use that name to check for existing client permissions here
+          client-id: "Cl16-CX-BPDMGate"
+        # The Gate needs to connect to the Pool and Orchestrator to realize the Golden Record Process
+        # Setup client connection for both here (where to connect and the authentication)
+        # By default the Gate assumes that the authentication server of the Pool and Orchestrator are the same as its own
+        # We will reuse the general BPDM admin technical user to establish connection between the services
+        client:
+          pool:
+            base-url: http://business-partners.tx.test/pool
+            registration:
+              client-id: "sa-cl7-cx-1"
+          orchestrator:
+            base-url: http://business-partners.tx.test/orchestrator
+            registration:
+              client-id: "sa-cl25-cx-3"
+    applicationSecrets:
+      spring:
+        datasource:
+          # Set the password of the postgres BPDM user here (Currently, BPDM can't deal with random initial passwords)
+          password: "<<SET-FROM-SECRET-STORE:umbrella-defaults:bpdm.bpdm-gate.applicationSecrets.spring.datasource.password>>"
+      bpdm:
+        client:
+          orchestrator:
+            registration:
+              client-secret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:bpdm.bpdm-gate.applicationSecrets.bpdm.client.orchestrator.registration.client-secret>>"
+          pool:
+            registration:
+              client-secret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:bpdm.bpdm-gate.applicationSecrets.bpdm.client.pool.registration.client-secret>>"
+
+  # Configures the central business partner Pool
+  bpdm-pool:
+    postgres:
+      # App uses BPDM postgres default name to find connection to the Postgres
+      fullnameOverride:
+      nameOverride: bpdm-postgres
+    ingress:
+      enabled: true
+      annotations:
+        nginx.ingress.kubernetes.io/rewrite-target: "/$2"
+        nginx.ingress.kubernetes.io/use-regex: "true"
+        nginx.ingress.kubernetes.io/x-forwarded-prefix: "/pool"
+      hosts:
+        - host: "business-partners.tx.test"
+          paths:
+            - path: "/pool(/|$)(.*)"
+              pathType: "ImplementationSpecific"
+    applicationConfig:
+      server:
+        # App should take the x-forward-header-prefix into account for Swagger-UI and redirects to work correctly
+        forward-headers-strategy: "FRAMEWORK"
+      bpdm:
+        datasource:
+          host: *bpdmPostgresName
+        security:
+          # App's API is authenticated over Central-IDP
+          auth-server-url: "http://centralidp.tx.test/auth"
+          realm: "CX-Central"
+          # Is Central-IDPs name for the Pool client
+          # The Pool will use that name to check for existing client permissions here
+          client-id: "Cl7-CX-BPDM"
+        # The Pool needs to connect to the Orchestrator to realize the Golden Record Process
+        # Setup client connection (where to connect and the authentication)
+        # By default the Pool assumes that the authentication server of the Orchestrator matches that one of the Pool
+        # We will reuse the general BPDM admin technical user to establish connection between the services
+        client:
+          orchestrator:
+            base-url: http://business-partners.tx.test/orchestrator
+            registration:
+              client-id: "sa-cl25-cx-2"
+    applicationSecrets:
+      bpdm:
+        client:
+          orchestrator:
+            registration:
+              client-secret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:bpdm.bpdm-pool.applicationSecrets.bpdm.client.orchestrator.registration.client-secret>>"
+      spring:
+        datasource:
+          # Set the password of the postgres BPDM user here (Currently, BPDM can't deal with random initial passwords)
+          password: "<<SET-FROM-SECRET-STORE:umbrella-defaults:bpdm.bpdm-pool.applicationSecrets.spring.datasource.password>>"
+
+  # Configures the central service for orchestrating the Golden Record Process
+  bpdm-orchestrator:
+    ingress:
+      enabled: true
+      annotations:
+        nginx.ingress.kubernetes.io/rewrite-target: "/$2"
+        nginx.ingress.kubernetes.io/use-regex: "true"
+        nginx.ingress.kubernetes.io/x-forwarded-prefix: "/orchestrator"
+      hosts:
+        - host: "business-partners.tx.test"
+          paths:
+            - path: "/orchestrator(/|$)(.*)"
+              pathType: "ImplementationSpecific"
+    postgres:
+      enabled: false
+      fullnameOverride: bpdm-postgres
+    applicationConfig:
+      server:
+        # App should take the x-forward-header-prefix into account for Swagger-UI and redirects to work correctly
+        forward-headers-strategy: "FRAMEWORK"
+      bpdm:
+        datasource:
+          host: *bpdmPostgresName
+        security:
+          auth-server-url: "http://centralidp.tx.test/auth"
+          realm: "CX-Central"
+          client-id: "Cl25-CX-BPDM-Orchestrator"
+    applicationSecrets:
+      spring:
+        datasource:
+          # Set the password of the postgres BPDM user here (Currently, BPDM can't deal with random initial passwords)
+          password: "<<SET-FROM-SECRET-STORE:umbrella-defaults:bpdm.bpdm-orchestrator.applicationSecrets.spring.datasource.password>>"
+
+  # This installs a dummy cleaning service which performs rudimentary cleaning operations in order to realize the golden record process
+  bpdm-cleaning-service-dummy:
+    applicationConfig:
+      bpdm:
+        # The cleaning dummy needs to connect to the Orchestrator to realize the Golden Record Process
+        # Setup client connection (where to connect and the authentication)
+        # We reuse the general BPDM admin technical user to establish connection between the services
+        client:
+          orchestrator:
+            base-url: http://business-partners.tx.test/orchestrator
+            provider:
+              issuer-uri: "http://centralidp.tx.test/auth/realms/CX-Central"
+            registration:
+              client-id: "sa-cl25-cx-1"
+    applicationSecrets:
+      bpdm:
+        client:
+          orchestrator:
+            registration:
+              client-secret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:bpdm.bpdm-cleaning-service-dummy.applicationSecrets.bpdm.client.orchestrator.registration.client-secret>>"
+
+dataconsumerOne:
+  enabled: false
+  seedTestdata: false
+  nameOverride: dataconsumer-1
+  secrets:
+    edc-wallet-secret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:dataconsumerOne.secrets.edc-wallet-secret>>"
+  dataspace-connector-bundle:
+    tractusx-connector:
+      nameOverride: dataconsumer-1-edc
+      participant:
+        id: BPNL00000003AZQP
+        contextId: "00000000-0000-0000-0000-00000003azqp"
+      iatp:
+        id: did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003AZQP
+        trustedIssuers:
+          - did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003CRHK
+        sts:
+          dim:
+            url: http://ssi-dim-wallet-stub.tx.test/api/sts
+          oauth:
+            token_url: http://ssi-dim-wallet-stub.tx.test/oauth/token
+            client:
+              id: BPNL00000003AZQP
+              secret_alias: edc-wallet-secret
+      controlplane:
+        env:
+          TX_IAM_IATP_CREDENTIALSERVICE_URL: http://ssi-dim-wallet-stub.tx.test/api
+          EDC_IAM_DID_WEB_USE_HTTPS: false
+        bdrs:
+          server:
+            url: http://ssi-dim-wallet-stub.tx.test/api/v1/directory
+        endpoints:
+          management:
+            authKey: "<<SET-FROM-SECRET-STORE:umbrella-defaults:dataconsumerOne.dataspace-connector-bundle.tractusx-connector.controlplane.endpoints.management.authKey>>"
+        ingresses:
+          - enabled: true
+            hostname: "dataconsumer-1-controlplane.tx.test"
+            endpoints:
+              - default
+              - protocol
+              - management
+            className: "nginx"
+            tls:
+              enabled: false
+      dataplane:
+        env:
+          TX_IAM_IATP_CREDENTIALSERVICE_URL: http://ssi-dim-wallet-stub.tx.test/api
+          EDC_IAM_DID_WEB_USE_HTTPS: false
+        ingresses:
+          - enabled: true
+            hostname: "dataconsumer-1-dataplane.tx.test"
+            endpoints:
+              - default
+              - public
+            className: "nginx"
+            tls:
+              enabled: false
+        token:
+          signer:
+            privatekey_alias: tokenSignerPrivateKey
+          verifier:
+            publickey_alias: tokenSignerPublicKey
+      postgresql:
+        jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataconsumer-1-db:5432/edc"
+        auth:
+          password: "<<SET-FROM-SECRET-STORE:umbrella-defaults:dataconsumerOne.dataspace-connector-bundle.tractusx-connector.postgresql.auth.password>>"
+          postgresPassword: "<<SET-FROM-SECRET-STORE:umbrella-defaults:dataconsumerOne.dataspace-connector-bundle.tractusx-connector.postgresql.auth.postgresPassword>>"
+      vault:
+        hashicorp:
+          url: http://{{ .Release.Name }}-edc-dataconsumer-1-vault:8200
+
+    postgresql:
+      nameOverride: dataconsumer-1-db
+      auth:
+        password: "<<SET-FROM-SECRET-STORE:umbrella-defaults:dataconsumerOne.dataspace-connector-bundle.postgresql.auth.password>>"
+        postgresPassword: "<<SET-FROM-SECRET-STORE:umbrella-defaults:dataconsumerOne.dataspace-connector-bundle.postgresql.auth.postgresPassword>>"
+
+    vault:
+      nameOverride: edc-dataconsumer-1-vault
+      enabled: true
+
+  data-persistence-layer-bundle:
+    enabled: false
+
+  digital-twin-bundle:
+    enabled: false
+
+tx-data-provider:
+  enabled: false
+  seedTestdata: true
+  backendUrl: http://{{ .Release.Name }}-dataprovider-submodelserver:8080
+  registryUrl: http://{{ .Release.Name }}-dataprovider-dtr:8080/api/v3
+  controlplanePublicUrl: http://{{ .Release.Name }}-dataprovider-edc-controlplane:8084
+  controlplaneManagementUrl: http://{{ .Release.Name }}-dataprovider-edc-controlplane:8081
+  dataplaneUrl: http://{{ .Release.Name }}-dataprovider-edc-dataplane:8081
+  nameOverride: dataprovider
+  secrets:
+    edc-wallet-secret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:tx-data-provider.secrets.edc-wallet-secret>>"
+  dataspace-connector-bundle:
+    tractusx-connector:
+      nameOverride: dataprovider-edc
+      participant:
+        id: BPNL00000003AYRE
+        contextId: "00000000-0000-0000-0000-00000003ayre"
+      iatp:
+        id: did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003AYRE
+        trustedIssuers:
+          - did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003CRHK
+        sts:
+          dim:
+            url: http://ssi-dim-wallet-stub.tx.test/api/sts
+          oauth:
+            token_url: http://ssi-dim-wallet-stub.tx.test/oauth/token
+            client:
+              id: BPNL00000003AYRE
+              secret_alias: edc-wallet-secret
+      controlplane:
+        env:
+          TX_IAM_IATP_CREDENTIALSERVICE_URL: http://ssi-dim-wallet-stub.tx.test/api
+          EDC_IAM_DID_WEB_USE_HTTPS: false
+        bdrs:
+          server:
+            url: http://ssi-dim-wallet-stub.tx.test/api/v1/directory
+        endpoints:
+          management:
+            authKey: "<<SET-FROM-SECRET-STORE:umbrella-defaults:tx-data-provider.dataspace-connector-bundle.tractusx-connector.controlplane.endpoints.management.authKey>>"
+        ingresses:
+          - enabled: true
+            hostname: "dataprovider-controlplane.tx.test"
+            endpoints:
+              - default
+              - protocol
+              - management
+            className: "nginx"
+            tls:
+              enabled: false
+      dataplane:
+        env:
+          TX_IAM_IATP_CREDENTIALSERVICE_URL: http://ssi-dim-wallet-stub.tx.test/api
+          EDC_IAM_DID_WEB_USE_HTTPS: false
+        ingresses:
+          - enabled: true
+            hostname: "dataprovider-dataplane.tx.test"
+            endpoints:
+              - default
+              - public
+            className: "nginx"
+            tls:
+              enabled: false
+        token:
+          signer:
+            privatekey_alias: tokenSignerPrivateKey
+          verifier:
+            publickey_alias: tokenSignerPublicKey
+      postgresql:
+        jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataprovider-db:5432/edc"
+        auth:
+          user: "dbusertxdataprovider"
+          password: "<<SET-FROM-SECRET-STORE:umbrella-defaults:tx-data-provider.dataspace-connector-bundle.tractusx-connector.postgresql.auth.password>>"
+          postgresPassword: "<<SET-FROM-SECRET-STORE:umbrella-defaults:tx-data-provider.dataspace-connector-bundle.tractusx-connector.postgresql.auth.postgresPassword>>"
+      vault:
+        hashicorp:
+          url: http://{{ .Release.Name }}-edc-dataprovider-vault:8200
+
+    postgresql:
+      nameOverride: dataprovider-db
+      auth:
+        user: "dbusertxdataprovider"
+        password: "<<SET-FROM-SECRET-STORE:umbrella-defaults:tx-data-provider.dataspace-connector-bundle.postgresql.auth.password>>"
+        postgresPassword: "<<SET-FROM-SECRET-STORE:umbrella-defaults:tx-data-provider.dataspace-connector-bundle.postgresql.auth.postgresPassword>>"
+
+    vault:
+      nameOverride: edc-dataprovider-vault
+      enabled: true
+
+  data-persistence-layer-bundle:
+    enabled: true
+    simple-data-backend:
+      nameOverride: dataprovider-submodelserver
+      ingress:
+        enabled: true
+        className: "nginx"
+        hosts:
+          - host: "dataprovider-submodelserver.tx.test"
+            paths:
+              - path: "/"
+                pathType: "Prefix"
+        # uncomment the following lines for tls
+        # tls:
+        #   - hosts:
+        #       - host: "dataprovider-submodelserver.tx.test"
+        #     secretName: "secretName"
+
+  digital-twin-bundle:
+    enabled: true
+    digital-twin-registry:
+      nameOverride: dataprovider-dtr
+      registry:
+        authentication: false
+        host: dataprovider-dtr.tx.test
+        dataSource:
+          url: "jdbc:postgresql://dataprovider-digital-twin-db:5432/dtr"
+        # FIX PROBLEMS WITH INGRESS AND PATH HANDLING
+        ingress:
+          # disable urlPrefix behaviour (that appends a regex to the path)
+          urlPrefix: ""
+          # provide explicit rules so we can set pathType to ImplementationSpecific
+          rules:
+            - host: dataprovider-dtr.tx.test
+              http:
+                paths:
+                  - path: "/semantics/registry(/|$)(.*)"
+                    pathType: ImplementationSpecific
+          className: "nginx"
+          annotations:
+            cert-manager.io/cluster-issuer: "my-ca-issuer"
+            nginx.ingress.kubernetes.io/rewrite-target: "/$2"
+            nginx.ingress.kubernetes.io/use-regex: "true"
+    postgresql:
+      fullnameOverride: "dataprovider-digital-twin-db"
+
+semantic-hub:
+  enabled: false
+  enableKeycloak: false
+  keycloak:
+    postgresql:
+      architecture: standalone
+      primary:
+        persistence:
+          enabled: false
+  hub:
+    authentication: true
+    idpIssuerUri: "http://centralidp.tx.test/auth/realms/CX-Central"
+    idpClientId: Cl3-CX-Semantic
+    embeddedTripleStore: true
+    livenessProbe:
+      initialDelaySeconds: 200
+    readinessProbe:
+      initialDelaySeconds: 200
+    host: semantics.tx.test
+    ingress:
+      enabled: true
+      tls: false
+      urlPrefix: "/hub"
+      className: "nginx"
+      annotations:
+        cert-manager.io/cluster-issuer: "my-ca-issuer"
+        nginx.ingress.kubernetes.io/rewrite-target: "/$2"
+        nginx.ingress.kubernetes.io/use-regex: "true"
+        nginx.ingress.kubernetes.io/enable-cors: "true"
+        nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+        nginx.ingress.kubernetes.io/x-forwarded-prefix: "/hub"
+  graphdb:
+    enabled: true
+    image: jena-fuseki-docker:5.0.0
+    imagePullPolicy: Never
+    storageClassName: ""
+    storageSize: 8Gi
+
+dataconsumerTwo:
+  enabled: false
+  seedTestdata: false
+  nameOverride: dataconsumer-2
+  secrets:
+    edc-wallet-secret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:dataconsumerTwo.secrets.edc-wallet-secret>>"
+  dataspace-connector-bundle:
+    tractusx-connector:
+      nameOverride: dataconsumer-2-edc
+      participant:
+        id: BPNL00000003AVTH
+        contextId: "00000000-0000-0000-0000-00000003avth"
+      iatp:
+        id: did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003AVTH
+        trustedIssuers:
+          - did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003CRHK
+        sts:
+          dim:
+            url: http://ssi-dim-wallet-stub.tx.test/api/sts
+          oauth:
+            token_url: http://ssi-dim-wallet-stub.tx.test/oauth/token
+            client:
+              id: BPNL00000003AVTH
+              secret_alias: edc-wallet-secret
+      controlplane:
+        env:
+          TX_IAM_IATP_CREDENTIALSERVICE_URL: http://ssi-dim-wallet-stub.tx.test/api
+          EDC_IAM_DID_WEB_USE_HTTPS: false
+        bdrs:
+          server:
+            url: http://ssi-dim-wallet-stub.tx.test/api/v1/directory
+        endpoints:
+          management:
+            authKey: "<<SET-FROM-SECRET-STORE:umbrella-defaults:dataconsumerTwo.dataspace-connector-bundle.tractusx-connector.controlplane.endpoints.management.authKey>>"
+        ingresses:
+          - enabled: true
+            hostname: "dataconsumer-2-controlplane.tx.test"
+            endpoints:
+              - default
+              - protocol
+              - management
+            className: "nginx"
+            tls:
+              enabled: false
+      dataplane:
+        env:
+          TX_IAM_IATP_CREDENTIALSERVICE_URL: http://ssi-dim-wallet-stub.tx.test/api
+          EDC_IAM_DID_WEB_USE_HTTPS: false
+        ingresses:
+          - enabled: true
+            hostname: "dataconsumer-2-dataplane.tx.test"
+            endpoints:
+              - default
+              - public
+            className: "nginx"
+            tls:
+              enabled: false
+        token:
+          signer:
+            privatekey_alias: tokenSignerPrivateKey
+          verifier:
+            publickey_alias: tokenSignerPublicKey
+      postgresql:
+        jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataconsumer-2-db:5432/edc"
+        auth:
+          password: "<<SET-FROM-SECRET-STORE:umbrella-defaults:dataconsumerTwo.dataspace-connector-bundle.tractusx-connector.postgresql.auth.password>>"
+          postgresPassword: "<<SET-FROM-SECRET-STORE:umbrella-defaults:dataconsumerTwo.dataspace-connector-bundle.tractusx-connector.postgresql.auth.postgresPassword>>"
+      vault:
+        hashicorp:
+          url: http://{{ .Release.Name }}-edc-dataconsumer-2-vault:8200
+
+    postgresql:
+      nameOverride: dataconsumer-2-db
+      auth:
+        password: "<<SET-FROM-SECRET-STORE:umbrella-defaults:dataconsumerTwo.dataspace-connector-bundle.postgresql.auth.password>>"
+        postgresPassword: "<<SET-FROM-SECRET-STORE:umbrella-defaults:dataconsumerTwo.dataspace-connector-bundle.postgresql.auth.postgresPassword>>"
+
+    vault:
+      nameOverride: edc-dataconsumer-2-vault
+#      fullnameOverride: edc-dataconsumer-2-vault
+      enabled: true
+
+  digital-twin-bundle:
+    enabled: false
+
+  data-persistence-layer-bundle:
+    enabled: false
+
+pgadmin4:
+  enabled: false
+  env:
+    email: pgadmin4@txtest.org
+    password: "<<SET-FROM-SECRET-STORE:umbrella-defaults:pgadmin4.env.password>>"
+  persistentVolume:
+    enabled: false
+  ingress:
+    enabled: true
+    ingressClassName: "nginx"
+    hosts:
+      - host: pgadmin4.tx.test
+        paths:
+          - path: /
+            pathType: Prefix
+
+bdrs-server-memory:
+  nameOverride: bdrs-server
+  fullnameOverride: bdrs-server
+  enabled: false
+  seeding:
+    url: "http://bdrs-server:8081"
+    enabled: true
+    bpnList:
+      - bpn: "BPNL00000003CRHK"
+        did: "did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003CRHK"
+      - bpn: "BPNL00000003B3NX"
+        did: "did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003B3NX"
+      - bpn: "BPNL00000003CSGV"
+        did: "did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003CSGV"
+      - bpn: "BPNL00000003B6LU"
+        did: "did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003B6LU"
+      - bpn: "BPNL00000003AXS3"
+        did: "did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003AXS3"
+      - bpn: "BPNL00000003AZQP"
+        did: "did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003AZQP"
+      - bpn: "BPNL00000003AWSS"
+        did: "did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003AWSS"
+      - bpn: "BPNL00000003AYRE"
+        did: "did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003AYRE"
+      - bpn: "BPNL00000003AVTH"
+        did: "did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003AVTH"
+      - bpn: "BPNL00000000BJTL"
+        did: "did:web:ssi-dim-wallet-stub.tx.test:BPNL00000000BJTL"
+      - bpn: "BPNL00000003CML1"
+        did: "did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003CML1"
+      - bpn: "BPNL00000003B2OM"
+        did: "did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003B2OM"
+      - bpn: "BPNL00000003B0Q0"
+        did: "did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003B0Q0"
+      - bpn: "BPNL00000003B5MJ"
+        did: "did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003B5MJ"
+      - bpn: "BPNS0000000008ZZ"
+        did: "did:web:ssi-dim-wallet-stub.tx.test:BPNS0000000008ZZ"
+      - bpn: "BPNL00000003CNKC"
+        did: "did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003CNKC"
+      - bpn: "BPNS00000008BDFH"
+        did: "did:web:ssi-dim-wallet-stub.tx.test:BPNS00000008BDFH"
+
+  server:
+    trustedIssuers:
+      - did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003CRHK
+    env:
+      EDC_IAM_DID_WEB_USE_HTTPS: false
+    endpoints:
+      management:
+        authKey: "<<SET-FROM-SECRET-STORE:umbrella-defaults:bdrs-server-memory.server.endpoints.management.authKey>>"
+    ingresses:
+      - enabled: true
+        hostname: bdrs-server.tx.test
+        endpoints:
+          - directory
+          - management
+        className: "nginx"
+        tls:
+          enabled: false
+
+# Persistent (PostgreSQL-backed) BDRS. Default OFF so the stub / shared / memory
+# profiles never instantiate it (they use bdrs-server-memory above). The postgres
+# profiles flip this on (and bdrs-server-memory off). Explicit `enabled: false`
+# is required: Helm treats a missing condition path as enabled, which would
+# render this alongside the memory variant (both claim fullnameOverride
+# `bdrs-server`) and collide. Full config lives in the postgres profiles.
+bdrs-server:
+  enabled: false
+
+# -----------------------------------------------------------------------------
+# Per-participant IdentityHub instances (#1609 per-participant topology).
+# DISABLED by default — the `shared` topology uses a single IdentityHub from
+# identity-and-trust-bundle. The per-participant profile
+# (values-test-data-exchange-identity-hub-per-participant.yaml) flips these to
+# `enabled: true` and supplies the full per-host configuration (ingresses,
+# probes, resources, did:web host, super-user key alias). Keeping only
+# `enabled: false` here means the default / stub / shared profiles never
+# instantiate these pods.
+# -----------------------------------------------------------------------------
+identity-hub-provider:
+  enabled: false
+identity-hub-consumer1:
+  enabled: false
+identity-hub-consumer2:
+  enabled: false
+# Postgres variant of consumer1's per-participant IdentityHub (umbrella-level dep
+# alias). Default OFF so only the per-participant-POSTGRES profile
+# (values-test-data-exchange-identity-hub-per-participant-postgres.yaml) enables it.
+# Without this default Helm treats the missing condition path as enabled, so the
+# alias would render its own bundled Vault in every profile — colliding with the
+# issuer-service Vault on the `<release>-vault` ServiceAccount and failing install.
+identity-hub-consumer1-postgres:
+  enabled: false
+
+identity-and-trust-bundle:
+  enabled: false
+  ssi-dim-wallet-stub:
+    wallet:
+      replicaCount: 1
+      host: ssi-dim-wallet-stub.tx.test
+      nameSpace: "umbrella"
+      appName: "ssi-dim-wallet-stub"
+      configName: "ssi-dim-wallet-config"
+      serviceName: "ssi-dim-wallet-service"
+      secretName: "ssi-dim-wallet-secret"
+      ingressName: "ssi-dim-wallet-ingress"
+      seeding:
+        bpnList: "BPNL00000003AZQP,BPNL00000003AYRE"
+      ingress:
+        enabled: true
+        tls:
+          enabled: false
+          name: ""
+        urlPrefix: /
+        className: nginx
+        annotations: {}
+      swagger:
+        ui:
+          status: true
+        apiDoc:
+          status: true
+      logLevel: "debug"
+      environment: "default"
+      baseWalletBpn: "BPNL00000003CRHK"
+      didHost: "ssi-dim-wallet-stub.tx.test"
+      stubUrl: "http://ssi-dim-wallet-stub.tx.test"
+      statusListVcId: "8a6c7486-1e1f-4555-bdd2-1a178182651e"
+      tokenExpiryTime: "5"
+      portal:
+        waitTime: "60"
+        host: "http://portal-backend.tx.test"
+        clientId: "sa-cl2-05"
+        clientSecret: "<<SET-FROM-SECRET-STORE:umbrella-defaults:identity-and-trust-bundle.ssi-dim-wallet-stub.wallet.portal.clientSecret>>"
+      keycloak:
+        realm: "CX-Central"
+        authServerUrl: "http://centralidp.tx.test/auth"
+      postgresql:
+        username: "postgres"
+        password: "<<SET-FROM-SECRET-STORE:umbrella-defaults:identity-and-trust-bundle.ssi-dim-wallet-stub.wallet.postgresql.password>>"
+      service:
+        type: ClusterIP
+        port: 8080
+      resources:
+        requests:
+          # -- CPU resource requests
+          cpu: 500m
+          # -- Memory resource requests
+          memory: 1Gi
+        limits:
+          # -- CPU resource limits
+          cpu: 1
+          # -- Memory resource limits
+          memory: 2Gi
+  postgresql:
+    fullnameOverride: wallet-postgres
+    enabled: true
+    configmap:
+      name: wallet-postgres-configmap
+    auth:
+      username: postgres
+      password: "<<SET-FROM-SECRET-STORE:umbrella-defaults:identity-and-trust-bundle.postgresql.auth.password>>"
+    persistence:
+      enabled: false
+      size: 10Gi
+      storageClass: standard
+
+smtp4dev:
+  enabled: false
+  ingress:
+    url: smtp.tx.test
+  ports:
+    smtp: 25
+    http: 80
+
+# By default we're disabling observability
+grafana:
+  enabled: false
+loki:
+  enabled: false
+opentelemetry-collector:
+  enabled: false
+prometheus:
+  enabled: false
+jaeger:
+  enabled: false
+
+cert-manager:
+  enabled: false
+external-secrets:
+  enabled: false
+
+# In-cluster did:web resolver shim (SANDBOX ONLY). Serves the Universal Resolver HTTP API
+# (GET /1.0/identifiers/{did}) for did:web:*.tx.test, which no public resolver can reach because
+# those hosts resolve only inside the cluster. The Portal onboarding step VALIDATE_DID_DOCUMENT
+# points at it via portal.backend.processesworker.dim.universalResolverAddress. Disabled by default;
+# the BE-293 onboarding overlays enable it. NOT for production — see the header of the rendered
+# template and docs/internal/BE-293-cross-repo-changes-and-decisions.md (D11) for the prod path
+# (real Universal Resolver over public-HTTPS did:web + host allowlist + egress NetworkPolicy).
+didwebResolver:
+  enabled: false
+  image: python:3.12-alpine
+  port: 8080
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 64Mi

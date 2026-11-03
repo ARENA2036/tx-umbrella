@@ -1,0 +1,142 @@
+{{- /*
+be293-target public DID and StatusList routes.
+
+On k8s-dev-01 these four Ingresses are applied outside Helm
+(handoff/BE-293-umbrella-3.17.0/manifests/10-13). For be293-target they are
+part of the release, so host, ingress class, ClusterIssuer and namespace come
+from the validated be293.target contract (templates/_target-validate.tpl).
+Paths, backends and TLS Secret sharing match the DEV manifests:
+- *-legacy-did own the certificate (cert-manager) and, when enabled, the DNS
+  record (ExternalDNS);
+- *-did-documents and *-statuslist reuse those TLS Secrets.
+Rendered only for deploymentProfile=be293-target.
+*/ -}}
+{{- $be293 := .Values.be293 | default dict -}}
+{{- if eq ($be293.deploymentProfile | default "local") "be293-target" -}}
+{{- $t := $be293.target -}}
+{{- $identityHubHost := printf "identity-hub.%s" $t.dnsZone -}}
+{{- $issuerHost := printf "issuer-service.%s" $t.dnsZone -}}
+{{- $identityHubService := printf "%s-identity-hub-postgres" .Release.Name -}}
+{{- $issuerService := printf "%s-issuer-service" .Release.Name -}}
+{{- $identityHubTls := "identity-hub-legacy-did-be293-tls" -}}
+{{- $issuerTls := "issuer-service-legacy-did-be293-tls" -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: be293-identityhub-legacy-did
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/part-of: be293
+    app.kubernetes.io/component: identityhub-legacy-did
+  annotations:
+    cert-manager.io/cluster-issuer: {{ $t.clusterIssuer | quote }}
+    {{- if $t.externalDns }}
+    external-dns.alpha.kubernetes.io/hostname: {{ $identityHubHost | quote }}
+    external-dns.alpha.kubernetes.io/ttl: "300"
+    {{- end }}
+spec:
+  ingressClassName: {{ $t.ingressClass | quote }}
+  tls:
+    - hosts:
+        - {{ $identityHubHost | quote }}
+      secretName: {{ $identityHubTls }}
+  rules:
+    - host: {{ $identityHubHost | quote }}
+      http:
+        paths:
+          {{- range $bpn := $t.externalIngresses.identityHubDidBpns }}
+          - path: {{ printf "/%s/did.json" $bpn | quote }}
+            pathType: Exact
+            backend:
+              service:
+                name: {{ $identityHubService }}
+                port:
+                  name: did
+          {{- end }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: be293-identityhub-did-documents
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/part-of: be293
+    app.kubernetes.io/component: identityhub-did-documents
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  ingressClassName: {{ $t.ingressClass | quote }}
+  tls:
+    - hosts:
+        - {{ $identityHubHost | quote }}
+      secretName: {{ $identityHubTls }}
+  rules:
+    - host: {{ $identityHubHost | quote }}
+      http:
+        paths:
+          - path: /BPNL[0-9A-Z]{12}/did\.json$
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ $identityHubService }}
+                port:
+                  name: did
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: be293-issuer-legacy-did
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/part-of: be293
+    app.kubernetes.io/component: issuer-legacy-did
+  annotations:
+    cert-manager.io/cluster-issuer: {{ $t.clusterIssuer | quote }}
+    {{- if $t.externalDns }}
+    external-dns.alpha.kubernetes.io/hostname: {{ $issuerHost | quote }}
+    external-dns.alpha.kubernetes.io/ttl: "300"
+    {{- end }}
+spec:
+  ingressClassName: {{ $t.ingressClass | quote }}
+  tls:
+    - hosts:
+        - {{ $issuerHost | quote }}
+      secretName: {{ $issuerTls }}
+  rules:
+    - host: {{ $issuerHost | quote }}
+      http:
+        paths:
+          - path: {{ printf "/%s/did.json" .Values.wallet.operatorBpn | quote }}
+            pathType: Exact
+            backend:
+              service:
+                name: {{ $issuerService }}
+                port:
+                  name: did
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: be293-issuer-statuslist
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/part-of: be293
+    app.kubernetes.io/component: issuer-statuslist
+spec:
+  ingressClassName: {{ $t.ingressClass | quote }}
+  tls:
+    - hosts:
+        - {{ $issuerHost | quote }}
+      secretName: {{ $issuerTls }}
+  rules:
+    - host: {{ $issuerHost | quote }}
+      http:
+        paths:
+          - path: /statuslist
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $issuerService }}
+                port:
+                  name: statuslist
+{{- end }}
