@@ -26,7 +26,7 @@ concurrency:
 
 env:
   SOURCE_REPOSITORY: ARENA2036/portal-backend
-  SOURCE_COMMIT: f5badda90030531434c9445e5bb4b70382bea6eb
+  SOURCE_COMMIT: ad459ee711ecaa9a43535a513bd9db83b640a8ff
   # Approved registry host + namespace, e.g. set as repository variable after platform approval.
   REGISTRY: ${{ vars.BE293_REGISTRY }}
   PLATFORM: linux/amd64
@@ -45,7 +45,7 @@ jobs:
           - {image: portal-marketplace-app-service, dockerfile: docker/Dockerfile-marketplace-app-service}
           - {image: portal-services-service, dockerfile: docker/Dockerfile-services-service}
           - {image: portal-notification-service, dockerfile: docker/Dockerfile-notification-service}
-          - {image: portal-maintenance-service, dockerfile: docker/Dockerfile-maintenance-service, patch: onboarding-walletprovider}
+          - {image: portal-maintenance-service, dockerfile: docker/Dockerfile-maintenance-service}
           - {image: portal-processes-worker, dockerfile: docker/Dockerfile-processes-worker}
           - {image: portal-migrations, dockerfile: docker/Dockerfile-portal-migrations}
     steps:
@@ -90,46 +90,6 @@ jobs:
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
 
-      # Build-input fix for the pinned source, applied to a copy outside the checkout (source stays pinned).
-      # docker/Dockerfile-maintenance-service at the pinned commit does not COPY src/onboarding/Onboarding.WalletProvider,
-      # which ApplicationChecklist.Library references since BE-293, so `dotnet publish` fails (CS0234/CS0246 on
-      # IWalletProviderResolver). The upstream Dockerfile is checksum-pinned; any upstream change stops the job.
-      # Upstream fix: alpha/portal/ci/portal-backend-maintenance-dockerfile.patch. Drop this step once the pinned
-      # commit contains it.
-      - name: Prepare Dockerfile
-        id: dockerfile
-        env:
-          DOCKERFILE: ${{ matrix.dockerfile }}
-          PATCH_ID: ${{ matrix.patch }}
-        run: |
-          set -euo pipefail
-          if [[ -z "${PATCH_ID:-}" ]]; then
-            echo "path=$DOCKERFILE" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          case "$PATCH_ID" in
-            onboarding-walletprovider)
-              expected="e08d65073be2c52ae28a4b86f608e3936f66e0dd6c6b820ccd8e401345e230eb"
-              anchor="COPY src/processes/ApplicationChecklist.Library/ src/processes/ApplicationChecklist.Library/"
-              line="COPY src/onboarding/Onboarding.WalletProvider/ src/onboarding/Onboarding.WalletProvider/"
-              ;;
-            *) echo "::error::unknown Dockerfile patch $PATCH_ID"; exit 1 ;;
-          esac
-          actual="$(sha256sum "$DOCKERFILE" | cut -d' ' -f1)"
-          if [[ "$actual" != "$expected" ]]; then
-            echo "::error::$DOCKERFILE differs from the reviewed upstream file ($actual); review the patch"; exit 1
-          fi
-          if [[ "$(grep -cxF "$anchor" "$DOCKERFILE")" != "1" ]]; then
-            echo "::error::patch anchor not found exactly once in $DOCKERFILE"; exit 1
-          fi
-          out="$RUNNER_TEMP/$(basename "$DOCKERFILE")"
-          awk -v a="$anchor" -v l="$line" '{ print } $0 == a { print l }' "$DOCKERFILE" > "$out"
-          if [[ "$(diff "$DOCKERFILE" "$out" | grep -c '^>')" != "1" ]]; then
-            echo "::error::patch did not add exactly one line"; exit 1
-          fi
-          diff -u "$DOCKERFILE" "$out" || true
-          echo "path=$out" >> "$GITHUB_OUTPUT"
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
 
@@ -160,7 +120,7 @@ jobs:
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
           context: .
-          file: ${{ steps.dockerfile.outputs.path }}
+          file: ${{ matrix.dockerfile }}
           platforms: ${{ env.PLATFORM }}
           pull: true
           load: true
@@ -181,7 +141,7 @@ jobs:
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
           context: .
-          file: ${{ steps.dockerfile.outputs.path }}
+          file: ${{ matrix.dockerfile }}
           platforms: ${{ env.PLATFORM }}
           pull: true
           push: true
