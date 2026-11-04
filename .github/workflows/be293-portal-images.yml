@@ -105,7 +105,7 @@ jobs:
         if: ${{ inputs.push }}
         run: |
           set -uo pipefail
-          out="$(docker buildx imagetools inspect "$IMAGE_REF" 2>&1)"; rc=$?
+          if out="$(docker buildx imagetools inspect "$IMAGE_REF" 2>&1)"; then rc=0; else rc=$?; fi
           if [[ $rc -eq 0 ]]; then
             echo "::error::$IMAGE_REF already exists; tags are immutable"; exit 1
           fi
