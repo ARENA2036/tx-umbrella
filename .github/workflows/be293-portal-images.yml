@@ -1,0 +1,197 @@
+# Location: tx-umbrella/.github/workflows/be293-portal-images.yml (source copy: alpha/portal/ci/ on the
+# BE-293 handoff branch, validated by alpha/portal/tools/check_package.rb).
+#
+# Isolated build of the 8 BE-293 Portal backend images from ONE pinned commit of ARENA2036/portal-backend.
+# - Lives in tx-umbrella and checks out portal-backend read-only at the pinned SHA: the portal-backend
+#   repository and its main-branch workflows are not modified or triggered.
+# - Manual trigger only. `push` defaults to false (build + scan + migration check, nothing leaves the runner).
+# - Tags are immutable `be293-<full-sha>`; `latest` is never produced, and an existing tag is never overwritten.
+# - Action versions are the SHA pins already used by portal-backend's own workflows at the pinned commit.
+name: BE-293 Portal images (isolated)
+
+on:
+  workflow_dispatch:
+    inputs:
+      push:
+        description: "Push to the approved registry (requires BE293_REGISTRY variable and registry secrets)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: be293-portal-images
+  cancel-in-progress: false
+
+env:
+  SOURCE_REPOSITORY: ARENA2036/portal-backend
+  SOURCE_COMMIT: f5badda90030531434c9445e5bb4b70382bea6eb
+  # Approved registry host + namespace, e.g. set as repository variable after platform approval.
+  REGISTRY: ${{ vars.BE293_REGISTRY }}
+  PLATFORM: linux/amd64
+
+jobs:
+  build:
+    name: ${{ matrix.image }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {image: portal-administration-service, dockerfile: docker/Dockerfile-administration-service}
+          - {image: portal-registration-service, dockerfile: docker/Dockerfile-registration-service}
+          - {image: portal-marketplace-app-service, dockerfile: docker/Dockerfile-marketplace-app-service}
+          - {image: portal-services-service, dockerfile: docker/Dockerfile-services-service}
+          - {image: portal-notification-service, dockerfile: docker/Dockerfile-notification-service}
+          - {image: portal-maintenance-service, dockerfile: docker/Dockerfile-maintenance-service}
+          - {image: portal-processes-worker, dockerfile: docker/Dockerfile-processes-worker}
+          - {image: portal-migrations, dockerfile: docker/Dockerfile-portal-migrations}
+    steps:
+      - name: Guard inputs
+        env:
+          PUSH: ${{ inputs.push }}
+          REGISTRY_HOST: ${{ vars.BE293_REGISTRY_HOST }}
+        run: |
+          set -euo pipefail
+          if [[ "$PUSH" == "true" ]]; then
+            # docker/login-action falls back to Docker Hub when `registry` is empty: refuse that.
+            if [[ -z "$REGISTRY" || -z "$REGISTRY_HOST" ]]; then
+              echo "::error::push requires repository variables BE293_REGISTRY and BE293_REGISTRY_HOST"; exit 1
+            fi
+            if [[ "$REGISTRY" != "$REGISTRY_HOST/"* && "$REGISTRY" != "$REGISTRY_HOST" ]]; then
+              echo "::error::BE293_REGISTRY must be under BE293_REGISTRY_HOST"; exit 1
+            fi
+          fi
+          if [[ -n "$REGISTRY" && ! "$REGISTRY" =~ ^[a-z0-9.-]+(:[0-9]+)?(/[a-z0-9._-]+)*$ ]]; then
+            echo "::error::BE293_REGISTRY must be a lowercase registry reference"; exit 1
+          fi
+          if [[ ! "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::SOURCE_COMMIT must be a full 40-character SHA"; exit 1
+          fi
+          REF="${REGISTRY:-be293-local}/${{ matrix.image }}:be293-${SOURCE_COMMIT}"
+          case "$REF" in *:latest) echo "::error::latest tag is forbidden"; exit 1 ;; esac
+          echo "IMAGE_REF=$REF" >> "$GITHUB_ENV"
+
+      - name: Checkout pinned source (read-only)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: ${{ env.SOURCE_REPOSITORY }}
+          ref: ${{ env.SOURCE_COMMIT }}
+          # The tx-umbrella GITHUB_TOKEN can read public repositories only. If ARENA2036/portal-backend is
+          # private, provide a fine-grained read-only token (Contents: read on that repo) as this secret.
+          token: ${{ secrets.BE293_SOURCE_READ_TOKEN || github.token }}
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Verify checked-out commit
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+
+      - name: Log in to approved registry
+        if: ${{ inputs.push }}
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+        with:
+          registry: ${{ vars.BE293_REGISTRY_HOST }}
+          username: ${{ secrets.BE293_REGISTRY_USERNAME }}
+          password: ${{ secrets.BE293_REGISTRY_PASSWORD }}
+
+      - name: Refuse to overwrite an existing tag
+        if: ${{ inputs.push }}
+        run: |
+          set -uo pipefail
+          out="$(docker buildx imagetools inspect "$IMAGE_REF" 2>&1)"; rc=$?
+          if [[ $rc -eq 0 ]]; then
+            echo "::error::$IMAGE_REF already exists; tags are immutable"; exit 1
+          fi
+          # Only an explicit "not found" means the tag is free; auth/network errors must not be read as free.
+          if ! grep -qiE 'not found|manifest unknown|MANIFEST_UNKNOWN|404' <<<"$out"; then
+            echo "::error::cannot determine whether $IMAGE_REF exists:"; echo "$out" | tail -5; exit 1
+          fi
+
+      # Local build (no push): load into the runner's daemon for scanning and the migration check.
+      - name: Build (no push)
+        if: ${{ !inputs.push }}
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          platforms: ${{ env.PLATFORM }}
+          pull: true
+          load: true
+          push: false
+          # build-push-action v6 adds a provenance attestation by default; attestations are not supported
+          # by the docker (load) exporter, so they are disabled for the build-only path.
+          provenance: false
+          sbom: false
+          tags: ${{ env.IMAGE_REF }}
+          labels: |
+            org.opencontainers.image.revision=${{ env.SOURCE_COMMIT }}
+            org.opencontainers.image.source=https://github.com/${{ env.SOURCE_REPOSITORY }}
+
+      # Release build: push by immutable tag with SBOM and max provenance attestations.
+      - name: Build and push
+        id: push
+        if: ${{ inputs.push }}
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          platforms: ${{ env.PLATFORM }}
+          pull: true
+          push: true
+          provenance: mode=max
+          sbom: true
+          tags: ${{ env.IMAGE_REF }}
+          labels: |
+            org.opencontainers.image.revision=${{ env.SOURCE_COMMIT }}
+            org.opencontainers.image.source=https://github.com/${{ env.SOURCE_REPOSITORY }}
+
+      - name: Resolve image under test
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${DIGEST:-}" ]]; then
+            echo "SCAN_REF=${IMAGE_REF%:*}@${DIGEST}" >> "$GITHUB_ENV"
+          else
+            echo "SCAN_REF=${IMAGE_REF}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Verify BE-293 migrations are in the migrations image
+        if: ${{ matrix.image == 'portal-migrations' }}
+        run: |
+          set -euo pipefail
+          for m in 20260710175010_BE293IdentityHubWalletStepTypes 20261024150921_BE293ConnectorProvisioningRequests; do
+            # Dockerfile-portal-migrations: WORKDIR /migrations, ENTRYPOINT dotnet <this assembly>.
+            docker run --rm --network none --entrypoint /bin/sh "$SCAN_REF" \
+              -c "grep -a -q '$m' /migrations/Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.dll" \
+              || { echo "::error::migration $m missing"; exit 1; }
+          done
+
+      - name: Vulnerability scan (report, does not gate)
+        uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4 # v0.32.0
+        with:
+          image-ref: ${{ env.SCAN_REF }}
+          format: table
+          severity: CRITICAL,HIGH
+          exit-code: "0"
+          # Default "true" runs actions/cache@v4 and writes the vulnerability DB to this repository's Actions
+          # cache; disabled so a build-only run makes no writes outside the runner.
+          cache: "false"
+
+      - name: Record result
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          {
+            echo "### ${{ matrix.image }}"
+            echo "- source: ${SOURCE_REPOSITORY}@${SOURCE_COMMIT}"
+            echo "- tag: \`${IMAGE_REF}\`"
+            echo "- digest: \`${DIGEST:-not pushed}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
