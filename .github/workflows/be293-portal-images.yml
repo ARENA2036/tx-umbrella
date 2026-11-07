@@ -26,7 +26,7 @@ concurrency:
 
 env:
   SOURCE_REPOSITORY: ARENA2036/portal-backend
-  SOURCE_COMMIT: ad459ee711ecaa9a43535a513bd9db83b640a8ff
+  SOURCE_COMMIT: 274096a965c10d65a96d8c077a60b7680176aff7
   # Approved registry host + namespace, e.g. set as repository variable after platform approval.
   REGISTRY: ${{ vars.BE293_REGISTRY }}
   PLATFORM: linux/amd64
