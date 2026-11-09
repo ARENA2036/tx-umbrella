@@ -2,10 +2,10 @@
 # BE-293 handoff branch, validated by alpha/portal/tools/check_package.rb).
 #
 # Isolated build of BE-293 Portal backend images from ONE pinned commit of ARENA2036/portal-backend.
-# This branch (fix/be293-await-worker-image) builds ONLY portal-processes-worker from 2cd5dd8a4 (274096a96 +
-# IdentityHub credential-await checklist fix 8ca2c1ecc + IdentityHub activation membership fix). The other seven
-# images keep their published tags; both fixes change only code run by the processes-worker. Not for merge: the
-# 8-image matrix stays on develop.
+# This branch (fix/be293-await-worker-image) builds ONLY portal-processes-worker from e2451f876 (274096a96 +
+# IdentityHub credential-await checklist fix 8ca2c1ecc + IdentityHub activation membership fix 2cd5dd8a4 + BPDM
+# cx-memberships field isCatenaXMember). The other seven images keep their published tags; these fixes change only
+# code run by the processes-worker. Not for merge: the 8-image matrix stays on develop.
 # - Lives in tx-umbrella and checks out portal-backend read-only at the pinned SHA: the portal-backend
 #   repository and its main-branch workflows are not modified or triggered.
 # - Manual trigger only. `push` defaults to false (build + scan + migration check, nothing leaves the runner).
@@ -30,7 +30,7 @@ concurrency:
 
 env:
   SOURCE_REPOSITORY: ARENA2036/portal-backend
-  SOURCE_COMMIT: 2cd5dd8a4aa8c6c84c9c01bebeb62ffbd65c6b3a
+  SOURCE_COMMIT: e2451f87628c8ae56c131f136e5ad3e12703a1f6
   # Approved registry host + namespace, e.g. set as repository variable after platform approval.
   REGISTRY: ${{ vars.BE293_REGISTRY }}
   PLATFORM: linux/amd64
