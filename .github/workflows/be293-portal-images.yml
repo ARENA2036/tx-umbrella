@@ -1,7 +1,10 @@
 # Location: tx-umbrella/.github/workflows/be293-portal-images.yml (source copy: alpha/portal/ci/ on the
 # BE-293 handoff branch, validated by alpha/portal/tools/check_package.rb).
 #
-# Isolated build of the 8 BE-293 Portal backend images from ONE pinned commit of ARENA2036/portal-backend.
+# Isolated build of BE-293 Portal backend images from ONE pinned commit of ARENA2036/portal-backend.
+# This branch (fix/be293-await-worker-image) builds ONLY portal-processes-worker from 8ca2c1ecc (274096a96 +
+# IdentityHub credential-await checklist fix). The other seven images keep their published tags; the fix changes
+# only code run by the processes-worker. Not for merge: the 8-image matrix stays on develop.
 # - Lives in tx-umbrella and checks out portal-backend read-only at the pinned SHA: the portal-backend
 #   repository and its main-branch workflows are not modified or triggered.
 # - Manual trigger only. `push` defaults to false (build + scan + migration check, nothing leaves the runner).
@@ -26,7 +29,7 @@ concurrency:
 
 env:
   SOURCE_REPOSITORY: ARENA2036/portal-backend
-  SOURCE_COMMIT: 274096a965c10d65a96d8c077a60b7680176aff7
+  SOURCE_COMMIT: 8ca2c1ecc4c893d75ba2d205675202fc439849a2
   # Approved registry host + namespace, e.g. set as repository variable after platform approval.
   REGISTRY: ${{ vars.BE293_REGISTRY }}
   PLATFORM: linux/amd64
@@ -40,14 +43,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {image: portal-administration-service, dockerfile: docker/Dockerfile-administration-service}
-          - {image: portal-registration-service, dockerfile: docker/Dockerfile-registration-service}
-          - {image: portal-marketplace-app-service, dockerfile: docker/Dockerfile-marketplace-app-service}
-          - {image: portal-services-service, dockerfile: docker/Dockerfile-services-service}
-          - {image: portal-notification-service, dockerfile: docker/Dockerfile-notification-service}
-          - {image: portal-maintenance-service, dockerfile: docker/Dockerfile-maintenance-service}
           - {image: portal-processes-worker, dockerfile: docker/Dockerfile-processes-worker}
-          - {image: portal-migrations, dockerfile: docker/Dockerfile-portal-migrations}
     steps:
       - name: Guard inputs
         env:
