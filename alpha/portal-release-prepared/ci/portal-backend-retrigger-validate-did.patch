@@ -1,0 +1,123 @@
+BE-293: RETRIGGER_VALIDATE_DID_DOCUMENT must resume IDENTITY_WALLET in IN_PROGRESS (not TO_DO)
+
+Base: ARENA2036/portal-backend ad459ee711ecaa9a43535a513bd9db83b640a8ff (deployed on Alpha); also applies to
+feat/BE-293-portal-integration f5badda90. Upstream eclipse-tractusx/portal-backend main has the same mapping.
+
+Defect: POST /api/administration/registration/application/{id}/retrigger-validate-did set the IDENTITY_WALLET
+checklist entry to TO_DO. VALIDATE_DID_DOCUMENT (DidDocumentValidationBusinessLogic) only runs while that
+entry is IN_PROGRESS - the state CREATE_IDENTITY_HUB_WALLET / the DIM callback leave it in - so the retriggered
+step failed immediately, scheduled no further retrigger, and left the application unrecoverable through the API.
+Fix: map the retrigger to IN_PROGRESS, as RETRIGGER_BUSINESS_PARTNER_NUMBER_PULL and the activation retriggers
+already do. Only the manual retrigger path changes; the wallet is never recreated (the retrigger schedules only
+VALIDATE_DID_DOCUMENT; a successful validation schedules only TRANSMIT_BPN_DID).
+
+Affected image: portal-administration-service only (the mapping is read solely by
+Administration.Service RegistrationBusinessLogic.TriggerChecklistAsync). Worker, migrations, schema: unchanged.
+
+Apply: git apply --index ci/portal-backend-retrigger-validate-did.patch   (from the portal-backend root)
+---
+diff --git a/src/processes/ApplicationChecklist.Library/ApplicationChecklistEntryTypeIdExtensions.cs b/src/processes/ApplicationChecklist.Library/ApplicationChecklistEntryTypeIdExtensions.cs
+index 8dd1c1c..4f0d623 100644
+--- a/src/processes/ApplicationChecklist.Library/ApplicationChecklistEntryTypeIdExtensions.cs
++++ b/src/processes/ApplicationChecklist.Library/ApplicationChecklistEntryTypeIdExtensions.cs
+@@ -49,7 +49,9 @@ public static class ApplicationChecklistEntryTypeIdExtensions
+             ProcessStepTypeId.RETRIGGER_IDENTITY_WALLET => (ProcessStepTypeId.CREATE_IDENTITY_WALLET, ApplicationChecklistEntryStatusId.TO_DO),
+             ProcessStepTypeId.RETRIGGER_CREATE_DIM_WALLET => (ProcessStepTypeId.CREATE_DIM_WALLET, ApplicationChecklistEntryStatusId.TO_DO),
+             ProcessStepTypeId.RETRIGGER_CREATE_IDENTITY_HUB_WALLET => (ProcessStepTypeId.CREATE_IDENTITY_HUB_WALLET, ApplicationChecklistEntryStatusId.TO_DO),
+-            ProcessStepTypeId.RETRIGGER_VALIDATE_DID_DOCUMENT => (ProcessStepTypeId.VALIDATE_DID_DOCUMENT, ApplicationChecklistEntryStatusId.TO_DO),
++            // IN_PROGRESS, not TO_DO: VALIDATE_DID_DOCUMENT only runs while the wallet entry is IN_PROGRESS (as left by the
++            // wallet creation step); TO_DO made the retriggered step fail at once with no further retrigger.
++            ProcessStepTypeId.RETRIGGER_VALIDATE_DID_DOCUMENT => (ProcessStepTypeId.VALIDATE_DID_DOCUMENT, ApplicationChecklistEntryStatusId.IN_PROGRESS),
+             ProcessStepTypeId.RETRIGGER_REQUEST_BPN_CREDENTIAL => (ProcessStepTypeId.REQUEST_BPN_CREDENTIAL, ApplicationChecklistEntryStatusId.TO_DO),
+             ProcessStepTypeId.RETRIGGER_REQUEST_MEMBERSHIP_CREDENTIAL => (ProcessStepTypeId.REQUEST_MEMBERSHIP_CREDENTIAL, ApplicationChecklistEntryStatusId.TO_DO),
+             ProcessStepTypeId.RETRIGGER_SELF_DESCRIPTION_LP => (ProcessStepTypeId.START_SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO),
+diff --git a/tests/administration/Administration.Service.Tests/BusinessLogic/RegistrationBusinessLogicTest.cs b/tests/administration/Administration.Service.Tests/BusinessLogic/RegistrationBusinessLogicTest.cs
+index 12fe159..12008df 100644
+--- a/tests/administration/Administration.Service.Tests/BusinessLogic/RegistrationBusinessLogicTest.cs
++++ b/tests/administration/Administration.Service.Tests/BusinessLogic/RegistrationBusinessLogicTest.cs
+@@ -755,7 +755,7 @@ public class RegistrationBusinessLogicTest
+     [InlineData(ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ProcessStepTypeId.RETRIGGER_IDENTITY_WALLET, ProcessStepTypeId.CREATE_IDENTITY_WALLET, ApplicationChecklistEntryStatusId.TO_DO)]
+     [InlineData(ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ProcessStepTypeId.RETRIGGER_CREATE_DIM_WALLET, ProcessStepTypeId.CREATE_DIM_WALLET, ApplicationChecklistEntryStatusId.TO_DO)]
+     [InlineData(ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ProcessStepTypeId.RETRIGGER_CREATE_IDENTITY_HUB_WALLET, ProcessStepTypeId.CREATE_IDENTITY_HUB_WALLET, ApplicationChecklistEntryStatusId.TO_DO)]
+-    [InlineData(ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ProcessStepTypeId.RETRIGGER_VALIDATE_DID_DOCUMENT, ProcessStepTypeId.VALIDATE_DID_DOCUMENT, ApplicationChecklistEntryStatusId.TO_DO)]
++    [InlineData(ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ProcessStepTypeId.RETRIGGER_VALIDATE_DID_DOCUMENT, ProcessStepTypeId.VALIDATE_DID_DOCUMENT, ApplicationChecklistEntryStatusId.IN_PROGRESS)]
+     [InlineData(ApplicationChecklistEntryTypeId.BPNL_CREDENTIAL, ProcessStepTypeId.RETRIGGER_REQUEST_BPN_CREDENTIAL, ProcessStepTypeId.REQUEST_BPN_CREDENTIAL, ApplicationChecklistEntryStatusId.TO_DO)]
+     [InlineData(ApplicationChecklistEntryTypeId.MEMBERSHIP_CREDENTIAL, ProcessStepTypeId.RETRIGGER_REQUEST_MEMBERSHIP_CREDENTIAL, ProcessStepTypeId.REQUEST_MEMBERSHIP_CREDENTIAL, ApplicationChecklistEntryStatusId.TO_DO)]
+     [InlineData(ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ProcessStepTypeId.RETRIGGER_SELF_DESCRIPTION_LP, ProcessStepTypeId.START_SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO)]
+diff --git a/tests/externalsystems/BpnDidResolver.Library.Tests/DidDocumentValidationBusinessLogicTests.cs b/tests/externalsystems/BpnDidResolver.Library.Tests/DidDocumentValidationBusinessLogicTests.cs
+index 429e5a4..b319338 100644
+--- a/tests/externalsystems/BpnDidResolver.Library.Tests/DidDocumentValidationBusinessLogicTests.cs
++++ b/tests/externalsystems/BpnDidResolver.Library.Tests/DidDocumentValidationBusinessLogicTests.cs
+@@ -166,6 +166,45 @@ public class DidDocumentValidationBusinessLogicTests
+         result.ScheduleStepTypeIds.Should().ContainSingle().Which.Should().Be(ProcessStepTypeId.TRANSMIT_BPN_DID);
+     }
+ 
++    /// <summary>
++    /// Regression for the FAILED -> retrigger -> DONE path of an IdentityHub wallet (BE-293 Alpha):
++    /// a resolver answering with an HTTP error (403 rate limit) fails the step with a manual
++    /// RETRIGGER_VALIDATE_DID_DOCUMENT; the retrigger puts IDENTITY_WALLET into the status from the
++    /// manual-trigger map; the retriggered step must then validate the existing DID and hand over to
++    /// TRANSMIT_BPN_DID - and must not create the wallet again.
++    /// </summary>
++    [Fact]
++    public async Task ValidateDidDocument_FailedThenRetriggered_ValidatesTheExistingWalletAndContinues()
++    {
++        const string did = "did:web:identity-hub-01.test.tractus-x.com:BPNL000000000342";
++        var now = DateTimeOffset.UtcNow;
++        A.CallTo(() => _dateTimeProvider.OffsetNow).Returns(now);
++        A.CallTo(() => _applicationRepository.GetDidApplicationId(ApplicationId))
++            .Returns((true, did, Enumerable.Repeat(now, 1)));
++
++        // 1. First run: the resolver answers 403; the step error handler fails it for a manual retrigger.
++        var rateLimited = new ServiceException("call to external system validate-did failed with statuscode 403", System.Net.HttpStatusCode.Forbidden);
++        A.CallTo(() => _resolver.ValidateDid(did, A<CancellationToken>._)).Throws(rateLimited);
++        var thrown = await Assert.ThrowsAsync<ServiceException>(() => _sut.ValidateDidDocument(ContextWith(ApplicationChecklistEntryStatusId.IN_PROGRESS), CancellationToken.None));
++        var failed = await new ApplicationChecklistService(A.Fake<IPortalRepositories>())
++            .HandleServiceErrorAsync(thrown, ProcessStepTypeId.RETRIGGER_VALIDATE_DID_DOCUMENT);
++        failed.StepStatusId.Should().Be(ProcessStepStatusId.FAILED);
++        failed.ScheduleStepTypeIds.Should().ContainSingle().Which.Should().Be(ProcessStepTypeId.RETRIGGER_VALIDATE_DID_DOCUMENT);
++
++        // 2. Manual retrigger: the checklist entry status the administration service writes.
++        var (nextStep, entryStatus) = ProcessStepTypeId.RETRIGGER_VALIDATE_DID_DOCUMENT.GetNextProcessStepDataForManualTriggerProcessStepId();
++        nextStep.Should().Be(ProcessStepTypeId.VALIDATE_DID_DOCUMENT);
++
++        // 3. Retriggered run against a working resolver.
++        A.CallTo(() => _resolver.ValidateDid(did, A<CancellationToken>._)).Returns(true);
++        var result = await _sut.ValidateDidDocument(ContextWith(entryStatus), CancellationToken.None);
++
++        result.StepStatusId.Should().Be(ProcessStepStatusId.DONE);
++        result.ScheduleStepTypeIds.Should().ContainSingle().Which.Should().Be(ProcessStepTypeId.TRANSMIT_BPN_DID);
++        result.ScheduleStepTypeIds.Should().NotContain(new[] { ProcessStepTypeId.CREATE_IDENTITY_HUB_WALLET, ProcessStepTypeId.CREATE_DIM_WALLET, ProcessStepTypeId.CREATE_IDENTITY_WALLET });
++        A.CallTo(() => _resolver.ValidateDid(did, A<CancellationToken>._)).MustHaveHappenedTwiceExactly();
++    }
++
+     [Theory]
+     [InlineData(WalletProviderId.Dim)]
+     [InlineData(WalletProviderId.Custodian)]
+diff --git a/tests/processes/ApplicationChecklist.Library.Tests/ApplicationChecklistEntryTypeIdExtensionsTests.cs b/tests/processes/ApplicationChecklist.Library.Tests/ApplicationChecklistEntryTypeIdExtensionsTests.cs
+index 7586305..2ce580f 100644
+--- a/tests/processes/ApplicationChecklist.Library.Tests/ApplicationChecklistEntryTypeIdExtensionsTests.cs
++++ b/tests/processes/ApplicationChecklist.Library.Tests/ApplicationChecklistEntryTypeIdExtensionsTests.cs
+@@ -58,4 +58,22 @@ public class ApplicationChecklistEntryTypeIdExtensionsTests
+ 
+         unmapped.Should().BeEmpty();
+     }
++
++    /// <summary>
++    /// VALIDATE_DID_DOCUMENT only runs while IDENTITY_WALLET is IN_PROGRESS (the state the wallet
++    /// creation step leaves it in). Resetting the entry to TO_DO made the retriggered step fail
++    /// immediately, without scheduling another retrigger. The retrigger must resume the existing wallet,
++    /// never recreate it.
++    /// </summary>
++    [Fact]
++    public void RetriggerValidateDidDocument_ResumesTheExistingWalletInProgress()
++    {
++        ApplicationChecklistEntryTypeId.IDENTITY_WALLET.GetManualTriggerProcessStepIds()
++            .Should().Contain(ProcessStepTypeId.RETRIGGER_VALIDATE_DID_DOCUMENT);
++
++        var (nextStep, status) = ProcessStepTypeId.RETRIGGER_VALIDATE_DID_DOCUMENT.GetNextProcessStepDataForManualTriggerProcessStepId();
++
++        nextStep.Should().Be(ProcessStepTypeId.VALIDATE_DID_DOCUMENT);
++        status.Should().Be(ApplicationChecklistEntryStatusId.IN_PROGRESS);
++    }
+ }

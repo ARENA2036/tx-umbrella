@@ -1,0 +1,11 @@
+# Helm 4 post-renderer plugin (release-only). Not installed globally: select it per command with
+#   HELM_PLUGINS="$PWD/helm-plugins" helm ... --post-renderer be293-retention
+# See post-render.rb for the exact (and only) changes it makes.
+apiVersion: v1
+type: postrenderer/v1
+name: be293-retention
+version: 1.0.0
+runtime: subprocess
+runtimeConfig:
+  platformCommand:
+    - command: ${HELM_PLUGIN_DIR}/post-render.rb

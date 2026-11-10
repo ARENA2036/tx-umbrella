@@ -1,0 +1,253 @@
+# Self-hosted did:web resolver for the BE-293 Portal on Alpha (replaces the rate-limited public
+# dev.uniresolver.io, which answers HTTP 403 after 10 requests per 30 minutes on the free Godiddy plan).
+# Applied with `kubectl create` by tools/did-resolver-be293.sh (never apply/replace); NOT part of the Helm
+# release, so Helm recovery/upgrade/uninstall never touches it.
+#
+# Components (one pod):
+#   - driver:  uport/uni-resolver-driver-did-uport 5.0.8 (uport-project/uport-did-driver, Apache-2.0). This is
+#              the did:web driver the DIF Universal Resolver itself routes did:web to (universal-resolver
+#              application.yml, pattern ^(did:web:.+)$). It serves the Universal Resolver driver API
+#              GET /1.0/identifiers/{did} and returns a DID resolution result
+#              {didDocument, didResolutionMetadata, didDocumentMetadata}: HTTP 200 with
+#              didResolutionMetadata.error="notFound" while a DID is unresolvable. That is exactly the contract
+#              the Portal checks (IdentityHubDidDocumentResolver: 2xx + didResolutionMetadata.error empty).
+#   - gateway: nginx-unprivileged in front of the driver. Required, not optional: the Portal sends the DID
+#              percent-encoded (Uri.EscapeDataString: did%3Aweb%3A...), but the driver matches the RAW request
+#              URL against /1.0/identifiers/(did:.*) and fails with HTTP 500 on an encoded DID. nginx matches
+#              the decoded URI and forwards the decoded DID. The gateway also narrows the API to GET did:web
+#              DIDs under *.test.tractus-x.com (no did:ethr/ens/peer/plc, no actuator endpoints) - every other
+#              path is 404.
+#
+# Isolation:
+#   - Service is ClusterIP, port 8080 -> gateway only. The driver port 8081 is not in the Service and has no
+#     ingress rule. No Ingress, LoadBalancer or NodePort.
+#   - NetworkPolicy ingress: TCP 8080 from be293 pods only (the Portal chart's Job/CronJob pods carry no
+#     labels, so the worker cannot be selected more narrowly than "pods in be293").
+#   - NetworkPolicy egress: cluster DNS and TCP 443 to the shared ingress address that serves the IdentityHub
+#     DID documents (identity-hub-0x.test.tractus-x.com), nothing else. The namespace-wide be293 policies
+#     already allow the same destinations; these rules keep the resolver working if those are ever narrowed.
+#   - Non-root, read-only root filesystem, no capabilities, RuntimeDefault seccomp, no service account token.
+# Images: pinned by multi-arch index digest with tools/did-resolver-be293.sh --pin (anonymous registry read).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: be293-did-resolver-gateway
+  namespace: be293
+  labels:
+    app.kubernetes.io/name: did-resolver
+    app.kubernetes.io/instance: be293-did-resolver
+    app.kubernetes.io/part-of: be293-portal
+    app.kubernetes.io/component: did-resolver
+data:
+  nginx.conf: |
+    worker_processes 1;
+    pid /tmp/nginx.pid;
+    error_log /dev/stderr warn;
+    events { worker_connections 64; }
+    http {
+      server_tokens off;
+      access_log /dev/stdout;
+      client_body_temp_path /tmp/client_temp;
+      proxy_temp_path /tmp/proxy_temp;
+      fastcgi_temp_path /tmp/fastcgi_temp;
+      uwsgi_temp_path /tmp/uwsgi_temp;
+      scgi_temp_path /tmp/scgi_temp;
+      client_max_body_size 1k;
+      server {
+        listen 8080;
+        # Location regexes match the DECODED, normalised URI, so did%3Aweb%3A... and did:web:... both match;
+        # $did is the decoded DID and is forwarded unencoded, which is the form the driver accepts. A named
+        # capture, so it survives the nested limit_except context.
+        location ~ "^/1\.0/identifiers/(?<did>did:web:[a-z0-9-]+(\.[a-z0-9-]+)*\.test\.tractus-x\.com(:[A-Za-z0-9._-]+)*)$" {
+          limit_except GET { deny all; }
+          proxy_pass http://127.0.0.1:8081/1.0/identifiers/$did;
+          proxy_set_header Host 127.0.0.1;
+          proxy_connect_timeout 2s;
+          proxy_read_timeout 20s;
+          proxy_send_timeout 5s;
+        }
+        # Readiness of the whole chain (gateway -> driver); returns the driver's health status only.
+        location = /healthz {
+          access_log off;
+          limit_except GET { deny all; }
+          proxy_pass http://127.0.0.1:8081/health;
+          proxy_connect_timeout 1s;
+          proxy_read_timeout 2s;
+        }
+        location / { return 404; }
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: be293-did-resolver
+  namespace: be293
+  labels: &labels
+    app.kubernetes.io/name: did-resolver
+    app.kubernetes.io/instance: be293-did-resolver
+    app.kubernetes.io/part-of: be293-portal
+    app.kubernetes.io/component: did-resolver
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: did-resolver
+      app.kubernetes.io/instance: be293-did-resolver
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: gateway
+          image: "docker.io/nginxinc/nginx-unprivileged:1.28.0-alpine@sha256:c97ff0bf7cbae369953c6da1232ec14ad9f971d66360c5698db0856a4cd657a0"
+          imagePullPolicy: IfNotPresent
+          # Bypass the image entrypoint scripts (they try to rewrite /etc/nginx, which is read-only here).
+          command: ["nginx", "-g", "daemon off;"]
+          ports:
+            - {name: http, containerPort: 8080, protocol: TCP}
+          readinessProbe:
+            httpGet: {path: /healthz, port: http}
+            periodSeconds: 10
+            timeoutSeconds: 3
+          livenessProbe:
+            tcpSocket: {port: http}
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            requests: {cpu: 10m, memory: 16Mi}
+            limits: {memory: 64Mi}
+          securityContext:
+            runAsUser: 101          # nginx user of the unprivileged image
+            runAsGroup: 101
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          volumeMounts:
+            - {name: gateway-config, mountPath: /etc/nginx/nginx.conf, subPath: nginx.conf, readOnly: true}
+            - {name: gateway-tmp, mountPath: /tmp}
+        - name: driver
+          image: "docker.io/uport/uni-resolver-driver-did-uport:5.0.8@sha256:917f4d1aab9165f1b91dedba6dd86d6662771018f137b93722b4d4f4bc729356"
+          imagePullPolicy: IfNotPresent
+          env:
+            - {name: NODE_ENV, value: "production"}
+          ports:
+            - {name: driver, containerPort: 8081, protocol: TCP}
+          readinessProbe:
+            httpGet: {path: /health, port: driver}
+            periodSeconds: 10
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet: {path: /health, port: driver}
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            timeoutSeconds: 3
+          resources:
+            requests: {cpu: 20m, memory: 96Mi}
+            limits: {memory: 384Mi}
+          securityContext:
+            runAsUser: 1000         # node user of the node base image (the image itself declares USER root)
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          volumeMounts:
+            - {name: driver-tmp, mountPath: /tmp}
+      volumes:
+        - name: gateway-config
+          configMap: {name: be293-did-resolver-gateway}
+        - name: gateway-tmp
+          emptyDir: {sizeLimit: 16Mi}
+        - name: driver-tmp
+          emptyDir: {sizeLimit: 16Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: be293-did-resolver
+  namespace: be293
+  labels:
+    app.kubernetes.io/name: did-resolver
+    app.kubernetes.io/instance: be293-did-resolver
+    app.kubernetes.io/part-of: be293-portal
+    app.kubernetes.io/component: did-resolver
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: did-resolver
+    app.kubernetes.io/instance: be293-did-resolver
+  ports:
+    - {name: http, port: 8080, targetPort: http, protocol: TCP}
+---
+# Worker -> resolver: only the gateway port, only from be293 pods (Job/CronJob pods carry no labels).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: be293-did-resolver-ingress
+  namespace: be293
+  labels:
+    app.kubernetes.io/name: did-resolver
+    app.kubernetes.io/instance: be293-did-resolver
+    app.kubernetes.io/part-of: be293-portal
+    app.kubernetes.io/component: did-resolver
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: did-resolver
+      app.kubernetes.io/instance: be293-did-resolver
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {}
+      ports:
+        - {protocol: TCP, port: 8080}
+---
+# Resolver -> DID documents: cluster DNS (CoreDNS listens on 8053 behind Service port 53 on this cluster) and
+# HTTPS to the shared ingress address that serves identity-hub-0x.test.tractus-x.com (same address and
+# ingress-controller fallback as be293-portal-public-egress).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: be293-did-resolver-egress
+  namespace: be293
+  labels:
+    app.kubernetes.io/name: did-resolver
+    app.kubernetes.io/instance: be293-did-resolver
+    app.kubernetes.io/part-of: be293-portal
+    app.kubernetes.io/component: did-resolver
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: did-resolver
+      app.kubernetes.io/instance: be293-did-resolver
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - {protocol: UDP, port: 53}
+        - {protocol: TCP, port: 53}
+        - {protocol: UDP, port: 8053}
+        - {protocol: TCP, port: 8053}
+    - to:
+        - ipBlock:
+            cidr: "188.34.116.149/32"
+      ports:
+        - {protocol: TCP, port: 443}
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: "ingress-nginx"
+      ports:
+        - {protocol: TCP, port: 443}

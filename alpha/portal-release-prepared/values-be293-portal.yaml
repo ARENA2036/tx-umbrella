@@ -1,0 +1,251 @@
+# BE-293 Portal on Alpha: Helm values for a STANDALONE release of the Portal chart in namespace be293.
+#
+# Chart: handoff/BE-293-umbrella-3.17.0/chart/umbrella/charts/portal-2.6.0.tgz (vendored BE-293 variant,
+#        sha256 a17ab65070eeea3e719ed1e09... see alpha/portal/README.md). NOT the umbrella chart.
+# Scope: everything renders into be293. Central services are REUSED from release26-09; the old Portal
+#        and its database are never referenced.
+#
+# Placeholder convention (validated by tools/validate_render.py):
+#   <<ALPHA:NAME>>      endpoint/identifier that must be verified read-only on Alpha (gate G4) or supplied by an owner
+#   <<IMAGE:NAME>>      registry / digest of an image that must be built by the approved CI pipeline (images.lock.yaml)
+# Secrets: NO credential is set in this file. Every credential is read from a pre-provisioned Secret in be293
+#          (see secrets-contract.yaml). Chart-generated Secrets are adopted through Helm `lookup`.
+
+portalAddress: "https://<<ALPHA:PORTAL_HOST>>"
+portalBackendAddress: "https://<<ALPHA:PORTAL_BACKEND_HOST>>"
+
+# Keycloak MUST be addressed through its public HTTPS host: the token issuer (iss) and browser redirects
+# must match. Hosts taken from the 2026-11-04 Alpha snapshot; re-verify in G4.
+centralidp:
+  address: "https://centralidp.test.tractus-x.com"
+sharedidpAddress: "https://sharedidp.test.tractus-x.com"
+
+semanticsAddress: "https://semantics.test.tractus-x.com"
+
+# BPDM is called by the browser (frontend env BPDM_POOL_API_URL / BPDM_GATE_API_URL) as well as by the
+# backend, so it must be the existing public HTTPS host, not an in-cluster Service name.
+# The API paths carry the BPDM API version: the backend (ad459ee7, BpdmService) sends relative paths such as
+# "input/business-partners" against <address><apiPath>/, and the BPDM Ingress only strips /gate or /pool.
+# Without the version the Gate answers 404 (BPN creation failed at .../gate/input/business-partners).
+# /v6 = portal-2.6.0 chart default and umbrella 3.17.0 reference. Shared BPDM is 7.5.0: checked against the
+# eclipse-tractusx/bpdm v7.5.0 sources, /v6 serves every Gate/Pool call of the backend while /v7 does not (v7
+# moved gate sharing-state and replaced pool cx-memberships). Re-verified against the live BPDM OpenAPI (paths
+# and fields) by tools/bpdm-endpoint-be293.sh before any live change. Gate R-BPDM enforces the shape.
+bpdm:
+  poolAddress: "https://business-partners.test.tractus-x.com"
+  poolApiPath: "/pool/v6"
+  portalGateAddress: "https://business-partners.test.tractus-x.com"
+  portalGateApiPath: "/gate/v6"
+
+# In-cluster addresses of release26-09 services whose management/admin APIs must not be used publicly.
+# Service names and Service ports are the confirmed Alpha inventory (alpha-service-map.yaml).
+sdfactoryAddress: "http://sdfactory.release26-09.svc.cluster.local"
+
+bpnDidResolver:
+  managementApiAddress: "http://bdrs-server.release26-09.svc.cluster.local:8081"
+  directoryApiAddress: "https://bdrs-server.test.tractus-x.com/api/directory"
+  existingSecret: be293-portal-bdrs
+  existingSecretKey: management-api-key
+
+# Integrations that the IdentityHub wallet flow does not use. They point at a reserved, non-resolving
+# domain (RFC 6761) so an accidental call fails closed instead of reaching a real system.
+custodianAddress: "https://custodian.disabled.invalid"
+issuerComponentAddress: "https://ssi-credential-issuer.disabled.invalid"
+dimWrapper:
+  baseAddress: "https://dim.disabled.invalid"
+  tokenAddress: "https://dim.disabled.invalid/token"
+decentralIdentityManagementAuthAddress: "https://dim.disabled.invalid/sts"
+clearinghouse:
+  default:
+    baseAddress: "https://clearinghouse.disabled.invalid"
+    tokenAddress: "https://clearinghouse.disabled.invalid/token"
+    clearinghouseConnectDisabled: true
+
+frontend:
+  ingress:
+    # Disabled until the platform owner allocates a dedicated host (W10). Never reuse portal.test.tractus-x.com.
+    enabled: false
+  portal:
+    image:
+      name: "docker.io/tractusx/portal-frontend"
+      portaltag: "v2.6.0@sha256:d0fe6dd295603fa8489b7af04179df1e80ae60246f0a6922957c1db5df395b95"
+      pullPolicy: IfNotPresent
+  registration:
+    image:
+      name: "docker.io/tractusx/portal-frontend-registration"
+      registrationtag: "v2.2.2@sha256:36bf200b4b64becab2606c60121ad59cd145492907e35cf86b208ad1bc22269a"
+      pullPolicy: IfNotPresent
+  assets:
+    image:
+      name: "docker.io/tractusx/portal-assets"
+      assetstag: "v2.6.0@sha256:27cf6ef97e1d9710b4440b964bfe92e0ceba1fffb139b3924066ba576bb3dbc3"
+      pullPolicy: IfNotPresent
+
+backend:
+  ingress:
+    enabled: false
+  walletProvider: IdentityHub
+  keycloak:
+    # Standard Tractus-X provisioning service accounts (seeded by centralidp/sharedidp charts; same IDs as
+    # charts/umbrella/values.yaml). Their secrets are provided in Secret be293-portal-keycloak only after the
+    # Keycloak owner authorizes reuse or issues dedicated be293 clients (see secrets-contract.yaml).
+    secret: be293-portal-keycloak
+    central:
+      clientId: "sa-cl1-reg-2"
+      clientSecret: ""
+      jwtBearerOptions:
+        requireHttpsMetadata: "true"
+    shared:
+      clientId: "sa-cl1-reg-1"
+      clientSecret: ""
+  mailing:
+    secret: be293-portal-mailing
+    host: "smtp.office365.com"
+    port: "587"
+    user: "it@arena2036.de"
+    senderEmail: "it@arena2036.de"
+    password: ""
+  interfaces:
+    secret: be293-portal-interfaces
+  provisioning:
+    sharedRealm:
+      smtpServer:
+        host: "smtp.office365.com"
+        port: "587"
+        user: "it@arena2036.de"
+        from: "it@arena2036.de"
+        replyTo: "it@arena2036.de"
+        password: ""
+
+  administration:
+    image:
+      name: "harbor-hub-shared.arena.3ascloud.de/be293/portal-administration-service"
+      administrationservicetag: "be293-274096a965c10d65a96d8c077a60b7680176aff7@sha256:aff600f9fc558c1d651e124d0c7b43b90819b94b6971967b9d4661c57cd76560"
+      pullPolicy: IfNotPresent
+      pullSecrets:
+        - name: be293-portal-registry-pull
+    issuerdid: "did:web:issuer-service.test.tractus-x.com:BPNL00000003CRHK"
+    connectorProvisioning:
+      connectorLocationId: DE
+      # The DEV-only operator shortcut endpoint stays off on Alpha.
+      devOperatorRequestsEnabled: false
+  registration:
+    image:
+      name: "harbor-hub-shared.arena.3ascloud.de/be293/portal-registration-service"
+      registrationservicetag: "be293-ad459ee711ecaa9a43535a513bd9db83b640a8ff@sha256:a83cf1410c0d762f407b189eed8fe9e78e72bc91abbd2ec2eed727c0a8d93088"
+      pullPolicy: IfNotPresent
+      pullSecrets:
+        - name: be293-portal-registry-pull
+  appmarketplace:
+    image:
+      name: "harbor-hub-shared.arena.3ascloud.de/be293/portal-marketplace-app-service"
+      appmarketplaceservicetag: "be293-ad459ee711ecaa9a43535a513bd9db83b640a8ff@sha256:2d5c3f6b208c53be33afeb03db5cf28479436f7aa263853374ecc262a758e94b"
+      pullPolicy: IfNotPresent
+      pullSecrets:
+        - name: be293-portal-registry-pull
+  services:
+    image:
+      name: "harbor-hub-shared.arena.3ascloud.de/be293/portal-services-service"
+      servicesservicetag: "be293-ad459ee711ecaa9a43535a513bd9db83b640a8ff@sha256:2abb07a918dd00cc9eded6f8fe9d15d6f7af137a26daf9a9b586744b98ba8b81"
+      pullPolicy: IfNotPresent
+      pullSecrets:
+        - name: be293-portal-registry-pull
+  notification:
+    image:
+      name: "harbor-hub-shared.arena.3ascloud.de/be293/portal-notification-service"
+      notificationservicetag: "be293-ad459ee711ecaa9a43535a513bd9db83b640a8ff@sha256:982e77752e05d341bb21dc708037423f7e1d2eed439999c891223dd61efb8b43"
+      pullPolicy: IfNotPresent
+      pullSecrets:
+        - name: be293-portal-registry-pull
+  portalmaintenance:
+    image:
+      name: "harbor-hub-shared.arena.3ascloud.de/be293/portal-maintenance-service"
+      portalmaintenancetag: "be293-ad459ee711ecaa9a43535a513bd9db83b640a8ff@sha256:08ee4b36da69c993094a47732aee8b18d0aec3a9defb368a12f0e6a622f559ee"
+      pullPolicy: IfNotPresent
+      pullSecrets:
+        - name: be293-portal-registry-pull
+  portalmigrations:
+    image:
+      name: "harbor-hub-shared.arena.3ascloud.de/be293/portal-migrations"
+      portalmigrationstag: "be293-ad459ee711ecaa9a43535a513bd9db83b640a8ff@sha256:c10f64ca556b6089f1f01bcce0291a62ec9390cfe727650ff84d09f3863a3815"
+      pullPolicy: IfNotPresent
+      pullSecrets:
+        - name: be293-portal-registry-pull
+    seeding:
+      useInitial: true
+      seedTestData:
+        # No test companies/connectors on Alpha; onboarding test data is created through the UI with owner approval.
+        useDefault: false
+        useOwnConfigMap:
+          configMap: ""
+          filename: ""
+  provisioningmigrations:
+    image:
+      name: "docker.io/tractusx/portal-provisioning-migrations"
+      provisioningmigrationstag: "v2.6.0@sha256:cbb0c469d5fc4af106a08a2fb8b9b5530877bf47e9698bff5bc0549e7e716992"
+      pullPolicy: IfNotPresent
+  processesworker:
+    image:
+      name: "harbor-hub-shared.arena.3ascloud.de/be293/portal-processes-worker"
+      processesworkertag: "be293-e2451f87628c8ae56c131f136e5ad3e12703a1f6@sha256:0857101e376c52277f88ec081b2902e6883f530e6d27d914fc83d05d7e72d3a6"
+      pullPolicy: IfNotPresent
+      pullSecrets:
+        - name: be293-portal-registry-pull
+    bpnDidResolver:
+      apiKey: ""
+    bpdm:
+      clientId: "sa-cl7-cx-5"
+      clientSecret: ""
+    sdfactory:
+      clientId: "sa-cl8-cx-1"
+      clientSecret: ""
+    dim:
+      baseAddress: "https://dim.disabled.invalid"
+      universalResolverAddress: "<<ALPHA:UNIVERSAL_RESOLVER_URL>>"
+    identityHub:
+      enabled: true
+      # IdentityHub identity (admin) API and IssuerService admin API, in-cluster only. Ports are the confirmed
+      # Service ports; paths are the chart defaults (identity=/api/identity, issueradmin=/api/admin).
+      # IDENTITYHUB_INSTANCE is identity-hub-01 or identity-hub-02: the owner decides which instance hosts
+      # Portal-onboarded wallets (it must match IDENTITYHUB_PUBLIC_HOST).
+      baseAddress: "http://identity-hub-01.release26-09.svc.cluster.local:8082/api/identity"
+      credentialServiceBaseAddress: "https://identity-hub-01.test.tractus-x.com/api/credentials"
+      didDocumentBaseLocation: "identity-hub-01.test.tractus-x.com"
+      universalResolverAddress: "<<ALPHA:UNIVERSAL_RESOLVER_URL>>"
+      issuerDid: "did:web:issuer-service.test.tractus-x.com:BPNL00000003CRHK"
+      issuerParticipantId: "issuer"
+      issuerAdminBaseAddress: "http://issuer-service.release26-09.svc.cluster.local:8086/api/admin"
+      bpnCredentialType: BpnCredential
+      bpnCredentialDefinitionId: "BpnCredential-id"
+      membershipCredentialType: MembershipCredential
+      membershipCredentialDefinitionId: "membershipCredential-id"
+      frameworkContractVersion: "1.0"
+      maxValidationTimeInDays: 7
+      # Keys come only from this pre-provisioned Secret; inline values stay empty.
+      existingSecret: be293-portal-identityhub
+      issuerAdminApiKeySecretKey: issuerservice-admin-api-key
+      apiKey: ""
+      issuerAdminApiKey: ""
+
+# Portal-owned PostgreSQL in be293. The application connects ONLY to this release-local service.
+postgresql:
+  enabled: true
+  architecture: standalone
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/postgresql
+    tag: "15-debian-11"
+    digest: "sha256:e5dd504985505a6e30b36a474a1764e9f93fd2367acf5d196dd14827cac7eac4"
+  auth:
+    # Portal-owned DB credentials: generated by the chart on first install (fresh random values, never copied
+    # from release26-09) and preserved on upgrade via lookup. externalSecretManaged=true is NOT used: this chart
+    # version still renders an EMPTY Secret of the same name in that mode, which would clobber a pre-created one.
+    existingSecret: be293-portal-postgres
+    externalSecretManaged: false
+  primary:
+    persistence:
+      enabled: true
+      size: 8Gi
+externalDatabase:
+  # Unused while postgresql.enabled=true; pointed at a non-resolving name so it can never reach another database.
+  host: "portal-external-db.disabled.invalid"

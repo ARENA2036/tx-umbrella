@@ -1,0 +1,993 @@
+From 538db476c75ae8ff8f6491d218dbdee169e26df6 Mon Sep 17 00:00:00 2001
+From: Payam Mirzaei <payam.mirzaei@arena2036.de>
+Date: Sat, 7 Nov 2026 15:48:38 +0100
+Subject: [PATCH] fix(BE-293): safe checklist retrigger (DID validation,
+ IdentityHub wallet, BPNL 409)
+
+- applicationRequestApiSlice: map RETRIGGER_VALIDATE_DID_DOCUMENT ->
+  retrigger-validate-did and RETRIGGER_CREATE_IDENTITY_HUB_WALLET ->
+  retrigger-create-identity-hub-wallet; resolve endpoints from own properties
+  only; retriggerProcess calls known endpoints only (a missing mapping used
+  to POST .../application/{id}/undefined).
+- ProgressVerificationButton: offer retrigger only for FAILED entries; one
+  explicit action per retriggerable step (never several submitted at once);
+  synchronous guard against duplicate submissions; async/await with
+  try/catch/finally so loading always resets; 409 and other errors shown
+  as actionable messages, never retried; checklist refreshed afterwards.
+  Loading was previously set to the error title (a truthy string), leaving
+  an endless spinner.
+- Tests: endpoint mapping, unknown steps, exactly one POST to
+  retrigger-validate-did, status guards, double-click, 409, loading cleanup.
+- jest: resolve tsconfig baseUrl imports and stub style imports.
+---
+ jest.config.ts                                |   3 +
+ src/assets/locales/de/main.json               |   6 +
+ src/assets/locales/en/main.json               |   6 +
+ .../ProgressVerificationButton/index.test.tsx | 233 ++++++++++++++++++
+ .../ProgressVerificationButton/index.tsx      | 179 ++++++++------
+ .../retrigger.test.ts                         |  94 +++++++
+ .../ProgressVerificationButton/retrigger.ts   |  69 ++++++
+ .../admin/applicationRequestApiSlice.test.ts  | 151 ++++++++++++
+ .../admin/applicationRequestApiSlice.ts       |  38 ++-
+ test/__ mocks __/styleMock.js                 |  21 ++
+ 10 files changed, 718 insertions(+), 82 deletions(-)
+ create mode 100644 src/components/shared/basic/ProgressVerificationButton/index.test.tsx
+ create mode 100644 src/components/shared/basic/ProgressVerificationButton/retrigger.test.ts
+ create mode 100644 src/components/shared/basic/ProgressVerificationButton/retrigger.ts
+ create mode 100644 src/features/admin/applicationRequestApiSlice.test.ts
+ create mode 100644 test/__ mocks __/styleMock.js
+
+diff --git a/jest.config.ts b/jest.config.ts
+index 0a5c3e7f..d086d4f1 100644
+--- a/jest.config.ts
++++ b/jest.config.ts
+@@ -24,8 +24,11 @@ export default {
+   transform: {
+     '^.+\\.tsx?$': 'ts-jest',
+   },
++  // Resolve the same bare imports as tsconfig baseUrl (e.g. features/..., utils/...).
++  modulePaths: ['<rootDir>/src'],
+   moduleNameMapper: {
+     '\\.(gif|ttf|eot|svg|png)$': '<rootDir>/test/__ mocks __/fileMock.js',
++    '\\.(css|scss|sass)$': '<rootDir>/test/__ mocks __/styleMock.js',
+   },
+   globals: {
+     ENV: true,
+diff --git a/src/assets/locales/de/main.json b/src/assets/locales/de/main.json
+index b798bb64..01002f73 100644
+--- a/src/assets/locales/de/main.json
++++ b/src/assets/locales/de/main.json
+@@ -1764,6 +1764,12 @@
+       "nocomments": " No comments available",
+       "buttonClose": "Close",
+       "resolveTitle": "Your option to resolve the issue",
++      "retrigger": {
++        "conflict": "Der erneute Start wurde nicht angenommen, weil dieser Schritt nicht mehr fehlgeschlagen ist. Die Checkliste wurde aktualisiert; ein erneuter Start ist nur bei fehlgeschlagenen Schritten möglich.",
++        "unavailable": "Diese Aktion zum erneuten Start ist in dieser Portal-Version nicht verfügbar. Bitte wenden Sie sich an das Betriebsteam.",
++        "failed": "Die Anfrage zum erneuten Start ist fehlgeschlagen. Die Checkliste wurde aktualisiert; bitte versuchen Sie es später erneut oder wenden Sie sich an das Betriebsteam.",
++        "noEndpoint": "Dieser Schritt ist fehlgeschlagen, aber für {{steps}} ist keine Aktion zum erneuten Start verfügbar. Bitte wenden Sie sich an das Betriebsteam."
++      },
+       "REGISTRATION_VERIFICATION": {
+         "stepName": "Data Validation",
+         "stepDescription": "Manual validation of the company registration by the operator. Please check the company details as well as uploaded documents and 'accept' / 'decline' the application; depending on the validation results",
+diff --git a/src/assets/locales/en/main.json b/src/assets/locales/en/main.json
+index 4bd08042..b967b52f 100644
+--- a/src/assets/locales/en/main.json
++++ b/src/assets/locales/en/main.json
+@@ -1763,6 +1763,12 @@
+       "nocomments": " No comments available",
+       "buttonClose": "Close",
+       "resolveTitle": "Your option to resolve the issue",
++      "retrigger": {
++        "conflict": "The retrigger was not accepted because this step is no longer in a failed state. The checklist has been refreshed; retrigger is only possible when the step shows as failed.",
++        "unavailable": "This retrigger action is not available in this Portal version. Please contact the operations team.",
++        "failed": "The retrigger request failed. The checklist has been refreshed; please try again later or contact the operations team.",
++        "noEndpoint": "This step failed, but no retrigger action is available for {{steps}}. Please contact the operations team."
++      },
+       "REGISTRATION_VERIFICATION": {
+         "stepName": "Data Validation",
+         "stepDescription": "Manual validation of the company registration by the operator. Please check the company details as well as uploaded documents and 'accept' / 'decline' the application; depending on the validation results",
+diff --git a/src/components/shared/basic/ProgressVerificationButton/index.test.tsx b/src/components/shared/basic/ProgressVerificationButton/index.test.tsx
+new file mode 100644
+index 00000000..9cc32546
+--- /dev/null
++++ b/src/components/shared/basic/ProgressVerificationButton/index.test.tsx
+@@ -0,0 +1,233 @@
++/********************************************************************************
++ * Copyright (c) 2026 Contributors to the Eclipse Foundation
++ *
++ * See the NOTICE file(s) distributed with this work for additional
++ * information regarding copyright ownership.
++ *
++ * This program and the accompanying materials are made available under the
++ * terms of the Apache License, Version 2.0 which is available at
++ * https://www.apache.org/licenses/LICENSE-2.0.
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
++ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
++ * License for the specific language governing permissions and limitations
++ * under the License.
++ *
++ * SPDX-License-Identifier: Apache-2.0
++ ********************************************************************************/
++
++import { act, fireEvent, render, screen } from '@testing-library/react'
++import type { ReactNode } from 'react'
++import { ProgressVerificationButton } from '.'
++import {
++  ProgressStatus,
++  StatusType,
++} from 'features/admin/applicationRequestApiSlice'
++
++const mockRetrigger = jest.fn()
++const mockDispatch = jest.fn()
++
++jest.mock('utils/rtkUtil', () => ({
++  apiBaseQuery: () => ({ baseUrl: 'https://portal-backend.test' }),
++}))
++jest.mock('features/admin/applicationRequestApiSlice', () => ({
++  ...jest.requireActual('features/admin/applicationRequestApiSlice'),
++  useApproveChecklistMutation: () => [jest.fn()],
++  useDeclineChecklistMutation: () => [jest.fn()],
++  useRetriggerProcessMutation: () => [mockRetrigger],
++}))
++jest.mock('features/admin/registration/slice', () => ({
++  refreshApplicationRequest: (payload: number) => ({
++    type: 'refreshApplicationRequest',
++    payload,
++  }),
++}))
++jest.mock('react-redux', () => ({
++  ...jest.requireActual('react-redux'),
++  useDispatch: () => mockDispatch,
++}))
++jest.mock('react-i18next', () => ({
++  useTranslation: () => ({ t: (key: string) => key }),
++}))
++// Plain stand-ins for the design-system components (rendering, not styling, is under test).
++jest.mock('@catena-x/portal-shared-components', () => ({
++  Button: ({
++    children,
++    onClick,
++    disabled,
++  }: {
++    children: ReactNode
++    onClick?: () => void
++    disabled?: boolean
++  }) => (
++    <button onClick={onClick} disabled={disabled}>
++      {children}
++    </button>
++  ),
++  CircleProgress: () => <span role="progressbar" />,
++  CustomAccordion: ({
++    items,
++  }: {
++    items: Array<{ id: string; titleElement: ReactNode; children: ReactNode }>
++  }) => (
++    <div>
++      {items.map((item) => (
++        <div key={item.id}>
++          {item.titleElement}
++          {item.children}
++        </div>
++      ))}
++    </div>
++  ),
++  Input: () => <input />,
++  StatusTag: () => null,
++  Typography: ({ children }: { children: ReactNode }) => <div>{children}</div>,
++}))
++
++const APPLICATION_ID = 'c5182556-2376-4afd-9131-15423e8e5e3e'
++const RETRIGGER = 'content.checklistOverlay.buttonRetrigger'
++
++const deferred = () => {
++  let resolve!: () => void
++  let reject!: (e: unknown) => void
++  const promise = new Promise<void>((res, rej) => {
++    resolve = res
++    reject = rej
++  })
++  return { promise, resolve, reject }
++}
++
++const renderButton = (statusId: ProgressStatus, steps: string[]) =>
++  render(
++    <ProgressVerificationButton
++      selectedRequestId={APPLICATION_ID}
++      statusId={statusId}
++      typeId={StatusType.IDENTITY_WALLET}
++      retriggerableProcessSteps={steps}
++    />
++  )
++
++beforeEach(() => {
++  mockRetrigger.mockReset()
++  mockDispatch.mockReset()
++})
++
++describe('ProgressVerificationButton retrigger', () => {
++  it('sends the DID validation retrigger exactly once, even on a double click, and resets loading', async () => {
++    const pending = deferred()
++    mockRetrigger.mockReturnValue({ unwrap: () => pending.promise })
++    renderButton(ProgressStatus.FAILED, ['RETRIGGER_VALIDATE_DID_DOCUMENT'])
++
++    const button = screen.getByRole('button', { name: RETRIGGER })
++    fireEvent.click(button)
++    fireEvent.click(button)
++
++    expect(mockRetrigger).toHaveBeenCalledTimes(1)
++    expect(mockRetrigger).toHaveBeenCalledWith({
++      applicationId: APPLICATION_ID,
++      endUrl: 'retrigger-validate-did',
++    })
++    expect(screen.getByRole('progressbar')).toBeTruthy()
++    expect(screen.queryByRole('button', { name: RETRIGGER })).toBeNull()
++
++    await act(async () => {
++      pending.resolve()
++      await pending.promise
++    })
++
++    expect(screen.queryByRole('progressbar')).toBeNull()
++    expect(screen.getByRole('button', { name: RETRIGGER })).toBeTruthy()
++    expect(mockDispatch).toHaveBeenCalledWith(
++      expect.objectContaining({ type: 'refreshApplicationRequest' })
++    )
++    expect(mockRetrigger).toHaveBeenCalledTimes(1)
++  })
++
++  it.each([
++    ProgressStatus.IN_PROGRESS,
++    ProgressStatus.DONE,
++    ProgressStatus.TO_DO,
++  ])('offers no retrigger while BPNL credential issuance is %s', (status) => {
++    renderButton(status, ['RETRIGGER_REQUEST_BPN_CREDENTIAL'])
++    expect(screen.queryByRole('button', { name: RETRIGGER })).toBeNull()
++    expect(screen.queryByRole('progressbar')).toBeNull()
++    expect(mockRetrigger).not.toHaveBeenCalled()
++  })
++
++  it('handles a 409 once: stops loading, refreshes, explains, never retries', async () => {
++    mockRetrigger.mockReturnValue({
++      unwrap: () =>
++        Promise.reject({ status: 409, data: { title: 'conflict' } }),
++    })
++    renderButton(ProgressStatus.FAILED, ['RETRIGGER_REQUEST_BPN_CREDENTIAL'])
++
++    await act(async () => {
++      fireEvent.click(screen.getByRole('button', { name: RETRIGGER }))
++    })
++
++    expect(mockRetrigger).toHaveBeenCalledTimes(1)
++    expect(mockRetrigger).toHaveBeenCalledWith({
++      applicationId: APPLICATION_ID,
++      endUrl: 'retrigger-bpn-credential',
++    })
++    expect(screen.queryByRole('progressbar')).toBeNull()
++    expect(
++      screen.getByText('content.checklistOverlay.retrigger.conflict')
++    ).toBeTruthy()
++    expect(mockDispatch).toHaveBeenCalledTimes(1)
++  })
++
++  it('resets loading and shows an actionable message when the request fails without a body', async () => {
++    mockRetrigger.mockReturnValue({
++      unwrap: () => Promise.reject({ status: 'FETCH_ERROR', error: 'offline' }),
++    })
++    renderButton(ProgressStatus.FAILED, ['RETRIGGER_VALIDATE_DID_DOCUMENT'])
++
++    await act(async () => {
++      fireEvent.click(screen.getByRole('button', { name: RETRIGGER }))
++    })
++
++    expect(screen.queryByRole('progressbar')).toBeNull()
++    expect(
++      screen.getByText('content.checklistOverlay.retrigger.failed')
++    ).toBeTruthy()
++    expect(screen.getByRole('button', { name: RETRIGGER })).toBeTruthy()
++  })
++
++  it('never submits several alternatives automatically', async () => {
++    mockRetrigger.mockReturnValue({ unwrap: () => Promise.resolve() })
++    renderButton(ProgressStatus.FAILED, [
++      'RETRIGGER_CREATE_IDENTITY_HUB_WALLET',
++      'RETRIGGER_VALIDATE_DID_DOCUMENT',
++    ])
++
++    const buttons = screen.getAllByRole('button', {
++      name: new RegExp(`^${RETRIGGER} \\(`),
++    })
++    expect(buttons).toHaveLength(2)
++    expect(mockRetrigger).not.toHaveBeenCalled()
++
++    await act(async () => {
++      fireEvent.click(
++        screen.getByRole('button', {
++          name: `${RETRIGGER} (RETRIGGER_VALIDATE_DID_DOCUMENT)`,
++        })
++      )
++    })
++    expect(mockRetrigger).toHaveBeenCalledTimes(1)
++    expect(mockRetrigger).toHaveBeenCalledWith({
++      applicationId: APPLICATION_ID,
++      endUrl: 'retrigger-validate-did',
++    })
++  })
++
++  it('shows an actionable message instead of calling /undefined for an unmapped step', () => {
++    renderButton(ProgressStatus.FAILED, ['RETRIGGER_SOMETHING_NEW'])
++    expect(screen.queryByRole('button', { name: RETRIGGER })).toBeNull()
++    expect(
++      screen.getByText('content.checklistOverlay.retrigger.noEndpoint')
++    ).toBeTruthy()
++    expect(mockRetrigger).not.toHaveBeenCalled()
++  })
++})
+diff --git a/src/components/shared/basic/ProgressVerificationButton/index.tsx b/src/components/shared/basic/ProgressVerificationButton/index.tsx
+index 1d913bf1..8124a681 100644
+--- a/src/components/shared/basic/ProgressVerificationButton/index.tsx
++++ b/src/components/shared/basic/ProgressVerificationButton/index.tsx
+@@ -28,7 +28,6 @@ import {
+   Typography,
+ } from '@catena-x/portal-shared-components'
+ import {
+-  EndUrlMap,
+   ProgressStatus,
+   RetriggerableProcessSteps,
+   StatusType,
+@@ -38,9 +37,15 @@ import {
+   type ProgressButtonsType,
+ } from 'features/admin/applicationRequestApiSlice'
+ import './style.scss'
+-import { useReducer } from 'react'
++import { useReducer, useRef } from 'react'
+ import { useDispatch } from 'react-redux'
+ import { refreshApplicationRequest } from 'features/admin/registration/slice'
++import {
++  getRetriggerErrorDetail,
++  getRetriggerErrorKind,
++  getRetriggerPlan,
++  type RetriggerOption,
++} from './retrigger'
+ 
+ enum ActionKind {
+   SET_RETRIGGER_LOADING = 'SET_RETRIGGER_LOADING',
+@@ -154,6 +159,12 @@ export const ProgressVerificationButton = ({
+     },
+     setState,
+   ] = useReducer(reducer, initialState)
++  // Synchronous guard: a second click before React re-renders must not send a second request.
++  const retriggerPending = useRef(false)
++  const retriggerPlan = getRetriggerPlan(
++    props.statusId,
++    props.retriggerableProcessSteps
++  )
+ 
+   const onUpdateComment = (
+     e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>
+@@ -204,32 +215,32 @@ export const ProgressVerificationButton = ({
+     dispatch(refreshApplicationRequest(Date.now()))
+   }
+ 
+-  const onRetrigger = () => {
+-    if (!selectedRequestId) return
+-    console.log(
+-      'props.retriggerableProcessSteps',
+-      props.retriggerableProcessSteps
+-    )
++  const onRetrigger = async ({ endUrl }: RetriggerOption) => {
++    if (!selectedRequestId || retriggerPending.current) return
++    retriggerPending.current = true
++    setState({ type: ActionKind.SET_ERROR, payload: '' })
+     setState({ type: ActionKind.SET_RETRIGGER_LOADING, payload: true })
+-    props.retriggerableProcessSteps &&
+-      props.retriggerableProcessSteps.forEach(async (process: string) => {
+-        const args = {
+-          applicationId: selectedRequestId,
+-          endUrl: EndUrlMap[process],
+-        }
+-        await retriggerProcess(args)
+-          .unwrap()
+-          .then(() => {
+-            setState({ type: ActionKind.SET_RETRIGGER_LOADING, payload: false })
+-            dispatch(refreshApplicationRequest(Date.now()))
+-          })
+-          .catch((error) => {
+-            setState({
+-              type: ActionKind.SET_RETRIGGER_LOADING,
+-              payload: error.data.title,
+-            })
+-          })
++    try {
++      // Exactly one request per click; a 409 (the step is no longer FAILED) is never retried.
++      await retriggerProcess({
++        applicationId: selectedRequestId,
++        endUrl,
++      }).unwrap()
++    } catch (retriggerError) {
++      const kind = getRetriggerErrorKind(retriggerError)
++      const detail = getRetriggerErrorDetail(retriggerError)
++      const message = t(`content.checklistOverlay.retrigger.${kind}`)
++      setState({
++        type: ActionKind.SET_ERROR,
++        payload:
++          detail && kind === 'failed' ? `${message} (${detail})` : message,
+       })
++    } finally {
++      retriggerPending.current = false
++      setState({ type: ActionKind.SET_RETRIGGER_LOADING, payload: false })
++      // Success or failure (e.g. 409): show the checklist state the backend has now.
++      dispatch(refreshApplicationRequest(Date.now()))
++    }
+   }
+ 
+   const getStepName = () =>
+@@ -247,16 +258,16 @@ export const ProgressVerificationButton = ({
+   const getDescription = () =>
+     t(`content.checklistOverlay.${props.typeId}.${props.statusId}.description`)
+ 
+-  const getButtonTitle = () => {
+-    if (
+-      props.retriggerableProcessSteps &&
+-      props.retriggerableProcessSteps.indexOf(
+-        RetriggerableProcessSteps.MANUAL_TRIGGER_OVERRIDE_CLEARING_HOUSE
+-      ) > -1
+-    ) {
+-      return t('content.checklistOverlay.buttonOverwrite')
+-    }
+-    return t('content.checklistOverlay.buttonRetrigger')
++  const getButtonTitle = ({ processStep }: RetriggerOption) => {
++    const title =
++      processStep ===
++      RetriggerableProcessSteps.MANUAL_TRIGGER_OVERRIDE_CLEARING_HOUSE
++        ? t('content.checklistOverlay.buttonOverwrite')
++        : t('content.checklistOverlay.buttonRetrigger')
++    // Several alternatives: each is its own explicit action, labelled with its step.
++    return retriggerPlan.options.length > 1
++      ? `${title} (${processStep})`
++      : title
+   }
+ 
+   const canShowApproveAndDecline = () =>
+@@ -460,56 +471,68 @@ export const ProgressVerificationButton = ({
+                     padding: '32px 0 0 20px',
+                   }}
+                 >
+-                  {props.retriggerableProcessSteps &&
+-                    props.retriggerableProcessSteps?.length > 0 &&
+-                    !showInput && (
+-                      <>
+-                        <div style={{ marginRight: '20px' }}>
+-                          {retriggerLoading && (
+-                            <span
+-                              style={{
+-                                marginRight: '75px',
+-                                marginLeft: '40px',
+-                                width: '116px',
+-                                textAlign: 'center',
+-                              }}
+-                            >
+-                              <CircleProgress
+-                                size={40}
+-                                step={1}
+-                                interval={0.1}
+-                                colorVariant={'primary'}
+-                                variant={'indeterminate'}
+-                                thickness={8}
+-                              />
+-                            </span>
+-                          )}
+-                          {!retriggerLoading && (
++                  {retriggerPlan.eligible && !showInput && (
++                    <>
++                      <div style={{ marginRight: '20px' }}>
++                        {retriggerLoading && (
++                          <span
++                            style={{
++                              marginRight: '75px',
++                              marginLeft: '40px',
++                              width: '116px',
++                              textAlign: 'center',
++                            }}
++                          >
++                            <CircleProgress
++                              size={40}
++                              step={1}
++                              interval={0.1}
++                              colorVariant={'primary'}
++                              variant={'indeterminate'}
++                              thickness={8}
++                            />
++                          </span>
++                        )}
++                        {!retriggerLoading &&
++                          retriggerPlan.options.map((option) => (
+                             <Button
++                              key={option.processStep}
++                              sx={{ marginRight: '10px' }}
+                               onClick={() => {
+-                                onRetrigger()
++                                void onRetrigger(option)
+                               }}
+                               size="small"
+                               variant="contained"
+                             >
+-                              {getButtonTitle()}
++                              {getButtonTitle(option)}
+                             </Button>
++                          ))}
++                        {!retriggerLoading &&
++                          retriggerPlan.options.length === 0 && (
++                            <Typography color="error" variant="body2">
++                              {t(
++                                'content.checklistOverlay.retrigger.noEndpoint',
++                                {
++                                  steps: retriggerPlan.unmapped.join(', '),
++                                }
++                              )}
++                            </Typography>
+                           )}
+-                        </div>
+-                        <div>
+-                          <Button
+-                            onClick={() => {
+-                              onDecline()
+-                            }}
+-                            size="small"
+-                            variant="outlined"
+-                            disabled={retriggerLoading}
+-                          >
+-                            {t('content.checklistOverlay.buttonCancel')}
+-                          </Button>
+-                        </div>
+-                      </>
+-                    )}
++                      </div>
++                      <div>
++                        <Button
++                          onClick={() => {
++                            onDecline()
++                          }}
++                          size="small"
++                          variant="outlined"
++                          disabled={retriggerLoading}
++                        >
++                          {t('content.checklistOverlay.buttonCancel')}
++                        </Button>
++                      </div>
++                    </>
++                  )}
+                   {canShowApproveAndDecline() && !showInput && (
+                     <>
+                       <div style={{ marginRight: '10px' }}>
+diff --git a/src/components/shared/basic/ProgressVerificationButton/retrigger.test.ts b/src/components/shared/basic/ProgressVerificationButton/retrigger.test.ts
+new file mode 100644
+index 00000000..9a2082e1
+--- /dev/null
++++ b/src/components/shared/basic/ProgressVerificationButton/retrigger.test.ts
+@@ -0,0 +1,94 @@
++/********************************************************************************
++ * Copyright (c) 2026 Contributors to the Eclipse Foundation
++ *
++ * See the NOTICE file(s) distributed with this work for additional
++ * information regarding copyright ownership.
++ *
++ * This program and the accompanying materials are made available under the
++ * terms of the Apache License, Version 2.0 which is available at
++ * https://www.apache.org/licenses/LICENSE-2.0.
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
++ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
++ * License for the specific language governing permissions and limitations
++ * under the License.
++ *
++ * SPDX-License-Identifier: Apache-2.0
++ ********************************************************************************/
++
++import {
++  getRetriggerErrorDetail,
++  getRetriggerErrorKind,
++  getRetriggerPlan,
++} from './retrigger'
++
++jest.mock('utils/rtkUtil', () => ({
++  apiBaseQuery: () => ({ baseUrl: 'https://portal-backend.test' }),
++}))
++
++describe('getRetriggerPlan', () => {
++  it.each(['IN_PROGRESS', 'DONE', 'TO_DO', 'SKIPPED', undefined])(
++    'offers no retrigger while the entry is %p, even if the backend lists retrigger steps',
++    (status) => {
++      expect(
++        getRetriggerPlan(status, ['RETRIGGER_REQUEST_BPN_CREDENTIAL'])
++      ).toEqual({ eligible: false, options: [], unmapped: [] })
++    }
++  )
++
++  it('offers no retrigger for a FAILED entry without retriggerable steps', () => {
++    expect(getRetriggerPlan('FAILED', [])).toMatchObject({ eligible: false })
++    expect(getRetriggerPlan('FAILED', undefined)).toMatchObject({
++      eligible: false,
++    })
++  })
++
++  it('maps a FAILED DID validation to exactly one action', () => {
++    expect(
++      getRetriggerPlan('FAILED', ['RETRIGGER_VALIDATE_DID_DOCUMENT'])
++    ).toEqual({
++      eligible: true,
++      options: [
++        {
++          processStep: 'RETRIGGER_VALIDATE_DID_DOCUMENT',
++          endUrl: 'retrigger-validate-did',
++        },
++      ],
++      unmapped: [],
++    })
++  })
++
++  it('keeps alternatives separate, de-duplicated, and reports unmapped steps', () => {
++    const plan = getRetriggerPlan('FAILED', [
++      'RETRIGGER_CLEARING_HOUSE',
++      'MANUAL_TRIGGER_OVERRIDE_CLEARING_HOUSE',
++      'RETRIGGER_CLEARING_HOUSE',
++      'RETRIGGER_SOMETHING_NEW',
++    ])
++    expect(plan.options.map((o) => o.endUrl)).toEqual([
++      'retrigger-clearinghouse',
++      'override-clearinghouse',
++    ])
++    expect(plan.unmapped).toEqual(['RETRIGGER_SOMETHING_NEW'])
++  })
++})
++
++describe('retrigger error classification', () => {
++  it('classifies 409, a refused unknown endpoint and other failures', () => {
++    expect(getRetriggerErrorKind({ status: 409, data: {} })).toBe('conflict')
++    expect(getRetriggerErrorKind({ status: 'CUSTOM_ERROR', error: 'x' })).toBe(
++      'unavailable'
++    )
++    expect(getRetriggerErrorKind({ status: 500 })).toBe('failed')
++    expect(getRetriggerErrorKind({ status: 'FETCH_ERROR' })).toBe('failed')
++    expect(getRetriggerErrorKind(undefined)).toBe('failed')
++  })
++
++  it('reads a problem title only when it is a non-empty string', () => {
++    expect(getRetriggerErrorDetail({ data: { title: 'Boom' } })).toBe('Boom')
++    expect(getRetriggerErrorDetail({ data: { title: '' } })).toBeUndefined()
++    expect(getRetriggerErrorDetail({ data: 'text' })).toBeUndefined()
++    expect(getRetriggerErrorDetail(null)).toBeUndefined()
++  })
++})
+diff --git a/src/components/shared/basic/ProgressVerificationButton/retrigger.ts b/src/components/shared/basic/ProgressVerificationButton/retrigger.ts
+new file mode 100644
+index 00000000..0365f1fb
+--- /dev/null
++++ b/src/components/shared/basic/ProgressVerificationButton/retrigger.ts
+@@ -0,0 +1,69 @@
++/********************************************************************************
++ * Copyright (c) 2026 Contributors to the Eclipse Foundation
++ *
++ * See the NOTICE file(s) distributed with this work for additional
++ * information regarding copyright ownership.
++ *
++ * This program and the accompanying materials are made available under the
++ * terms of the Apache License, Version 2.0 which is available at
++ * https://www.apache.org/licenses/LICENSE-2.0.
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
++ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
++ * License for the specific language governing permissions and limitations
++ * under the License.
++ *
++ * SPDX-License-Identifier: Apache-2.0
++ ********************************************************************************/
++
++import {
++  getRetriggerEndUrl,
++  ProgressStatus,
++} from 'features/admin/applicationRequestApiSlice'
++
++export type RetriggerOption = {
++  processStep: string
++  endUrl: string
++}
++
++export type RetriggerPlan = {
++  // A retrigger is offered at all (the backend accepts manual retriggers for FAILED entries only).
++  eligible: boolean
++  // One explicit action per retriggerable step that has an endpoint; never submitted together.
++  options: RetriggerOption[]
++  // Retriggerable steps the frontend has no endpoint for (shown as an actionable message).
++  unmapped: string[]
++}
++
++const NONE: RetriggerPlan = { eligible: false, options: [], unmapped: [] }
++
++export const getRetriggerPlan = (
++  statusId?: string,
++  retriggerableProcessSteps?: string[]
++): RetriggerPlan => {
++  if (statusId !== ProgressStatus.FAILED || !retriggerableProcessSteps?.length)
++    return NONE
++  const options: RetriggerOption[] = []
++  const unmapped: string[] = []
++  new Set(retriggerableProcessSteps).forEach((processStep) => {
++    const endUrl = getRetriggerEndUrl(processStep)
++    if (endUrl) options.push({ processStep, endUrl })
++    else unmapped.push(processStep)
++  })
++  return { eligible: true, options, unmapped }
++}
++
++export type RetriggerErrorKind = 'conflict' | 'unavailable' | 'failed'
++
++export const getRetriggerErrorKind = (error: unknown): RetriggerErrorKind => {
++  const status = (error as { status?: unknown } | null)?.status
++  if (status === 409) return 'conflict'
++  if (status === 'CUSTOM_ERROR') return 'unavailable'
++  return 'failed'
++}
++
++export const getRetriggerErrorDetail = (error: unknown): string | undefined => {
++  const title = (error as { data?: { title?: unknown } } | null)?.data?.title
++  return typeof title === 'string' && title !== '' ? title : undefined
++}
+diff --git a/src/features/admin/applicationRequestApiSlice.test.ts b/src/features/admin/applicationRequestApiSlice.test.ts
+new file mode 100644
+index 00000000..36144a98
+--- /dev/null
++++ b/src/features/admin/applicationRequestApiSlice.test.ts
+@@ -0,0 +1,151 @@
++/**
++ * @jest-environment node
++ */
++/********************************************************************************
++ * Copyright (c) 2026 Contributors to the Eclipse Foundation
++ *
++ * See the NOTICE file(s) distributed with this work for additional
++ * information regarding copyright ownership.
++ *
++ * This program and the accompanying materials are made available under the
++ * terms of the Apache License, Version 2.0 which is available at
++ * https://www.apache.org/licenses/LICENSE-2.0.
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
++ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
++ * License for the specific language governing permissions and limitations
++ * under the License.
++ *
++ * SPDX-License-Identifier: Apache-2.0
++ ********************************************************************************/
++
++import { configureStore } from '@reduxjs/toolkit'
++import {
++  apiSlice,
++  EndUrlMap,
++  getRetriggerEndUrl,
++  isKnownRetriggerEndUrl,
++  RetriggerableProcessSteps,
++} from './applicationRequestApiSlice'
++
++// No real environment or authentication in unit tests: the base query points at a fixed test host.
++jest.mock('utils/rtkUtil', () => ({
++  apiBaseQuery: () => ({ baseUrl: 'https://portal-backend.test' }),
++}))
++
++const APPLICATION_ID = 'c5182556-2376-4afd-9131-15423e8e5e3e'
++
++const makeStore = () =>
++  configureStore({
++    reducer: { [apiSlice.reducerPath]: apiSlice.reducer },
++    middleware: (getDefault) => getDefault().concat(apiSlice.middleware),
++  })
++
++describe('retrigger endpoint mapping', () => {
++  it('maps the DID validation and IdentityHub wallet retriggers to their backend routes', () => {
++    expect(EndUrlMap.RETRIGGER_VALIDATE_DID_DOCUMENT).toBe(
++      'retrigger-validate-did'
++    )
++    expect(EndUrlMap.RETRIGGER_CREATE_IDENTITY_HUB_WALLET).toBe(
++      'retrigger-create-identity-hub-wallet'
++    )
++    expect(
++      getRetriggerEndUrl(
++        RetriggerableProcessSteps.RETRIGGER_VALIDATE_DID_DOCUMENT
++      )
++    ).toBe('retrigger-validate-did')
++    expect(
++      getRetriggerEndUrl(
++        RetriggerableProcessSteps.RETRIGGER_CREATE_IDENTITY_HUB_WALLET
++      )
++    ).toBe('retrigger-create-identity-hub-wallet')
++  })
++
++  it('has an endpoint for every retriggerable step the UI knows', () => {
++    Object.values(RetriggerableProcessSteps).forEach((step) => {
++      expect(getRetriggerEndUrl(step)).toEqual(expect.any(String))
++    })
++  })
++
++  it('resolves unknown steps and prototype keys to no endpoint', () => {
++    ;[
++      'RETRIGGER_SOMETHING_NEW',
++      '',
++      'toString',
++      '__proto__',
++      'constructor',
++    ].forEach((step) => {
++      expect(getRetriggerEndUrl(step)).toBeUndefined()
++    })
++    expect(isKnownRetriggerEndUrl(undefined)).toBe(false)
++    expect(isKnownRetriggerEndUrl('undefined')).toBe(false)
++    expect(isKnownRetriggerEndUrl('trigger-identity-wallet')).toBe(true)
++  })
++})
++
++describe('retriggerProcess mutation', () => {
++  let fetchMock: jest.SpyInstance
++
++  beforeEach(() => {
++    fetchMock = jest
++      .spyOn(global, 'fetch')
++      .mockResolvedValue(new Response(null, { status: 204 }))
++  })
++
++  afterEach(() => {
++    fetchMock.mockRestore()
++  })
++
++  it('sends exactly one POST to retrigger-validate-did', async () => {
++    const store = makeStore()
++    const result = await store.dispatch(
++      apiSlice.endpoints.retriggerProcess.initiate({
++        applicationId: APPLICATION_ID,
++        endUrl: 'retrigger-validate-did',
++      })
++    )
++    expect('data' in result && result.data).toBe(true)
++    expect(fetchMock).toHaveBeenCalledTimes(1)
++    const request = fetchMock.mock.calls[0][0] as Request
++    expect(request.method).toBe('POST')
++    expect(request.url).toBe(
++      `https://portal-backend.test/api/administration/registration/application/${APPLICATION_ID}/retrigger-validate-did`
++    )
++  })
++
++  it.each([undefined, 'undefined', 'retrigger-anything'])(
++    'never calls the backend for endpoint %p',
++    async (endUrl) => {
++      const store = makeStore()
++      const result = await store.dispatch(
++        apiSlice.endpoints.retriggerProcess.initiate({
++          applicationId: APPLICATION_ID,
++          endUrl,
++        })
++      )
++      expect('error' in result && result.error).toMatchObject({
++        status: 'CUSTOM_ERROR',
++      })
++      expect(fetchMock).not.toHaveBeenCalled()
++    }
++  )
++
++  it('surfaces a 409 as an error without retrying', async () => {
++    fetchMock.mockResolvedValue(
++      new Response(JSON.stringify({ title: 'conflict' }), {
++        status: 409,
++        headers: { 'content-type': 'application/json' },
++      })
++    )
++    const store = makeStore()
++    const result = await store.dispatch(
++      apiSlice.endpoints.retriggerProcess.initiate({
++        applicationId: APPLICATION_ID,
++        endUrl: 'retrigger-bpn-credential',
++      })
++    )
++    expect('error' in result && result.error).toMatchObject({ status: 409 })
++    expect(fetchMock).toHaveBeenCalledTimes(1)
++  })
++})
+diff --git a/src/features/admin/applicationRequestApiSlice.ts b/src/features/admin/applicationRequestApiSlice.ts
+index 7f8a79cb..53c68a28 100644
+--- a/src/features/admin/applicationRequestApiSlice.ts
++++ b/src/features/admin/applicationRequestApiSlice.ts
+@@ -90,6 +90,8 @@ interface Map {
+ export const EndUrlMap: Map = {
+   RETRIGGER_IDENTITY_WALLET: 'trigger-identity-wallet',
+   RETRIGGER_CREATE_DIM_WALLET: 'retrigger-create-dim-wallet',
++  RETRIGGER_CREATE_IDENTITY_HUB_WALLET: 'retrigger-create-identity-hub-wallet',
++  RETRIGGER_VALIDATE_DID_DOCUMENT: 'retrigger-validate-did',
+   RETRIGGER_CLEARING_HOUSE: 'retrigger-clearinghouse',
+   MANUAL_TRIGGER_OVERRIDE_CLEARING_HOUSE: 'override-clearinghouse',
+   RETRIGGER_SELF_DESCRIPTION_LP: 'trigger-self-description',
+@@ -102,9 +104,24 @@ export const EndUrlMap: Map = {
+   RETRIGGER_REQUEST_MEMBERSHIP_CREDENTIAL: 'retrigger-membership-credential',
+ }
+ 
++// Own properties only: a step name like 'toString' or '__proto__' must not resolve to an endpoint.
++export const getRetriggerEndUrl = (processStep: string): string | undefined =>
++  Object.prototype.hasOwnProperty.call(EndUrlMap, processStep)
++    ? EndUrlMap[processStep]
++    : undefined
++
++const knownRetriggerEndUrls = new Set(
++  Object.values(EndUrlMap).filter((url): url is string => !!url)
++)
++
++export const isKnownRetriggerEndUrl = (endUrl?: string): endUrl is string =>
++  endUrl !== undefined && knownRetriggerEndUrls.has(endUrl)
++
+ export enum RetriggerableProcessSteps {
+   RETRIGGER_IDENTITY_WALLET = 'RETRIGGER_IDENTITY_WALLET',
+   RETRIGGER_CREATE_DIM_WALLET = 'RETRIGGER_CREATE_DIM_WALLET',
++  RETRIGGER_CREATE_IDENTITY_HUB_WALLET = 'RETRIGGER_CREATE_IDENTITY_HUB_WALLET',
++  RETRIGGER_VALIDATE_DID_DOCUMENT = 'RETRIGGER_VALIDATE_DID_DOCUMENT',
+   RETRIGGER_CLEARING_HOUSE = 'RETRIGGER_CLEARING_HOUSE',
+   MANUAL_TRIGGER_OVERRIDE_CLEARING_HOUSE = 'MANUAL_TRIGGER_OVERRIDE_CLEARING_HOUSE',
+   RETRIGGER_SELF_DESCRIPTION_LP = 'RETRIGGER_SELF_DESCRIPTION_LP',
+@@ -279,10 +296,23 @@ export const apiSlice = createApi({
+       },
+     }),
+     retriggerProcess: builder.mutation<boolean, RetriggerProcessRequestType>({
+-      query: (args) => ({
+-        url: `/api/administration/registration/application/${args.applicationId}/${args.endUrl}`,
+-        method: 'POST',
+-      }),
++      // Only known retrigger endpoints are ever called: a missing EndUrlMap entry used to produce
++      // POST .../application/{id}/undefined. Such a request is rejected here without a network call.
++      queryFn: async (args, _api, _extraOptions, baseQuery) => {
++        if (!args.applicationId || !isKnownRetriggerEndUrl(args.endUrl)) {
++          return {
++            error: {
++              status: 'CUSTOM_ERROR',
++              error: `No retrigger endpoint is configured for ${args.endUrl ?? 'this step'}`,
++            },
++          }
++        }
++        const result = await baseQuery({
++          url: `/api/administration/registration/application/${encodeURIComponent(args.applicationId)}/${args.endUrl}`,
++          method: 'POST',
++        })
++        return result.error ? { error: result.error } : { data: true }
++      },
+       invalidatesTags: ['checklist'],
+     }),
+   }),
+diff --git a/test/__ mocks __/styleMock.js b/test/__ mocks __/styleMock.js
+new file mode 100644
+index 00000000..868a4bba
+--- /dev/null
++++ b/test/__ mocks __/styleMock.js	
+@@ -0,0 +1,21 @@
++/********************************************************************************
++ * Copyright (c) 2026 Contributors to the Eclipse Foundation
++ *
++ * See the NOTICE file(s) distributed with this work for additional
++ * information regarding copyright ownership.
++ *
++ * This program and the accompanying materials are made available under the
++ * terms of the Apache License, Version 2.0 which is available at
++ * https://www.apache.org/licenses/LICENSE-2.0.
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
++ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
++ * License for the specific language governing permissions and limitations
++ * under the License.
++ *
++ * SPDX-License-Identifier: Apache-2.0
++ ********************************************************************************/
++
++// Style imports have no runtime value in unit tests.
++module.exports = {}
+-- 
+2.56.0
+

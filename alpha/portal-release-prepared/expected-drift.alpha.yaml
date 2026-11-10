@@ -1,0 +1,39 @@
+# Reviewed drift that the be293-portal recovery upgrade (revision 2) is expected to apply, from the dry run of
+# 2026-11-08 (22 SAME, 7 DRIFT, no FAIL). tools/compare_release_live.rb --expected fails (exit 1) on ANY drift
+# item not listed here, so tools/recover-be293.sh stops before upgrading. FAIL lines (Secret change, SSA conflict,
+# Helm-owned annotation the upgrade would remove) can never be excused here.
+#
+# Format: "Kind/name" => list of drift items, each exact, or a prefix ending in "*".
+# Review every change to this file; never add an item only to make a run pass.
+
+# BPDM Gate/Pool /v6 (verified against BPDM 7.5.0), in-cluster DID resolver (worker already uses it).
+Deployment/be293-portal-administration-service:
+  - "container be293-portal-administration-service env APPLICATIONCHECKLIST__BPDM__BASEADDRESS: value differs (live=https://business-partners.test.tractus-x.com/gate rendered=https://business-partners.test.tractus-x.com/gate/v6) [owner: helm]"
+  - "container be293-portal-administration-service env APPLICATIONCHECKLIST__BPDM__BUSINESSPARTNERPOOLBASEADDRESS: value differs (live=https://business-partners.test.tractus-x.com/pool rendered=https://business-partners.test.tractus-x.com/pool/v6) [owner: helm]"
+  - "container be293-portal-administration-service env APPLICATIONCHECKLIST__DIM__UNIVERSALRESOLVERADDRESS: value differs (live=https://universal-resolver.disabled.invalid/ rendered=http://be293-did-resolver.be293.svc.cluster.local:8080/) [owner: helm]"
+  - "container be293-portal-administration-service env APPLICATIONCHECKLIST__IDENTITYHUB__UNIVERSALRESOLVERADDRESS: value differs (live=https://universal-resolver.disabled.invalid/ rendered=http://be293-did-resolver.be293.svc.cluster.local:8080/) [owner: helm]"
+  - "container be293-portal-administration-service env BPNACCESS__BASEADDRESS: value differs (live=https://business-partners.test.tractus-x.com/pool rendered=https://business-partners.test.tractus-x.com/pool/v6) [owner: helm]"
+
+# DIM resolver address (DIM path unused: walletProvider IdentityHub).
+Deployment/be293-portal-marketplace-app-service:
+  - "container be293-portal-marketplace-app-service env DIM__UNIVERSALRESOLVERADDRESS: value differs (live=https://universal-resolver.disabled.invalid/ rendered=http://be293-did-resolver.be293.svc.cluster.local:8080/) [owner: helm]"
+Deployment/be293-portal-services-service:
+  - "container be293-portal-services-service env DIM__UNIVERSALRESOLVERADDRESS: value differs (live=https://universal-resolver.disabled.invalid/ rendered=http://be293-did-resolver.be293.svc.cluster.local:8080/) [owner: helm]"
+
+# BPN lookup against Pool /v6 (GET /v6/legal-entities/{bpn}?idType=BPN).
+Deployment/be293-portal-registration-service:
+  - "container be293-portal-registration-service env BPNACCESS__BASEADDRESS: value differs (live=https://business-partners.test.tractus-x.com/pool rendered=https://business-partners.test.tractus-x.com/pool/v6) [owner: helm]"
+
+# Frontend BPDM base URLs: the frontend appends /sharing-state, /input/..., /output/..., /members/... itself.
+Deployment/be293-portal-portal:
+  - "container be293-portal-portal env BPDM_GATE_API_URL: value differs (live=https://business-partners.test.tractus-x.com/gate rendered=https://business-partners.test.tractus-x.com/gate/v6) [owner: helm]"
+  - "container be293-portal-portal env BPDM_POOL_API_URL: value differs (live=https://business-partners.test.tractus-x.com/pool rendered=https://business-partners.test.tractus-x.com/pool/v6) [owner: helm]"
+
+CronJob/be293-portal-processes-worker:
+  - "container be293-portal-processes-worker image [owner: helm]"
+
+# Rancher writes field.cattle.io/publicEndpoints; not in the template, not Helm-owned, kept by server-side apply.
+Ingress/be293-portal-backend:
+  - "annotation field.cattle.io/publicEndpoints: only live (upgrade keeps it unless Helm owned it)*"
+Ingress/be293-portal-frontend:
+  - "annotation field.cattle.io/publicEndpoints: only live (upgrade keeps it unless Helm owned it)*"

@@ -1,0 +1,33 @@
+# Reviewed object inventory of the be293-portal ALPHA RELEASE render (base values + values-be293-portal.alpha-release.yaml).
+# = expected-inventory.txt plus the two approved Ingresses. Any difference fails the render gate.
+ConfigMap/be293-portal-initial-data
+ConfigMap/be293-portal-portal-cm-postgres
+CronJob/be293-portal-portal-maintenance
+CronJob/be293-portal-processes-worker
+Deployment/be293-portal-administration-service
+Deployment/be293-portal-assets
+Deployment/be293-portal-marketplace-app-service
+Deployment/be293-portal-notification-service
+Deployment/be293-portal-portal
+Deployment/be293-portal-registration
+Deployment/be293-portal-registration-service
+Deployment/be293-portal-services-service
+Ingress/be293-portal-backend
+Ingress/be293-portal-frontend
+Job/be293-portal-portal-migrations
+Job/be293-portal-provisioning-migrations
+Secret/be293-portal-interfaces
+Secret/be293-portal-keycloak
+Secret/be293-portal-mailing
+Secret/be293-portal-postgres
+Service/be293-portal-administration-service
+Service/be293-portal-assets
+Service/be293-portal-marketplace-app-service
+Service/be293-portal-notification-service
+Service/be293-portal-portal
+Service/be293-portal-postgresql
+Service/be293-portal-postgresql-hl
+Service/be293-portal-registration
+Service/be293-portal-registration-service
+Service/be293-portal-services-service
+StatefulSet/be293-portal-postgresql

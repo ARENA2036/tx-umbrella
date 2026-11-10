@@ -1,0 +1,32 @@
+# BE-293 Portal on Alpha: DATA-RETENTION OVERLAY (zero automatic data deletion). Third values file:
+#
+#   helm ... -f values-be293-portal.yaml -f values-be293-portal.alpha-release.yaml -f values-be293-portal.alpha-retention.yaml \
+#            --post-renderer be293-retention        # with HELM_PLUGINS=<this dir>/helm-plugins
+#
+# Uses only options the vendored portal-2.6.0 chart and its Bitnami postgresql 12.12.10 subchart support.
+# Everything the chart cannot express (suspending the CronJob, Helm keep policy on Secrets) is done by the
+# release-only post-renderer helm-plugins/be293-retention. tools/validate_retention.rb gates both.
+
+backend:
+  portalmaintenance:
+    # The chart has no switch to disable or suspend the portal-maintenance CronJob (schedule hard-coded to
+    # "0 0 * * *"), and Maintenance.App has no off switch: BatchProcessingService.CleanupDocuments always
+    # removes INACTIVE, unreferenced documents with date_created < now - deleteDocuments.days
+    # (DocumentRepository.GetDocumentDataForCleanup at ad459ee7).
+    # 365000 days (~1000 years) puts the cutoff near the year 1026: no row can match, and the value stays far
+    # inside the DateTimeOffset range (AddDays does not throw). Defense in depth only: the post-renderer also
+    # suspends the CronJob. The same applies to the clearinghouse retrigger (it rewrites checklist entries).
+    batchProcessing:
+      deleteDocuments:
+        days: 365000
+      retriggerClearinghouse:
+        days: 365000
+
+postgresql:
+  primary:
+    # Explicit instead of implicit: the PVC created from the StatefulSet volumeClaimTemplate is kept when the
+    # StatefulSet is deleted or scaled down. The PVC is not a Helm object, so `helm uninstall` never deletes it.
+    persistentVolumeClaimRetentionPolicy:
+      enabled: true
+      whenScaled: Retain
+      whenDeleted: Retain

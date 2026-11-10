@@ -1,0 +1,20 @@
+meta {
+  name: 10 Application checklist
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{portalApi}}/registration/applications/{{applicationId}}/checklistDetails
+  body: none
+  auth: inherit
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  Read-only. The checklist the Application Requests page shows (status and comment per entry).
+  Requires the role approve_new_partner. Log in via the collection's OAuth2 settings ("Get Access Token").
+}

@@ -1,0 +1,40 @@
+meta {
+  name: 05 Query holders
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/holders/query
+  body: json
+  auth: none
+}
+
+headers {
+  x-api-key: {{issuerAdminApiKey}}
+}
+
+body:json {
+  {"offset": 0, "limit": 100}
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  const holders = res.getBody() || [];
+  const find = (id) => holders.find((h) => h.holderId === id);
+  test("new holder is registered", function () {
+    expect(find(bru.getEnvVar("newHolder")), "holder " + bru.getEnvVar("newHolder")).to.not.be.undefined;
+  });
+  test("legacy holder is registered", function () {
+    expect(find(bru.getEnvVar("legacyHolder")), "holder " + bru.getEnvVar("legacyHolder")).to.not.be.undefined;
+  });
+}
+
+docs {
+  All holders known to the issuer (read-only query). The Portal registers each onboarded company as
+  holderId = BPN with properties {"contractVersion": "1.0"}. Compare the new holder with a holder for which
+  issuance works, if there is one.
+}

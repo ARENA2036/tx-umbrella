@@ -1,0 +1,6 @@
+# Environment-specific inputs and generated Secret manifests must never be committed.
+private/
+*.private.yaml
+*.secrets.yaml
+.evidence/
+.claude/

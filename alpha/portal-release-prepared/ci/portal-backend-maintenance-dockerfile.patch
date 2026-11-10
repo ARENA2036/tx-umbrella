@@ -1,0 +1,16 @@
+fix(BE-293): copy Onboarding.WalletProvider into the maintenance image build
+
+ApplicationChecklist.Library references src/onboarding/Onboarding.WalletProvider since BE-293,
+but docker/Dockerfile-maintenance-service did not copy it, so dotnet publish of
+Maintenance.App failed with CS0234/CS0246 (IWalletProviderResolver). Base: f5badda90030531434c9445e5bb4b70382bea6eb
+
+--- a/docker/Dockerfile-maintenance-service
++++ b/docker/Dockerfile-maintenance-service
+@@ -28,6 +28,7 @@
+ COPY src/framework/ src/framework/
+ COPY src/processes/Processes.ProcessIdentity/ src/processes/Processes.ProcessIdentity/
+ COPY src/processes/ApplicationChecklist.Library/ src/processes/ApplicationChecklist.Library/
++COPY src/onboarding/Onboarding.WalletProvider/ src/onboarding/Onboarding.WalletProvider/
+ RUN dotnet restore "src/maintenance/Maintenance.App/Maintenance.App.csproj"
+ WORKDIR /src/maintenance/Maintenance.App
+ RUN dotnet publish "Maintenance.App.csproj" -c Release -o /app/publish

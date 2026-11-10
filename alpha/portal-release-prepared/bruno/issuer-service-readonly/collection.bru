@@ -1,0 +1,30 @@
+auth {
+  mode: oauth2
+}
+
+auth:oauth2 {
+  grant_type: authorization_code
+  callback_url: {{portalCallbackUrl}}
+  authorization_url: {{centralIdp}}/auth/realms/CX-Central/protocol/openid-connect/auth
+  access_token_url: {{centralIdp}}/auth/realms/CX-Central/protocol/openid-connect/token
+  client_id: Cl2-CX-Portal
+  client_secret:
+  scope: openid
+  pkce: true
+}
+
+docs {
+  BE-293 diagnosis of the BPN credential failure (IssuerService NullPointerException in
+  AttestationPipelineImpl.evaluate for holder BPNL00000000052O).
+
+  Folder "Issuer (read-only)": IssuerService admin API in release26-09, x-api-key per request, GET and
+  POST .../query only. Needs the tunnel:
+    kubectl --kubeconfig ~/.kube/alpha.yaml --context alpha -n release26-09 port-forward svc/issuer-service 18086:8086
+
+  Folder "Portal (operator login)": Portal administration API with the operator's own Keycloak login
+  (CX-Central, public client Cl2-CX-Portal, authorization code + PKCE; Bruno opens the login window).
+  The retrigger requests change the application and are guarded: they refuse to send unless confirmRetrigger
+  equals applicationId. Send them only after approval and after the issuer cause is fixed.
+
+  Secrets (issuerAdminApiKey) and tokens are kept by Bruno on this machine only, never in these files.
+}

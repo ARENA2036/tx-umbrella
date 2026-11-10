@@ -1,0 +1,101 @@
+# Image lock for the BE-293 Portal on Alpha. Single source for image provenance; values-be293-portal.yaml
+# must reference exactly these repositories/tags, and tools/validate_render.rb checks that.
+#
+# Rebuild rule: every .NET backend image is rebuilt from ONE commit, because f5badda90 is based on upstream
+# main fa5675c7e (after the v2.6.0 release a22506f8c) and changes shared projects (PortalEntities, DBAccess,
+# Framework.Web/Cors) that all services load. DEV images from the personal registry are NOT used.
+source:
+  repository: https://github.com/ARENA2036/portal-backend
+  branch: fix/BE-293-retrigger-validate-did-in-progress
+  commit: 274096a965c10d65a96d8c077a60b7680176aff7
+  base: fa5675c7e     # upstream eclipse-tractusx/portal-backend main, 2026-01-16
+  # Both BE-293 EF migrations are in the migrations project at this commit (source-verified; the image
+  # itself has not been built yet):
+  migrations:
+    - 20260710175010_BE293IdentityHubWalletStepTypes
+    - 20261024150921_BE293ConnectorProvisioningRequests
+registry: "harbor-hub-shared.arena.3ascloud.de/be293"
+build:
+  # Verified from docker/Dockerfile-* and .github/workflows/*.yml at the commit above.
+  context: "."                          # repository root (Dockerfiles COPY LICENSE NOTICE.md DEPENDENCIES and src/)
+  platformsInUpstreamCi: [linux/amd64, linux/arm64]
+  platformRequiredForAlpha: linux/amd64  # Alpha node selector in DEV values was kubernetes.io/arch=amd64
+  baseImages:                           # floating tags in the Dockerfiles; record resolved digests at build time
+    - mcr.microsoft.com/dotnet/sdk:9.0-alpine       # build stage
+    - mcr.microsoft.com/dotnet/aspnet:9.0-alpine    # web services
+    - mcr.microsoft.com/dotnet/runtime:9.0-alpine   # maintenance, processes-worker, portal-migrations
+  requirements: [sbom, provenance-attestation, vulnerability-report, push-by-digest, record-base-image-digests]
+  localBuild:
+    status: BLOCKED
+    date: "2026-11-04"
+    reason: >-
+      Sandbox network policy denies api.nuget.org:443 (proxy 403, host not on allow list) and no Docker daemon
+      socket is available; `dotnet restore` of PortalBackend.Migrations from a clean git-archive export of the
+      commit therefore cannot complete. Not an authentication, feed or dependency failure (no custom
+      nuget.config; default nuget.org feed only).
+  isolatedCi:
+    workflow: tx-umbrella/.github/workflows/be293-portal-images.yml   # merged via PR #239 (develop 7bd43c3)
+    firstRun:
+      id: 41849663453
+      date: "2026-11-04"
+      mode: push=false
+      builds: "7/8 succeeded; portal-maintenance-service failed (dotnet publish: CS0234/CS0246 IWalletProviderResolver)"
+      migrationsCheck: "passed (both BE-293 migrations present in portal-migrations image)"
+      scan: "failed in all 7 built jobs: Trivy v0.64.1 GitHub release no longer exists (setup-trivy install.sh exit 1)"
+    fixPrepared:
+      - "Dockerfile-maintenance-service: checksum-guarded one-line COPY of src/onboarding/Onboarding.WalletProvider in CI (upstream patch: ci/portal-backend-maintenance-dockerfile.patch)"
+      - "trivy-action: version pinned to v0.76.1 (existing release)"
+  ci:
+    # Upstream workflows trigger on push to main and on workflow_dispatch only, so the feature branch has
+    # never been built by CI. Tags: administration-service pushes `latest` and the commit SHA; the other
+    # seven workflows still target the upstream `tractusx` namespace and would not produce arena2036 images.
+    workflows:
+      - {image: portal-administration-service, workflow: administration-service.yml, namespace: arena2036.azurecr.io, tags: [latest, "<sha>"]}
+      - {image: portal-registration-service,   workflow: registration-service.yml,   namespace: tractusx}
+      - {image: portal-marketplace-app-service, workflow: marketplace-app-service.yml, namespace: tractusx}
+      - {image: portal-services-service,       workflow: services-service.yml,       namespace: tractusx}
+      - {image: portal-notification-service,   workflow: notification-service.yml,   namespace: tractusx}
+      - {image: portal-maintenance-service,    workflow: maintenance-service.yml,    namespace: tractusx}
+      - {image: portal-processes-worker,       workflow: processes-worker.yml,       namespace: tractusx}
+      - {image: portal-portal-migrations,      workflow: portal-migrations.yml,      namespace: tractusx}
+    hazards:
+      - "Dispatching administration-service.yml on the feature branch would move `latest` in arena2036.azurecr.io."
+      - "The other seven workflows would push to (or fail against) the upstream tractusx namespace."
+rebuilt:
+  # DEPLOYED pins (what Helm renders). Since 2026-11-07 only portal-administration-service runs the
+  # 274096a96 build (DID validation retrigger fix); the other seven stay on the ad459ee71 images that are live on
+  # Alpha, so a Helm reconciliation does not roll them. Their 274096a96 builds are published but not deployed:
+  # see publishedNotDeployed. source.commit is the commit the isolated workflow builds from.
+  - {image: portal-administration-service, dockerfile: docker/Dockerfile-administration-service, project: src/administration/Administration.Service, tag: be293-274096a965c10d65a96d8c077a60b7680176aff7, digest: "aff600f9fc558c1d651e124d0c7b43b90819b94b6971967b9d4661c57cd76560"}
+  - {image: portal-registration-service,   dockerfile: docker/Dockerfile-registration-service,   project: src/registration/Registration.Service,     tag: be293-ad459ee711ecaa9a43535a513bd9db83b640a8ff, digest: "a83cf1410c0d762f407b189eed8fe9e78e72bc91abbd2ec2eed727c0a8d93088"}
+  - {image: portal-marketplace-app-service, dockerfile: docker/Dockerfile-marketplace-app-service, project: src/marketplace/Apps.Service,          tag: be293-ad459ee711ecaa9a43535a513bd9db83b640a8ff, digest: "2d5c3f6b208c53be33afeb03db5cf28479436f7aa263853374ecc262a758e94b"}
+  - {image: portal-services-service,       dockerfile: docker/Dockerfile-services-service,       project: src/marketplace/Services.Service,        tag: be293-ad459ee711ecaa9a43535a513bd9db83b640a8ff, digest: "2abb07a918dd00cc9eded6f8fe9d15d6f7af137a26daf9a9b586744b98ba8b81"}
+  - {image: portal-notification-service,   dockerfile: docker/Dockerfile-notification-service,   project: src/notifications/Notifications.Service, tag: be293-ad459ee711ecaa9a43535a513bd9db83b640a8ff, digest: "982e77752e05d341bb21dc708037423f7e1d2eed439999c891223dd61efb8b43"}
+  - {image: portal-maintenance-service,    dockerfile: docker/Dockerfile-maintenance-service,    project: src/maintenance/Maintenance.App,         tag: be293-ad459ee711ecaa9a43535a513bd9db83b640a8ff, digest: "08ee4b36da69c993094a47732aee8b18d0aec3a9defb368a12f0e6a622f559ee"}
+  - {image: portal-processes-worker,       dockerfile: docker/Dockerfile-processes-worker,       project: src/processes/Processes.Worker,          tag: be293-e2451f87628c8ae56c131f136e5ad3e12703a1f6, digest: "0857101e376c52277f88ec081b2902e6883f530e6d27d914fc83d05d7e72d3a6"}  # Built from portal-backend e2451f876 (2cd5dd8a4 + BPDM cx-memberships isCatenaXMember), run 42600052811
+  - {image: portal-migrations,             dockerfile: docker/Dockerfile-portal-migrations,      project: src/portalbackend/PortalBackend.Migrations, tag: be293-ad459ee711ecaa9a43535a513bd9db83b640a8ff, digest: "c10f64ca556b6089f1f01bcce0291a62ec9390cfe727650ff84d09f3863a3815"}
+publishedNotDeployed:
+  # Pushed by the isolated workflow from source.commit (immutable tags), intentionally NOT rendered. Rolling one
+  # out = move its digest into `rebuilt` and values-be293-portal.yaml, then a reviewed, approved upgrade.
+  - {image: portal-processes-worker, tag: be293-8ca2c1ecc4c893d75ba2d205675202fc439849a2, digest: "e2ab28e1ac6c95f10cea4b01d81d5c3b8e6382b0311605e7ef5853a9e9db5066"}  # deployed in revision 3 (2026-11-09), superseded by 2cd5dd8a4
+  - {image: portal-processes-worker, tag: be293-2cd5dd8a4aa8c6c84c9c01bebeb62ffbd65c6b3a, digest: "421bf1fd9c7ff3f912557b85b56ebdc0c5770c853bc49d5fd6a94b5ae946a399"}  # deployed in revision 4 (2026-11-09), superseded by e2451f876
+  - {image: portal-registration-service, tag: be293-274096a965c10d65a96d8c077a60b7680176aff7, digest: "7f058f665bbdcbf7950b2054eb718777c585efe620d4c090c30c791f2528deb0"}
+  - {image: portal-marketplace-app-service, tag: be293-274096a965c10d65a96d8c077a60b7680176aff7, digest: "30b3c08604fb3e581459e81cce063665bcc33f08914c23a9554bbad3898df904"}
+  - {image: portal-services-service, tag: be293-274096a965c10d65a96d8c077a60b7680176aff7, digest: "002ee4d46637176ee7321a81123b40bb43f2db33b506fbf0394c3c596d924132"}
+  - {image: portal-notification-service, tag: be293-274096a965c10d65a96d8c077a60b7680176aff7, digest: "8db4015a1423e735440cf8ea1b493a798a3fa65841ea6d35d7ca5dbdfae916c1"}
+  - {image: portal-maintenance-service, tag: be293-274096a965c10d65a96d8c077a60b7680176aff7, digest: "c4fb578ec3d98e25e212f347a9dae1eb83f5c89e2da68bcaec98e2665561cd77"}
+  - {image: portal-processes-worker, tag: be293-274096a965c10d65a96d8c077a60b7680176aff7, digest: "7c183b30d20901835c7ff28e1b0d226a7b3227854ee39ebbceaa702b7f5e7025"}
+  - {image: portal-migrations, tag: be293-274096a965c10d65a96d8c077a60b7680176aff7, digest: "bc94d4ee6a910850dd599561ae2bd5cc5734f1fce63fa72d6cb7c57e13fd0659"}
+upstream:
+  # Public upstream images, pinned by the digests recorded from DEV evidence (handoff inventory/IMAGE-INVENTORY.yaml).
+  # Re-resolve and, if the platform requires it, mirror by digest before release.
+  - {image: docker.io/tractusx/portal-frontend,                 tag: v2.6.0, digest: "sha256:d0fe6dd295603fa8489b7af04179df1e80ae60246f0a6922957c1db5df395b95"}
+  - {image: docker.io/tractusx/portal-frontend-registration,    tag: v2.2.2, digest: "sha256:36bf200b4b64becab2606c60121ad59cd145492907e35cf86b208ad1bc22269a"}
+  - {image: docker.io/tractusx/portal-assets,                   tag: v2.6.0, digest: "sha256:27cf6ef97e1d9710b4440b964bfe92e0ceba1fffb139b3924066ba576bb3dbc3"}
+  - {image: docker.io/tractusx/portal-provisioning-migrations,  tag: v2.6.0, digest: "sha256:cbb0c469d5fc4af106a08a2fb8b9b5530877bf47e9698bff5bc0549e7e716992"}
+  - {image: docker.io/bitnamilegacy/postgresql,                 tag: 15-debian-11, digest: "sha256:e5dd504985505a6e30b36a474a1764e9f93fd2367acf5d196dd14827cac7eac4"}
+forbidden:
+  # Never deploy these on Alpha: personal-account DEV registry and unknown-source images.
+  - be293-images
+  - claimfix
+  - cp-933aeeb25

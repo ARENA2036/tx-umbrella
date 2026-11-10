@@ -1,0 +1,151 @@
+# smtp4dev: isolated TEST mail sink for the BE-293 Portal on Alpha (no real SMTP provider yet, blocker M1).
+# Applied with `kubectl create` by tools/smtp4dev-be293.sh (never apply/replace); NOT part of the Helm release,
+# so Helm recovery/upgrade/uninstall never touches it.
+#
+# Isolation:
+#   - Service is ClusterIP and exposes SMTP only (25 -> pod 2525). No Ingress, no LoadBalancer, no NodePort.
+#     The web UI (pod port 8080) is reachable only through `kubectl port-forward` (binds 127.0.0.1).
+#   - NetworkPolicy: SMTP ingress only from pods in be293; the UI port gets no ingress rule at all.
+#   - No relay: RelayOptions SmtpServer/AutomaticRelayExpression empty and LockSettings=true, so nobody can
+#     enable relaying from the UI. Independently, be293 egress has no SMTP rule (default-deny).
+#   - IMAP and POP3 disabled. Non-root (uid 1654 = `app` in the image), read-only root filesystem, no
+#     capabilities, RuntimeDefault seccomp.
+# Image: official rnwood/smtp4dev 3.15.0 (latest stable release, 2026-03-03), pinned by the multi-arch index
+# digest resolved with tools/smtp4dev-be293.sh --pin (anonymous registry read).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: be293-smtp4dev-data
+  namespace: be293
+  labels:
+    app.kubernetes.io/name: smtp4dev
+    app.kubernetes.io/instance: be293-smtp4dev
+    app.kubernetes.io/part-of: be293-portal
+    app.kubernetes.io/component: test-mail-sink
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: be293-smtp4dev
+  namespace: be293
+  labels: &labels
+    app.kubernetes.io/name: smtp4dev
+    app.kubernetes.io/instance: be293-smtp4dev
+    app.kubernetes.io/part-of: be293-portal
+    app.kubernetes.io/component: test-mail-sink
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate          # RWO volume: never two pods on the SQLite mailbox
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: smtp4dev
+      app.kubernetes.io/instance: be293-smtp4dev
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1654
+        runAsGroup: 1654
+        fsGroup: 1654
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: smtp4dev
+          image: "docker.io/rnwood/smtp4dev:3.15.0@sha256:25c434c1900a9c5b61e17ead0a774d9e81b80554d05cf64719d69e5ea8c66537"
+          imagePullPolicy: IfNotPresent
+          env:
+            - {name: ASPNETCORE_HTTP_PORTS, value: "8080"}
+            - {name: SERVEROPTIONS__URLS, value: "http://*:8080"}
+            - {name: ServerOptions__Port, value: "2525"}
+            - {name: ServerOptions__ImapPort, value: ""}      # null = IMAP disabled
+            - {name: ServerOptions__Pop3Port, value: ""}      # null = POP3 disabled
+            - {name: ServerOptions__LockSettings, value: "true"}
+            - {name: ServerOptions__Database, value: "/smtp4dev/database.db"}
+            - {name: ServerOptions__NumberOfMessagesToKeep, value: "1000"}
+            - {name: ServerOptions__NumberOfSessionsToKeep, value: "200"}
+            - {name: ServerOptions__TlsMode, value: "None"}
+            # The Portal mailer always sends AUTH (Mailing.SendMail); any credentials are accepted, none stored.
+            - {name: ServerOptions__AuthenticationRequired, value: "false"}
+            - {name: ServerOptions__SmtpAllowAnyCredentials, value: "true"}
+            - {name: RelayOptions__SmtpServer, value: ""}
+            - {name: RelayOptions__AutomaticRelayExpression, value: ""}
+            - {name: DOTNET_EnableDiagnostics, value: "0"}
+          ports:
+            - {name: smtp, containerPort: 2525, protocol: TCP}
+            - {name: http, containerPort: 8080, protocol: TCP}
+          readinessProbe:
+            tcpSocket: {port: smtp}
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /, port: http}
+            initialDelaySeconds: 20
+            periodSeconds: 30
+          resources:
+            requests: {cpu: 50m, memory: 128Mi}
+            limits: {memory: 512Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          volumeMounts:
+            - {name: data, mountPath: /smtp4dev}
+            - {name: tmp, mountPath: /tmp}
+            - {name: home, mountPath: /home/app}
+      volumes:
+        - name: data
+          persistentVolumeClaim: {claimName: be293-smtp4dev-data}
+        - name: tmp
+          emptyDir: {sizeLimit: 64Mi}
+        - name: home
+          emptyDir: {sizeLimit: 16Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: be293-smtp4dev
+  namespace: be293
+  labels:
+    app.kubernetes.io/name: smtp4dev
+    app.kubernetes.io/instance: be293-smtp4dev
+    app.kubernetes.io/part-of: be293-portal
+    app.kubernetes.io/component: test-mail-sink
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: smtp4dev
+    app.kubernetes.io/instance: be293-smtp4dev
+  ports:
+    - {name: smtp, port: 25, targetPort: smtp, protocol: TCP}
+---
+# SMTP from be293 pods only (Job/CronJob pods carry no labels, so all be293 pods). The UI port 8080 has no
+# rule: port-forward reaches it from inside the pod network namespace, not through the policy.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: be293-smtp4dev-smtp-ingress
+  namespace: be293
+  labels:
+    app.kubernetes.io/name: smtp4dev
+    app.kubernetes.io/instance: be293-smtp4dev
+    app.kubernetes.io/part-of: be293-portal
+    app.kubernetes.io/component: test-mail-sink
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: smtp4dev
+      app.kubernetes.io/instance: be293-smtp4dev
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {}
+      ports:
+        - {protocol: TCP, port: 2525}

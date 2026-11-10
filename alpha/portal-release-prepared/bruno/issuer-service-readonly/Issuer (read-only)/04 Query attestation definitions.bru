@@ -1,0 +1,30 @@
+meta {
+  name: 04 Query attestation definitions
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/attestations/query
+  body: json
+  auth: none
+}
+
+headers {
+  x-api-key: {{issuerAdminApiKey}}
+}
+
+body:json {
+  {"offset": 0, "limit": 100}
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  All attestation definitions (read-only query): "attestationType" and "configuration".
+  - database: the configuration names the data source/table; the holder needs a row there.
+  - holder properties: note the property it reads; the Portal registers holders with only "contractVersion".
+  An attestation returning no data for the holder is what crashes AttestationPipelineImpl.evaluate.
+}

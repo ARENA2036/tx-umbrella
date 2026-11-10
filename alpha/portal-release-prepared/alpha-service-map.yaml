@@ -1,0 +1,75 @@
+# Confirmed release26-09 Service inventory (Alpha, provided 2026-11-04) with the Pod target port resolved
+# from the deployed chart's templates. NetworkPolicies select PODS, so they must use `container`,
+# never the Service `port`. tools/validate_render.rb enforces this.
+#
+# Resolution evidence:
+#   identity-hub-0x  tractusx-identityhub chart v0.4.2 (eclipse-tractusx/tractusx-identityhub @9aee7ba):
+#                    Service targetPort is the endpoint NAME; the container port of that name is
+#                    endpoints.<name>.port, i.e. the same number as the Service port.
+#                    Pod selector: app.kubernetes.io/instance=<release>.
+#   issuer-service   tractusx-issuerservice chart v0.4.2 (@9aee7ba): same pattern as above.
+#   bdrs-server      bdrs-server chart 0.6.0 (vendored, handoff charts/bdrs-server-0.6.0.tgz): same pattern.
+#   sdfactory        sdfactory chart 2.1.35 (vendored): targetPort = service.targetPort (8080 confirmed).
+#   bpdm-*           Service 80 -> target 8081/8080 (confirmed). Not used for pod egress: the Portal chart
+#                    feeds the same bpdm.* value to the browser, so BPDM is reached via its public host.
+#   *-keycloak       Service 80 (confirmed); target port not resolved. Not used for pod egress: Keycloak
+#                    must be addressed by its public issuer URL.
+#   bpndiscovery, discoveryfinder: confirmed, not used by the Portal.
+# Selector labels assume the Helm release names listed on Alpha; podSelectors use only
+# app.kubernetes.io/instance, which every chart above sets to .Release.Name.
+namespace: release26-09
+dnsSuffix: release26-09.svc.cluster.local
+services:
+  centralidp-keycloak:
+    ports: {http: {service: 80, container: null}}
+    portalUse: "public issuer URL only (https://centralidp.test.tractus-x.com)"
+  sharedidp-keycloak:
+    ports: {http: {service: 80, container: null}}
+    portalUse: "public issuer URL only (https://sharedidp.test.tractus-x.com)"
+  identity-hub-01:
+    podSelector: {app.kubernetes.io/instance: identity-hub-01}
+    ports:
+      default: {service: 8081, container: 8081}
+      identity: {service: 8082, container: 8082, path: /api/identity}
+      credentials: {service: 8083, container: 8083}
+      did: {service: 8084, container: 8084}
+      sts: {service: 8087, container: 8087}
+  identity-hub-02:
+    podSelector: {app.kubernetes.io/instance: identity-hub-02}
+    ports:
+      default: {service: 8081, container: 8081}
+      identity: {service: 8082, container: 8082, path: /api/identity}
+      credentials: {service: 8083, container: 8083}
+      did: {service: 8084, container: 8084}
+      sts: {service: 8087, container: 8087}
+  issuer-service:
+    podSelector: {app.kubernetes.io/instance: issuer-service}
+    ports:
+      default: {service: 8081, container: 8081}
+      issuance: {service: 8082, container: 8082}
+      did: {service: 8083, container: 8083}
+      sts: {service: 8085, container: 8085}
+      issueradmin: {service: 8086, container: 8086, path: /api/admin}
+      identity: {service: 8087, container: 8087}
+      statuslist: {service: 8088, container: 8088}
+  bdrs-server:
+    podSelector: {app.kubernetes.io/instance: bdrs-server}
+    ports:
+      default: {service: 8080, container: 8080}
+      management: {service: 8081, container: 8081}
+      directory: {service: 8082, container: 8082}
+  bpdm-bpdm-gate:
+    ports: {http: {service: 80, container: 8081}}
+    portalUse: "public host only (browser-facing)"
+  bpdm-bpdm-pool:
+    ports: {http: {service: 80, container: 8080}}
+    portalUse: "public host only (browser-facing)"
+  sdfactory:
+    podSelector: {app.kubernetes.io/instance: sdfactory}
+    ports: {http: {service: 80, container: 8080}}
+  bpndiscovery:
+    ports: {http: {service: 8080, container: 4243}}
+    portalUse: none
+  discoveryfinder:
+    ports: {http: {service: 8080, container: 4243}}
+    portalUse: none

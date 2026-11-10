@@ -1,0 +1,23 @@
+tx-umbrella: build the 8 BE-293 Portal images from ARENA2036/portal-backend 274096a965c10d65a96d8c077a60b7680176aff7
+
+Base: tx-umbrella origin/fix/be293-final-images cf147aeedb91405fb4f5099789f112c1f8271b24 (the workflow that built the
+images deployed on Alpha from ad459ee7). Only SOURCE_COMMIT changes; matrix, immutable be293-<sha> tags, the
+refuse-to-overwrite check, SBOM + provenance (mode=max), Trivy v0.76.1 report and the migration check stay as they are.
+274096a965c10d65a96d8c077a60b7680176aff7 = ad459ee7 + "fix(BE-293): resume IDENTITY_WALLET in IN_PROGRESS on DID validation retrigger" (4 files).
+
+Apply (tx-umbrella root, on a new branch from origin/fix/be293-final-images):
+  git apply --check alpha/portal-release-prepared/ci/tx-umbrella-be293-portal-images-274096a9.patch && git apply --index alpha/portal-release-prepared/ci/tx-umbrella-be293-portal-images-274096a9.patch
+---
+diff --git a/.github/workflows/be293-portal-images.yml b/.github/workflows/be293-portal-images.yml
+index 8db4a3b..3016094 100644
+--- a/.github/workflows/be293-portal-images.yml
++++ b/.github/workflows/be293-portal-images.yml
+@@ -26,7 +26,7 @@ concurrency:
+ 
+ env:
+   SOURCE_REPOSITORY: ARENA2036/portal-backend
+-  SOURCE_COMMIT: ad459ee711ecaa9a43535a513bd9db83b640a8ff
++  SOURCE_COMMIT: 274096a965c10d65a96d8c077a60b7680176aff7
+   # Approved registry host + namespace, e.g. set as repository variable after platform approval.
+   REGISTRY: ${{ vars.BE293_REGISTRY }}
+   PLATFORM: linux/amd64

@@ -1,0 +1,6 @@
+{
+  "version": "1",
+  "name": "BE-293 IssuerService (read-only)",
+  "type": "collection",
+  "ignore": ["node_modules", ".git"]
+}

@@ -1,0 +1,20 @@
+meta {
+  name: 06 Get new holder
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/holders/{{newHolder}}
+  body: none
+  auth: none
+}
+
+headers {
+  x-api-key: {{issuerAdminApiKey}}
+}
+
+docs {
+  The new test company's holder entry, including its properties. 404 here while request 05 lists it means this
+  IssuerService version has no single-holder GET; use 05 instead.
+}

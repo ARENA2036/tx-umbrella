@@ -1,0 +1,182 @@
+# NetworkPolicies for the BE-293 Portal release in be293. Namespaced objects only; applied by a
+# separately approved step BEFORE the Helm release (gate G8 step 1). Nothing here changes release26-09.
+#
+# Placeholders <<ALPHA:...>> are resolved from read-only Alpha facts (gate G4); tools/validate_render.py
+# fails in --mode release while any placeholder remains.
+#
+# Note: the Portal chart's Job/CronJob pod templates carry no labels, so in-namespace rules select all pods
+# of be293 (the namespace hosts only this release; verified in G4).
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: be293-portal-default-deny
+  namespace: be293
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: be293-portal-dns-egress
+  namespace: be293
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - {protocol: UDP, port: 53}
+        - {protocol: TCP, port: 53}
+---
+# Portal-owned PostgreSQL: reachable only from pods in be293, nothing else.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: be293-portal-postgresql
+  namespace: be293
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: be293-portal
+      app.kubernetes.io/name: postgresql
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {}
+      ports:
+        - {protocol: TCP, port: 5432}
+---
+# Database egress is limited to the in-namespace PostgreSQL. No rule allows TCP 5432 to any other
+# namespace, so the old Portal database in release26-09 is unreachable even with a wrong connection string.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: be293-portal-intra-namespace-egress
+  namespace: be293
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - podSelector: {}
+---
+# Frontend and backend pods accept traffic from the ingress controller (only once Ingress is enabled) and
+# from each other.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: be293-portal-http-ingress
+  namespace: be293
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: be293-portal
+      app.kubernetes.io/name: portal
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: "ingress-nginx"
+      ports:
+        - {protocol: TCP, port: 8080}
+---
+# Egress to the reused central services in release26-09 (in-cluster admin/management APIs). NetworkPolicy
+# ports match the POD (container) port, not the Service port: see alpha-service-map.yaml. Each entry is one
+# owner-approved destination; the receiving side's own NetworkPolicies are the owners' decision (W9).
+# Keycloak and BPDM are deliberately absent: they are reached through their public hosts (shared ingress).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: be293-portal-release26-09-egress
+  namespace: be293
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    # IdentityHub identity API: Service 8082 (named target "identity") -> container 8082.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: release26-09
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: "identity-hub-01"
+      ports:
+        - {protocol: TCP, port: 8082}
+    # IssuerService admin API: Service 8086 (named target "issueradmin") -> container 8086.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: release26-09
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: issuer-service
+      ports:
+        - {protocol: TCP, port: 8086}
+    # BDRS management API: Service 8081 (named target "management") -> container 8081.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: release26-09
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: bdrs-server
+      ports:
+        - {protocol: TCP, port: 8081}
+    # SD-Factory: Service 80 -> container 8080.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: release26-09
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: sdfactory
+      ports:
+        - {protocol: TCP, port: 8080}
+---
+# Public HTTPS endpoints that must be used by their public name (Keycloak issuer, BPDM - also called by the
+# browser -, DID documents, BDRS directory, semantics, universal resolver) and SMTP. Restricted to the shared ingress address and the
+# approved resolver/SMTP addresses instead of 0.0.0.0/0.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: be293-portal-public-egress
+  namespace: be293
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    # Shared ingress address observed for the release26-09/connector ingresses (Alpha snapshot 2026-11-04).
+    # Depending on the CNI, in-cluster traffic to a LoadBalancer IP may be redirected to the ingress-controller
+    # pods before policy evaluation; the next rule covers that path.
+    - to:
+        - ipBlock:
+            cidr: "188.34.116.149/32"
+      ports:
+        - {protocol: TCP, port: 443}
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: "ingress-nginx"
+      ports:
+        - {protocol: TCP, port: 443}
+    - to:
+        - ipBlock:
+            cidr: "<<ALPHA:UNIVERSAL_RESOLVER_CIDR>>"
+      ports:
+        - {protocol: TCP, port: 443}
+    - to:
+        - ipBlock:
+            cidr: "<<ALPHA:SMTP_CIDR>>"
+      ports:
+        - {protocol: TCP, port: "<<ALPHA:SMTP_PORT>>"}
