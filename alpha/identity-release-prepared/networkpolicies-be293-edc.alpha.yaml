@@ -1,0 +1,175 @@
+# NetworkPolicies for the two hand-deployed E2E test connectors (be293-edc-fv1, be293-edc-guc), their PostgreSQL and the
+# provider's data source. ADDITIVE ONLY: no existing policy is changed. NetworkPolicies are unioned, so the three policies
+# that select identity pods (IdentityHub, Vault) widen access for the four connector pods only and leave
+# networkpolicies-be293-identity.alpha.yaml exactly as reviewed. Apply before the first connector release; delete this file's
+# objects when the test connectors are removed.
+#
+# Context: be293-portal-default-deny selects every be293 pod; every pod may egress to DNS, to any be293 pod and to the shared
+# ingress on 443 (did:web resolution of our HTTPS DIDs). So only INGRESS rules are needed. Ports are POD ports.
+#
+# Pod labels (tractusx-connector 0.13.0 selector labels): app.kubernetes.io/instance = <release>-controlplane | -dataplane.
+# The management API (control plane 8081) and the consumer proxy (data plane 8186) are opened to NO pod: the operator reaches
+# them only through `kubectl port-forward`, which does not pass through NetworkPolicy. Metrics (9090) stay closed.
+---
+# IdentityHub: the connectors' DCP credential service (8083) and embedded STS (8087). The STS is not opened to anything else.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: be293-edc-identityhub-ingress
+  namespace: be293
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: be293-identityhub
+      app.kubernetes.io/name: tractusx-identityhub
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {matchLabels: {app.kubernetes.io/instance: be293-edc-fv1-controlplane}}
+        - podSelector: {matchLabels: {app.kubernetes.io/instance: be293-edc-fv1-dataplane}}
+        - podSelector: {matchLabels: {app.kubernetes.io/instance: be293-edc-guc-controlplane}}
+        - podSelector: {matchLabels: {app.kubernetes.io/instance: be293-edc-guc-dataplane}}
+      ports:
+        - {protocol: TCP, port: 8083}   # credentials (DCP credential service)
+        - {protocol: TCP, port: 8087}   # sts (/api/sts/token)
+---
+# Vault: the connectors use their own KV mounts (edc-fv1, edc-guc) with their own scoped tokens.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: be293-edc-vault-ingress
+  namespace: be293
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: be293-identity-vault
+      app.kubernetes.io/name: vault
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {matchLabels: {app.kubernetes.io/instance: be293-edc-fv1-controlplane}}
+        - podSelector: {matchLabels: {app.kubernetes.io/instance: be293-edc-fv1-dataplane}}
+        - podSelector: {matchLabels: {app.kubernetes.io/instance: be293-edc-guc-controlplane}}
+        - podSelector: {matchLabels: {app.kubernetes.io/instance: be293-edc-guc-dataplane}}
+      ports:
+        - {protocol: TCP, port: 8200}
+---
+# Connector PostgreSQL: only the four connector pods.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: be293-edc-postgresql-ingress
+  namespace: be293
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: be293-edc-postgresql
+      app.kubernetes.io/name: postgresql
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {matchLabels: {app.kubernetes.io/instance: be293-edc-fv1-controlplane}}
+        - podSelector: {matchLabels: {app.kubernetes.io/instance: be293-edc-fv1-dataplane}}
+        - podSelector: {matchLabels: {app.kubernetes.io/instance: be293-edc-guc-controlplane}}
+        - podSelector: {matchLabels: {app.kubernetes.io/instance: be293-edc-guc-dataplane}}
+      ports:
+        - {protocol: TCP, port: 5432}
+---
+# fv1 control plane: DSP (8084) from the other control plane; control API (8083) from its own data plane.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: be293-edc-fv1-controlplane-ingress
+  namespace: be293
+spec:
+  podSelector:
+    matchLabels: {app.kubernetes.io/instance: be293-edc-fv1-controlplane}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {matchLabels: {app.kubernetes.io/instance: be293-edc-guc-controlplane}}
+      ports:
+        - {protocol: TCP, port: 8084}   # protocol (DSP)
+    - from:
+        - podSelector: {matchLabels: {app.kubernetes.io/instance: be293-edc-fv1-dataplane}}
+      ports:
+        - {protocol: TCP, port: 8083}   # control
+---
+# fv1 data plane: signalling (8084) from its own control plane; public API (8081: data, EDR token refresh) from the other
+# connector's pods.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: be293-edc-fv1-dataplane-ingress
+  namespace: be293
+spec:
+  podSelector:
+    matchLabels: {app.kubernetes.io/instance: be293-edc-fv1-dataplane}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {matchLabels: {app.kubernetes.io/instance: be293-edc-fv1-controlplane}}
+      ports:
+        - {protocol: TCP, port: 8084}   # control (data-plane signalling)
+    - from:
+        - podSelector: {matchLabels: {app.kubernetes.io/instance: be293-edc-guc-controlplane}}
+        - podSelector: {matchLabels: {app.kubernetes.io/instance: be293-edc-guc-dataplane}}
+      ports:
+        - {protocol: TCP, port: 8081}   # public
+---
+# guc control plane: mirror of fv1.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: be293-edc-guc-controlplane-ingress
+  namespace: be293
+spec:
+  podSelector:
+    matchLabels: {app.kubernetes.io/instance: be293-edc-guc-controlplane}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {matchLabels: {app.kubernetes.io/instance: be293-edc-fv1-controlplane}}
+      ports:
+        - {protocol: TCP, port: 8084}   # protocol (DSP)
+    - from:
+        - podSelector: {matchLabels: {app.kubernetes.io/instance: be293-edc-guc-dataplane}}
+      ports:
+        - {protocol: TCP, port: 8083}   # control
+---
+# guc data plane: mirror of fv1.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: be293-edc-guc-dataplane-ingress
+  namespace: be293
+spec:
+  podSelector:
+    matchLabels: {app.kubernetes.io/instance: be293-edc-guc-dataplane}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {matchLabels: {app.kubernetes.io/instance: be293-edc-guc-controlplane}}
+      ports:
+        - {protocol: TCP, port: 8084}   # control (data-plane signalling)
+    - from:
+        - podSelector: {matchLabels: {app.kubernetes.io/instance: be293-edc-fv1-controlplane}}
+        - podSelector: {matchLabels: {app.kubernetes.io/instance: be293-edc-fv1-dataplane}}
+      ports:
+        - {protocol: TCP, port: 8081}   # public
+---
+# Data source: only the provider's data plane.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: be293-edc-datasource-ingress
+  namespace: be293
+spec:
+  podSelector:
+    matchLabels: {app.kubernetes.io/name: be293-edc-datasource}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {matchLabels: {app.kubernetes.io/instance: be293-edc-fv1-dataplane}}
+      ports:
+        - {protocol: TCP, port: 8080}

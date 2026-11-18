@@ -1,0 +1,367 @@
+{{- $createCustomUser := and .Values.customUser (or .Values.customUser.name .Values.customUser.existingSecret) -}}
+{{- $replicationPrimary := and .Values.replication.enabled (not .Values.replication.primary.host) -}}
+{{- $hasGeneratedScripts := or $createCustomUser $replicationPrimary .Values.initdb.scripts -}}
+{{- $shouldMountInitScripts := or $hasGeneratedScripts .Values.initdb.scriptsConfigMap -}}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "postgres.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "postgres.labels" . | nindent 4 }}
+  {{- if .Values.commonAnnotations }}
+  annotations:
+    {{- include "postgres.annotations" . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  serviceName: {{ include "postgres.fullname" . }}-headless
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      {{- include "postgres.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- $annotations := merge .Values.podAnnotations .Values.commonAnnotations }}
+      {{- with $annotations }}
+      annotations: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "postgres.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "postgres.serviceAccountName" . }}
+      {{- if .Values.priorityClassName }}
+      priorityClassName: {{ .Values.priorityClassName }}
+      {{- end }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}
+{{- with (include "postgres.imagePullSecrets" .) }}
+{{- . | nindent 6 }}
+{{- end }}
+      securityContext: {{ include "cloudpirates.renderPodSecurityContext" . | nindent 8 }}
+      initContainers:
+        {{- if and .Values.replication.enabled .Values.replication.primary.host }}
+        - name: replication-standby-init
+          securityContext: {{ include "cloudpirates.renderContainerSecurityContext" . | nindent 12 }}
+          image: {{ include "postgres.image" . }}
+          imagePullPolicy: {{ .Values.image.imagePullPolicy }}
+          env:
+            - name: PGDATA
+              value: {{ include "postgres.pgdataPath" . }}
+            {{ include "postgres.replicationEnv" . | nindent 12 }}
+          volumeMounts:
+            - name: {{ .Values.persistence.volumeName }}
+              mountPath: {{ include "postgres.dataDir" . }}
+              {{- if .Values.persistence.subPath }}
+              subPath: {{ .Values.persistence.subPath }}
+              {{- end }}
+            - name: run
+              mountPath: {{ include "postgres.runDir" . }}
+            - name: replication
+              mountPath: /replication-scripts
+          command:
+            - /replication-scripts/replication-standby-init.sh
+        {{- end }}
+        {{- if .Values.initContainers }}
+        {{- toYaml .Values.initContainers | nindent 8 }}
+        {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      enableServiceLinks: {{ .Values.global.enableServiceLinks }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext: {{ include "cloudpirates.renderContainerSecurityContext" . | nindent 12 }}
+          image: {{ include "postgres.image" . }}
+          imagePullPolicy: {{ .Values.image.imagePullPolicy }}
+          {{- if .Values.command }}
+          command: {{- toYaml .Values.command | nindent 12 }}
+          {{- end }}
+          {{- if kindIs "invalid" .Values.args }}
+          args:
+            - postgres
+            - -c
+            - 'config_file={{ include "postgres.configDir" . }}/postgresql.conf'
+          {{- else if .Values.args }}
+          args: {{- toYaml .Values.args | nindent 12 }}
+          {{- end }}
+          env:
+            - name: PGDATA
+              value: {{ include "postgres.pgdataPath" . }}
+            {{- if .Values.initdb.args }}
+            - name: POSTGRES_INITDB_ARGS
+              value: {{ .Values.initdb.args | quote }}
+            {{- end }}
+            {{- if .Values.auth.username }}
+            - name: POSTGRES_USER
+              value: {{ include "postgres.username" .}}
+            {{- end }}
+            {{- if .Values.auth.database }}
+            - name: POSTGRES_DB
+              value: {{ include "postgres.database" .}}
+            {{- end }}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "postgres.secretName" . }}
+                  key: {{ include "postgres.adminPasswordKey" . }}
+            {{- with .Values.extraEnvVars }}
+{{ toYaml . | indent 12 }}
+            {{- end }}
+
+            {{- /* Custom user setup if a name or an existing secret is defined */}}
+            {{- if and .Values.customUser (or .Values.customUser.name .Values.customUser.existingSecret) }}
+            - name: CUSTOM_DB
+
+              {{- /* Setup a secret ref if a key is defined */}}
+              {{- if .Values.customUser.secretKeys.database }}
+              valueFrom:
+                secretKeyRef:
+                  {{/* Reference the existing secret */}}
+                  {{- if .Values.customUser.existingSecret }}
+                  name: {{ include "cloudpirates.tplvalues.render" (dict "value" .Values.customUser.existingSecret "context" $) }}
+                  {{- else }}
+                  {{/* Reference the generated secret */}}
+                  name: {{ include "postgres.custom-user-configname" . }}
+                  {{- end }}
+                  key: {{ tpl .Values.customUser.secretKeys.database . | quote }}
+              {{- else }}
+              {{- /* Fallback to static value otherwise */}}
+              value: {{ tpl .Values.customUser.database . | quote }}
+              {{- end }}
+            - name: CUSTOM_USER
+              {{- if .Values.customUser.secretKeys.name }}
+              valueFrom:
+                secretKeyRef:
+                  {{- if .Values.customUser.existingSecret }}
+                  name: {{ include "cloudpirates.tplvalues.render" (dict "value" .Values.customUser.existingSecret "context" $) }}
+                  {{- else }}
+                  name: {{ include "postgres.custom-user-configname" . }}
+                  {{- end }}
+                  key: {{ tpl .Values.customUser.secretKeys.name . | quote }}
+              {{- else }}
+              value: {{ tpl .Values.customUser.name . | quote }}
+              {{- end }}
+            - name: CUSTOM_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  {{- if .Values.customUser.existingSecret }}
+                  name: {{ include "cloudpirates.tplvalues.render" (dict "value" .Values.customUser.existingSecret "context" $) }}
+                  {{- else }}
+                  name: {{ include "postgres.custom-user-configname" . }}
+                  {{- end }}
+                  key: {{ tpl .Values.customUser.secretKeys.password . | quote }}
+            {{- end }}
+          {{- if .Values.replication.enabled }}
+            {{ include "postgres.replicationEnv" . | nindent 12 }}
+          {{- end }}
+          {{- if .Values.extraEnvVarsSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.extraEnvVarsSecret }}
+          {{- end }}
+          ports:
+            - name: postgresql
+              containerPort: {{ .Values.service.targetPort }}
+              protocol: TCP
+          {{- if .Values.livenessProbe.enabled }}
+          livenessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  pg_isready -U {{ include "postgres.username" . }} -d {{ include "postgres.database" . }} -h 127.0.0.1 -p {{ .Values.service.targetPort }}
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.livenessProbe.successThreshold }}
+            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+          {{- end }}
+          {{- if .Values.readinessProbe.enabled }}
+          readinessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  pg_isready -U {{ include "postgres.username" . }} -d {{ include "postgres.database" . }} -h 127.0.0.1 -p {{ .Values.service.targetPort }}
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.readinessProbe.successThreshold }}
+            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+          {{- end }}
+          {{- if .Values.startupProbe.enabled }}
+          startupProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  pg_isready -U {{ include "postgres.username" . }} -d {{ include "postgres.database" . }} -h 127.0.0.1 -p {{ .Values.service.targetPort }}
+            initialDelaySeconds: {{ .Values.startupProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.startupProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.startupProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.startupProbe.successThreshold }}
+            failureThreshold: {{ .Values.startupProbe.failureThreshold }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: {{ .Values.persistence.volumeName }}
+              mountPath: {{ include "postgres.dataDir" . }}
+              {{- if .Values.persistence.subPath }}
+              subPath: {{ .Values.persistence.subPath }}
+              {{- end }}
+            {{- if .Values.config.mountConfigMap }}
+            - name: config
+              mountPath: {{ include "postgres.configDir" . }}
+            {{- end }}
+            - name: run
+              mountPath: {{ include "postgres.runDir" . }}
+            - name: tmp
+              mountPath: /tmp
+            {{- if $shouldMountInitScripts }}
+            - name: custom-init-scripts
+              mountPath: {{ .Values.initdb.directory }}
+            {{- end }}
+            {{- if .Values.extraVolumeMounts }}
+            {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
+            {{- end }}
+        {{- if .Values.metrics.enabled }}
+        - name: metrics
+          image: "{{ .Values.metrics.image.registry }}/{{ .Values.metrics.image.repository }}:{{ .Values.metrics.image.tag }}"
+          imagePullPolicy: {{ .Values.metrics.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 65534
+            runAsGroup: 65534
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "postgres.secretName" . }}
+                  key: {{ include "postgres.adminPasswordKey" . }}
+            - name: DATA_SOURCE_NAME
+              value: "postgresql://{{ include "postgres.username" . }}:$(POSTGRES_PASSWORD)@localhost:{{ .Values.service.targetPort }}/{{ include "postgres.database" . }}?sslmode=disable"
+          ports:
+            - name: metrics
+              containerPort: 9187
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /
+              port: metrics
+          readinessProbe:
+            httpGet:
+              path: /
+              port: metrics
+          livenessProbe:
+            httpGet:
+              path: /
+              port: metrics
+          {{- with .Values.metrics.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        {{- end }}
+      volumes:
+        {{- if not .Values.persistence.enabled }}
+        - name: {{ .Values.persistence.volumeName }}
+          emptyDir: {}
+        {{- end }}
+        {{- if .Values.persistence.existingClaim }}
+        - name: {{ .Values.persistence.volumeName }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim }}
+        {{- end }}
+        {{- if .Values.config.mountConfigMap }}
+        - name: config
+          configMap:
+            name: {{ include "postgres.configmapName" . }}
+            optional: true
+        {{- end }}
+        - name: run
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+        {{- if $shouldMountInitScripts }}
+        - name: custom-init-scripts
+          {{- if and $hasGeneratedScripts .Values.initdb.scriptsConfigMap }}
+          projected:
+            defaultMode: 0755
+            sources:
+              - configMap:
+                  name: {{ printf "%s-init-scripts" (include "postgres.fullname" .) }}
+              - configMap:
+                  name: {{ tpl .Values.initdb.scriptsConfigMap . }}
+          {{- else }}
+          configMap:
+            name: {{ include "postgres.initdb.scriptsCM" . }}
+            defaultMode: 0755
+          {{- end }}
+        {{- end }}
+        {{- if and .Values.replication.enabled .Values.replication.primary.host }}
+        - name: replication
+          configMap:
+            name: {{ printf "%s-replication" (include "postgres.fullname" .) }}
+            defaultMode: 0755
+        {{- end }}
+        {{- if .Values.extraVolumes }}
+        {{- toYaml .Values.extraVolumes | nindent 8 }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  {{- if .Values.persistence.enabled }}
+  {{- if .Values.persistentVolumeClaimRetentionPolicy.enabled }}
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: {{ .Values.persistentVolumeClaimRetentionPolicy.whenDeleted }}
+    whenScaled: {{ .Values.persistentVolumeClaimRetentionPolicy.whenScaled }}
+  {{- end }}
+  {{- if not .Values.persistence.existingClaim }}
+  volumeClaimTemplates:
+  - metadata:
+      name: {{ .Values.persistence.volumeName }}
+      {{- with $labels := merge (include "postgres.selectorLabels" . | fromYaml) .Values.persistence.labels .Values.podLabels }}
+      labels:
+        {{- toYaml $labels | nindent 8 }}
+      {{- end }}
+      {{- with .Values.persistence.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      accessModes:
+        {{- range .Values.persistence.accessModes }}
+        - {{ . | quote }}
+        {{- end }}
+      resources:
+        requests:
+          storage: {{ .Values.persistence.size | quote }}
+      {{- if .Values.persistence.storageClass }}
+      {{- if (eq "-" .Values.persistence.storageClass) }}
+      storageClassName: ""
+      {{- else }}
+      storageClassName: {{ .Values.persistence.storageClass | quote }}
+      {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}

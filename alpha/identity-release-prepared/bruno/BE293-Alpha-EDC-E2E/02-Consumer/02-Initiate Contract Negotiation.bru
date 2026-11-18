@@ -1,0 +1,93 @@
+meta {
+  name: 02-Initiate Contract Negotiation
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{Consumer}}/v3/contractnegotiations
+  body: json
+  auth: apikey
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:apikey {
+  key: X-Api-Key
+  value: {{Consumer_Api_Key}}
+  placement: header
+}
+
+body:json {
+  {
+    "@context": [
+      "https://w3id.org/catenax/2025/9/policy/context.jsonld",
+      "https://w3id.org/dspace/2025/1/odrl-profile.jsonld",
+      {
+        "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+      }
+    ],
+    "@type": "ContractRequest",
+    "counterPartyAddress": "{{Provider_DSP}}",
+    "counterPartyId": "{{Provider_DID}}",
+    "protocol": "dataspace-protocol-http:2025-1",
+    "policy": {
+      "@id": "{{offerId}}",
+      "@type": "Offer",
+      "assigner": "{{Provider_DID}}",
+      "target": "{{Asset_ID}}",
+      "permission": [
+        {
+          "action": "use",
+          "constraint": [
+            {
+              "and": [
+                {
+                  "leftOperand": "Membership",
+                  "operator": "eq",
+                  "rightOperand": "active"
+                },
+                {
+                  "leftOperand": "FrameworkAgreement",
+                  "operator": "eq",
+                  "rightOperand": "DataExchangeGovernance:1.0"
+                },
+                {
+                  "leftOperand": "UsagePurpose",
+                  "operator": "isAnyOf",
+                  "rightOperand": "cx.core.industrycore:1"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "prohibition": [
+
+      ],
+      "obligation": [
+
+      ]
+    },
+    "callbackAddresses": [
+
+    ]
+  }
+}
+
+script:post-response {
+  bru.setVar("negotiationId", res.getBody()["@id"]);
+}
+
+tests {
+  test("negotiation accepted (200)", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(bru.getVar("negotiationId")).to.be.a("string").and.not.empty;
+  });
+}
+
+docs {
+  The policy must echo the catalog offer exactly (constraints and operand forms as the catalog returns them; UsagePurpose comes back as the plain string). Run 01-Request Catalog first: "@id" is {{offerId}}.
+}

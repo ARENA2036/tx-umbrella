@@ -1,0 +1,112 @@
+# BE-293 Alpha: shared values of the two hand-deployed E2E test connectors in be293 (no provisioning controller).
+# Applied first, then the per-connector file: values-be293-edc-fv1.yaml (provider) or values-be293-edc-guc.yaml (consumer).
+#
+# Chart: official tractusx-connector 0.13.0 (eclipse-tractusx/tractusx-edc tag 0.13.0, EDC 0.17.0) plus ONE local patch,
+# patches/tractusx-connector-0.13.0-secret-refs.patch (the DEV SecretRef patch, already written for 0.13.0): the
+# management key, the data-plane proxy key, the DB password and the Vault token are read ONLY from secretKeyRefs
+# (*SecretRef below) and the literal env entries are gone; a missing ref fails rendering. See identity-charts.lock.yaml.
+#
+# DCP/STS wiring is the configuration proven end to end in Federity-X/public-tractus-x-umbrella PR #2
+# (charts/values-test-data-exchange-identity-hub.yaml) and on StackIT DEV (values-be293-onb0003-edc.yaml):
+#   - dcp.sts.div.url is EMPTY: the chart then omits TX_EDC_IAM_STS_DIV_URL and the connector uses the plain OAuth2 STS
+#     client (client_credentials, client_id = full DID) against IdentityHub's embedded STS /api/sts/token
+#   - the STS client secret is read from the connector's own Vault mount at alias edc-wallet-secret, a copy of
+#     IdentityHub's <pid>-sts-client-secret (tools/identity-vault-be293.sh --configure-edc, never printed)
+# EDC_IAM_DID_WEB_USE_HTTPS stays at its default (true): every DID here is did:web over HTTPS.
+#
+# In-cluster only: no Ingress, no public endpoint. The management API (8081) and the consumer proxy (8186) are reached
+# only through `kubectl port-forward`; NetworkPolicies are in networkpolicies-be293-edc.alpha.yaml.
+# NEVER run `helm test` on these releases: the upstream test hooks POST to the management API.
+install:
+  postgresql: false
+  vault: false
+
+dcp:
+  trustedIssuers:
+    - "did:web:issuer-be293.test.tractus-x.com:BPNL00000003CRHK"
+  sts:
+    div:
+      url: ""                     # empty on purpose: no DIV client (see header)
+    oauth:
+      token_url: "http://be293-identityhub.be293.svc.cluster.local:8087/api/sts/token"
+      client:
+        secret_alias: "edc-wallet-secret"
+
+controlplane:
+  # Test environment only: the Catena-X profile validator requires
+  # FrameworkAgreement and UsagePurpose, which our issuer does not provide.
+  policy:
+    validation:
+      enabled: false
+  image:
+    repository: "tractusx/edc-controlplane-postgresql-hashicorp-vault"
+    tag: "0.13.0@sha256:9de9ceeedf4d5cee918901fd1244b09675c387f638800ea69302cbb2bb2cc7b9"
+    pullPolicy: IfNotPresent
+  # The image ENTRYPOINT fixes edc.fs.config at /app/configuration.properties while the root filesystem is read-only:
+  # create that (empty) file in an emptyDir and mount it as a subPath (StackIT DEV fix, values-be293-k8s-dev-01-edc-
+  # filesystem-recovery.yaml), with the plane's own official image instead of DEV's personal one.
+  initContainers:
+    - name: initialize-runtime-configuration
+      image: "docker.io/tractusx/edc-controlplane-postgresql-hashicorp-vault:0.13.0@sha256:9de9ceeedf4d5cee918901fd1244b09675c387f638800ea69302cbb2bb2cc7b9"
+      imagePullPolicy: IfNotPresent
+      command: ["/bin/sh", "-ec", "umask 0077; : > /work/configuration.properties"]
+      securityContext: &initSecurity
+        allowPrivilegeEscalation: false
+        capabilities: {drop: [ALL]}
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+      volumeMounts: [{name: edc-runtime-configuration, mountPath: /work}]
+  volumeMounts: &runtimeConfigMount
+    - {name: edc-runtime-configuration, mountPath: /app/configuration.properties, subPath: configuration.properties}
+  volumes: &runtimeConfigVolume
+    - {name: edc-runtime-configuration, emptyDir: {sizeLimit: 1Mi}}
+  bdrs:
+    server:
+      url: "http://be293-bdrs.be293.svc.cluster.local:8082/api/directory"
+  # ingresses: chart defaults (all disabled) are kept; gate E1 fails on any rendered Ingress
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1.5"
+      memory: 1Gi
+
+dataplane:
+  image:
+    repository: "tractusx/edc-dataplane-hashicorp-vault"
+    tag: "0.13.0@sha256:de22ff97df715244de7c04784ee3fe6f08d369064186da675dcaffda63b5062c"
+    pullPolicy: IfNotPresent
+  initContainers:
+    - name: initialize-runtime-configuration
+      image: "docker.io/tractusx/edc-dataplane-hashicorp-vault:0.13.0@sha256:de22ff97df715244de7c04784ee3fe6f08d369064186da675dcaffda63b5062c"
+      imagePullPolicy: IfNotPresent
+      command: ["/bin/sh", "-ec", "umask 0077; : > /work/configuration.properties"]
+      securityContext: *initSecurity
+      volumeMounts: [{name: edc-runtime-configuration, mountPath: /work}]
+  volumeMounts: *runtimeConfigMount
+  volumes: *runtimeConfigVolume
+  token:
+    signer:
+      privatekey_alias: "tokenSignerPrivateKey"
+    verifier:
+      publickey_alias: "tokenSignerPublicKey"
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1.5"
+      memory: 1Gi
+
+vault:
+  hashicorp:
+    url: "http://be293-identity-vault.be293.svc.cluster.local:8200"
+    paths:
+      health: /v1/sys/health
+      folder: ""
+
+networkPolicy:
+  enabled: false                  # managed explicitly in networkpolicies-be293-edc.alpha.yaml

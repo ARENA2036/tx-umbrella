@@ -1,0 +1,33 @@
+meta {
+  name: 06-Get EDR Data Address
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{Consumer}}/v3/edrs/{{transferId}}/dataaddress
+  body: none
+  auth: apikey
+}
+
+auth:apikey {
+  key: X-Api-Key
+  value: {{Consumer_Api_Key}}
+  placement: header
+}
+
+script:post-response {
+  const b = res.getBody();
+  bru.setVar("edrEndpoint", b.endpoint ?? b["edc:endpoint"]);
+  bru.setVar("edrToken", b.authorization ?? b["edc:authorization"]);
+}
+
+tests {
+  test("EDR data address with endpoint and token", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(bru.getVar("edrToken")).to.be.a("string").and.not.empty;
+  });
+  test("the EDR endpoint is the PROVIDER's data plane (fetch through the fv1 data-plane port-forward)", function () {
+    expect(bru.getVar("edrEndpoint")).to.match(/be293-edc-fv1-dataplane/);
+  });
+}

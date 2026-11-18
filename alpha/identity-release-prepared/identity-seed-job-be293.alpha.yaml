@@ -1,0 +1,53 @@
+# One run of the identity seed (script and RBAC: identity-seed-be293.alpha.yaml). Created, never applied:
+#   kubectl --kubeconfig ~/.kube/alpha.yaml --context alpha -n be293 create -f identity-seed-job-be293.alpha.yaml
+# Idempotent: re-running leaves the same issuer setup, re-issues the two scoped Portal keys and rotates the super-user keys
+# again. Not a Helm hook, so a Helm upgrade never re-runs it.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: be293-identity-seed-
+  namespace: be293
+  labels: {app.kubernetes.io/name: be293-identity-seed}
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 900
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: be293-identity-seed}
+    spec:
+      serviceAccountName: be293-identity-seed
+      automountServiceAccountToken: true
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: seed
+          # Official alpine/k8s (curl, jq), digest from handoff inventory IMAGE-INVENTORY.yaml.
+          image: "docker.io/alpine/k8s:1.31.3@sha256:7f485a380b3b890b8f4d0de63e242b79db728ef1e0fc5ae30d30cbe5f9e2d242"
+          command: ["/bin/sh", "/seed/seed.sh"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {cpu: 250m, memory: 128Mi}
+          volumeMounts:
+            - {name: script, mountPath: /seed, readOnly: true}
+            - {name: work, mountPath: /work}
+            - {name: issuerservice-key, mountPath: /keys/issuerservice, readOnly: true}
+            - {name: identityhub-key, mountPath: /keys/identityhub, readOnly: true}
+      volumes:
+        - name: script
+          configMap: {name: be293-identity-seed, defaultMode: 0444}
+        - name: work
+          emptyDir: {medium: Memory, sizeLimit: 1Mi}
+        - name: issuerservice-key
+          secret: {secretName: be293-issuerservice-superuser, defaultMode: 0440, items: [{key: api-key, path: api-key}]}
+        - name: identityhub-key
+          secret: {secretName: be293-identityhub-superuser, defaultMode: 0440, items: [{key: api-key, path: api-key}]}

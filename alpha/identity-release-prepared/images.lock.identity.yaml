@@ -1,0 +1,10 @@
+# Official images of the own identity stack and the E2E test connectors, pinned by digest (tools/identity-pin-be293.sh --pin).
+# resolved: 2026-11-18T12:37:05Z
+images:
+  - {image: docker.io/tractusx/issuerservice, tag: "0.4.1", digest: "sha256:4fc515d6f7b31a04dabe31120cd0b7a8ae39f6b942eb17049dd5c99ca57f7d3e"}
+  - {image: docker.io/tractusx/identityhub, tag: "0.4.1", digest: "sha256:48b47c05c6292ab0d81d59203c408044edd0d1b9c383e96ab2b67ef6b85fc8a0"}
+  - {image: docker.io/hashicorp/vault, tag: "1.18.1", digest: "sha256:3580fa352195aa7e76449cb8fadeef6d2f90a454c38982d30cf094e9013be786"}
+  - {image: docker.io/tractusx/bdrs-server, tag: "0.6.0", digest: "sha256:e73c566f3b20f9e0f3db21d6e49911d01fe22fd4c01f463e2a52e26914cfd206"}
+  - {image: docker.io/tractusx/edc-controlplane-postgresql-hashicorp-vault, tag: "0.13.0", digest: "sha256:9de9ceeedf4d5cee918901fd1244b09675c387f638800ea69302cbb2bb2cc7b9"}
+  - {image: docker.io/tractusx/edc-dataplane-hashicorp-vault, tag: "0.13.0", digest: "sha256:de22ff97df715244de7c04784ee3fe6f08d369064186da675dcaffda63b5062c"}
+  - {image: docker.io/nginxinc/nginx-unprivileged, tag: "1.27-alpine", digest: "sha256:65e3e85dbaed8ba248841d9d58a899b6197106c23cb0ff1a132b7bfe0547e4c0"}

@@ -1,0 +1,54 @@
+# BE-293 Alpha: E2E test connector of the CONSUMER BPNL000000000GUC. Release be293-edc-guc, namespace be293.
+# Install with: -f values-be293-edc-common.yaml -f values-be293-edc-guc.yaml (see the deployment steps).
+#
+# Identity facts (confirmed live): IdentityHub participant context bpnl000000000guc, DID below, STS account client_id = DID,
+# secret alias bpnl000000000guc-sts-client-secret on the identityhub Vault mount; BpnCredential + MembershipCredential ISSUED.
+# Secrets (secrets-contract.identity.yaml, key names only): be293-edc-guc-auth, be293-edc-guc-vault-token, be293-edc-db-users.
+fullnameOverride: be293-edc-guc
+
+participant:
+  id: "did:web:identityhub-be293.test.tractus-x.com:BPNL000000000GUC"
+  bpnl: "BPNL000000000GUC"
+  contextId: "bpnl000000000guc"            # plain IdentityHub participantContextId (EDC 0.17.0: no base64 in URL paths)
+
+dcp:
+  sts:
+    oauth:
+      client:
+        id: "did:web:identityhub-be293.test.tractus-x.com:BPNL000000000GUC"   # STS client_id = the full DID
+
+controlplane:
+  endpoints:
+    management:
+      authKey: "from-secret-ref"            # not rendered (patch): authKeySecretRef is the only source
+      authKeySecretRef: {name: be293-edc-guc-auth, key: management-api-key}
+  url:
+    protocol: "http://be293-edc-guc-controlplane.be293.svc.cluster.local:8084"
+  env:
+    TX_EDC_IAM_DCP_CREDENTIALSERVICE_URL: "http://be293-identityhub.be293.svc.cluster.local:8083/api/credentials/v1/participants/bpnl000000000guc"
+    TX_IAM_IATP_CREDENTIALSERVICE_URL: "http://be293-identityhub.be293.svc.cluster.local:8083/api/credentials/v1/participants/bpnl000000000guc"
+
+dataplane:
+  endpoints:
+    proxy:
+      authKey: "from-secret-ref"
+      authKeySecretRef: {name: be293-edc-guc-auth, key: proxy-api-key}
+  url:
+    public: "http://be293-edc-guc-dataplane.be293.svc.cluster.local:8081/api/public"
+  env:
+    TX_EDC_IAM_DCP_CREDENTIALSERVICE_URL: "http://be293-identityhub.be293.svc.cluster.local:8083/api/credentials/v1/participants/bpnl000000000guc"
+    TX_IAM_IATP_CREDENTIALSERVICE_URL: "http://be293-identityhub.be293.svc.cluster.local:8083/api/credentials/v1/participants/bpnl000000000guc"
+
+postgresql:
+  jdbcUrl: "jdbc:postgresql://be293-edc-postgresql.be293.svc.cluster.local:5432/edc_guc"
+  auth:
+    username: "edc_guc"
+    password: "from-secret-ref"
+    passwordSecretRef: {name: be293-edc-db-users, key: EDC_GUC_DB_PASSWORD}
+
+vault:
+  hashicorp:
+    token: "from-secret-ref"
+    tokenSecretRef: {name: be293-edc-guc-vault-token, key: token}
+    paths:
+      secret: /v1/edc-guc                   # KV v2 mount owned by this connector only (policy be293-edc-guc)

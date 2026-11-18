@@ -1,0 +1,45 @@
+meta {
+  name: 04-Initiate Transfer
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{Consumer}}/v3/transferprocesses
+  body: json
+  auth: apikey
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:apikey {
+  key: X-Api-Key
+  value: {{Consumer_Api_Key}}
+  placement: header
+}
+
+body:json {
+  {
+    "@context": {
+      "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+    },
+    "@type": "TransferRequest",
+    "counterPartyAddress": "{{Provider_DSP}}",
+    "contractId": "{{agreementId}}",
+    "protocol": "dataspace-protocol-http:2025-1",
+    "transferType": "HttpData-PULL"
+  }
+}
+
+script:post-response {
+  bru.setVar("transferId", res.getBody()["@id"]);
+}
+
+tests {
+  test("transfer accepted (200)", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(bru.getVar("transferId")).to.be.a("string").and.not.empty;
+  });
+}

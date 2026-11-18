@@ -1,0 +1,83 @@
+{
+  "_comment": "BE-293 Alpha E2E: management API v3 bodies for the PROVIDER be293-edc-fv1 (POST {mgmt}/v3/assets, /v3/policydefinitions, /v3/contractdefinitions). Shape from the proven PR #2 hack/dcp-data-transfer-smoke.sh. ACTIVE: asset, accessPolicy (Membership AND the consumer BPN), contractPolicyV2 (Membership, FrameworkAgreement eq DataExchangeGovernance:1.0, UsagePurpose isAnyOf; tractusx-edc 0.13.0 UsagePolicyValidator requires the last two and PolicyValidationConstants forbids BusinessPartnerNumber in usage policies), contractDefinitionV2. ROLLBACK ONLY: contractPolicy/contractDefinition (v1, Membership-only usage policy, rejected live by the usage-policy validator). Gate E8 checks the active objects.",
+  "asset": {
+    "@context": {"@vocab": "https://w3id.org/edc/v0.0.1/ns/", "edc": "https://w3id.org/edc/v0.0.1/ns/"},
+    "@id": "be293-e2e-asset-1",
+    "properties": {"description": "BE-293 Alpha E2E test payload", "contenttype": "application/json"},
+    "dataAddress": {
+      "@type": "DataAddress",
+      "type": "HttpData",
+      "baseUrl": "http://be293-edc-datasource.be293.svc.cluster.local:8080/payload.json",
+      "proxyPath": "false",
+      "proxyQueryParams": "false",
+      "proxyMethod": "false",
+      "proxyBody": "false"
+    }
+  },
+  "accessPolicy": {
+    "@context": ["https://w3id.org/dspace/2025/1/odrl-profile.jsonld", "https://w3id.org/catenax/2025/9/policy/context.jsonld", {"@vocab": "https://w3id.org/edc/v0.0.1/ns/"}],
+    "@id": "be293-e2e-access-1",
+    "@type": "PolicyDefinition",
+    "policy": {
+      "@type": "Set",
+      "permission": [{"action": "access", "constraint": [{"and": [
+        {"leftOperand": "Membership", "operator": "eq", "rightOperand": "active"},
+        {"leftOperand": "BusinessPartnerNumber", "operator": "isAnyOf", "rightOperand": ["BPNL000000000GUC"]}
+      ]}]}],
+      "prohibition": [],
+      "obligation": []
+    }
+  },
+  "contractPolicy": {
+    "@context": ["https://w3id.org/dspace/2025/1/odrl-profile.jsonld", "https://w3id.org/catenax/2025/9/policy/context.jsonld", {"@vocab": "https://w3id.org/edc/v0.0.1/ns/"}],
+    "@id": "be293-e2e-contract-policy-1",
+    "@type": "PolicyDefinition",
+    "policy": {
+      "@type": "Set",
+      "permission": [{"action": "use", "constraint": {"and": [
+        {"leftOperand": "Membership", "operator": "eq", "rightOperand": "active"}
+      ]}}],
+      "prohibition": [],
+      "obligation": []
+    }
+  },
+  "contractDefinition": {
+    "@context": {"edc": "https://w3id.org/edc/v0.0.1/ns/"},
+    "@id": "be293-e2e-contract-1",
+    "@type": "ContractDefinition",
+    "accessPolicyId": "be293-e2e-access-1",
+    "contractPolicyId": "be293-e2e-contract-policy-1",
+    "assetsSelector": [{"@type": "CriterionDto", "operandLeft": "https://w3id.org/edc/v0.0.1/ns/id", "operator": "=", "operandRight": "be293-e2e-asset-1"}]
+  },
+  "contractPolicyV2": {
+    "@context": ["https://w3id.org/dspace/2025/1/odrl-profile.jsonld", "https://w3id.org/catenax/2025/9/policy/context.jsonld", {"@vocab": "https://w3id.org/edc/v0.0.1/ns/"}],
+    "@id": "be293-e2e-contract-policy-2",
+    "@type": "PolicyDefinition",
+    "policy": {
+      "@type": "Set",
+      "permission": [{"action": "use", "constraint": {"and": [
+        {"leftOperand": "Membership", "operator": "eq", "rightOperand": "active"},
+        {"leftOperand": "FrameworkAgreement", "operator": "eq", "rightOperand": "DataExchangeGovernance:1.0"},
+        {"leftOperand": "UsagePurpose", "operator": "isAnyOf", "rightOperand": ["cx.core.industrycore:1"]}
+      ]}}],
+      "prohibition": [],
+      "obligation": []
+    }
+  },
+  "contractDefinitionV2": {
+    "@context": {"edc": "https://w3id.org/edc/v0.0.1/ns/"},
+    "@id": "be293-e2e-contract-2",
+    "@type": "ContractDefinition",
+    "accessPolicyId": "be293-e2e-access-1",
+    "contractPolicyId": "be293-e2e-contract-policy-2",
+    "assetsSelector": [{"@type": "CriterionDto", "operandLeft": "https://w3id.org/edc/v0.0.1/ns/id", "operator": "=", "operandRight": "be293-e2e-asset-1"}]
+  },
+  "consumerCatalogRequest": {
+    "@context": [{"@vocab": "https://w3id.org/edc/v0.0.1/ns/"}],
+    "@type": "CatalogRequest",
+    "counterPartyAddress": "http://be293-edc-fv1-controlplane.be293.svc.cluster.local:8084/api/v1/dsp/2025-1",
+    "counterPartyId": "did:web:identityhub-be293.test.tractus-x.com:BPNL000000000FV1",
+    "protocol": "dataspace-protocol-http:2025-1",
+    "querySpec": {"filterExpression": [{"operandLeft": "https://w3id.org/edc/v0.0.1/ns/id", "operator": "=", "operandRight": "be293-e2e-asset-1"}]}
+  }
+}

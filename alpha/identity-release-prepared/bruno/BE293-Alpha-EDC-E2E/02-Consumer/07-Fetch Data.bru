@@ -1,0 +1,45 @@
+meta {
+  name: 07-Fetch Data
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{DataPlane}}/api/public
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: {{edrToken}}
+}
+
+script:post-response {
+  // Acceptance: hash the RAW bytes. res.getBody() may be a parsed JSON object, whose re-serialisation is not
+  // the transferred byte stream, so fetch the same URL once more as an ArrayBuffer and hash that.
+  const axios = require("axios");
+  const CryptoJS = require("crypto-js");
+  const raw = await axios.get(req.getUrl(), {
+    headers: { Authorization: bru.getVar("edrToken") },
+    responseType: "arraybuffer",
+    transformResponse: (d) => d
+  });
+  const bytes = new Uint8Array(raw.data);
+  bru.setVar("payloadLength", bytes.length);
+  bru.setVar("payloadSha256", CryptoJS.SHA256(CryptoJS.lib.WordArray.create(bytes)).toString(CryptoJS.enc.Hex));
+}
+
+tests {
+  test("fetch returned 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+  test("ACCEPTANCE: payload is exactly the provider's 140 bytes (SHA-256 match)", function () {
+    expect(bru.getVar("payloadLength")).to.equal(140);
+    // payload.json of edc-datasource-be293.alpha.yaml (recorded by gate E8 of tools/validate_edc.rb)
+    expect(bru.getVar("payloadSha256")).to.equal("c48268cc16f6e04c1e3500a2d4cd717d656cff95da8abd32dab4f7071f8695c2");
+  });
+}
+
+docs {
+  {{DataPlane}} is a port-forward to svc/be293-edc-fv1-dataplane (the PROVIDER data plane), not the consumer's. The EDR endpoint names the in-cluster host; only the token is reused here.
+}

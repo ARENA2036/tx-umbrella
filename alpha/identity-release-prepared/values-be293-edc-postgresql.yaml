@@ -1,0 +1,65 @@
+# BE-293 Alpha: one PostgreSQL for the two E2E test connectors, one database and one role per connector.
+# Chart: the same vendored bitnami postgresql 16.0.0 as be293-identity-postgresql (alpha/identity-charts/postgresql-16.0.0.tgz).
+# Release: be293-edc-postgresql, namespace be293. Separate from the identity database on purpose: test connectors can be
+# removed (uninstall + PVC delete, separately approved) without touching the identity stack.
+#
+# Credentials come only from existing Secrets (secrets-contract.identity.yaml, created by identity-secrets-be293.sh --edc):
+#   be293-edc-postgresql / postgres-password                 superuser, used by the chart only
+#   be293-edc-db-users   / EDC_FV1_DB_PASSWORD, EDC_GUC_DB_PASSWORD
+# The init SQL reads the role passwords with psql \getenv, so no password is in this file, the ConfigMap or the release.
+fullnameOverride: be293-edc-postgresql
+
+image:
+  registry: docker.io
+  repository: bitnamilegacy/postgresql
+  tag: "15-debian-11"
+  digest: "sha256:e5dd504985505a6e30b36a474a1764e9f93fd2367acf5d196dd14827cac7eac4"   # same pin as be293-identity-postgresql
+
+architecture: standalone
+
+auth:
+  enablePostgresUser: true
+  existingSecret: be293-edc-postgresql
+  secretKeys:
+    adminPasswordKey: postgres-password
+
+primary:
+  extraEnvVarsSecret: be293-edc-db-users
+  initdb:
+    scripts:
+      01-edc-databases.sql: |
+        -- Never write a failed statement (which would contain a password) to the server log.
+        SET log_min_error_statement = 'panic';
+        SET log_statement = 'none';
+        \getenv edc_fv1_pw EDC_FV1_DB_PASSWORD
+        \getenv edc_guc_pw EDC_GUC_DB_PASSWORD
+        CREATE ROLE edc_fv1 LOGIN PASSWORD :'edc_fv1_pw';
+        CREATE ROLE edc_guc LOGIN PASSWORD :'edc_guc_pw';
+        CREATE DATABASE edc_fv1 OWNER edc_fv1;
+        CREATE DATABASE edc_guc OWNER edc_guc;
+        REVOKE ALL ON DATABASE edc_fv1 FROM PUBLIC;
+        REVOKE ALL ON DATABASE edc_guc FROM PUBLIC;
+  persistence:
+    enabled: true
+    storageClass: premium-perf1-stackit
+    size: 4Gi
+    accessModes: [ReadWriteOnce]
+  persistentVolumeClaimRetentionPolicy:
+    enabled: true
+    whenDeleted: Retain
+    whenScaled: Retain
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  networkPolicy:
+    enabled: false          # managed explicitly in networkpolicies-be293-edc.alpha.yaml
+
+readReplicas:
+  replicaCount: 0
+
+networkPolicy:
+  enabled: false

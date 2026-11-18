@@ -1,0 +1,37 @@
+meta {
+  name: 05-Poll Transfer
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{Consumer}}/v3/transferprocesses/{{transferId}}
+  body: none
+  auth: apikey
+}
+
+auth:apikey {
+  key: X-Api-Key
+  value: {{Consumer_Api_Key}}
+  placement: header
+}
+
+script:post-response {
+  // transfer process is ASYNCHRONOUS: poll until a terminal state instead of trusting one call. A TERMINATED transfer process cannot
+  // be resumed; a re-run must start a new one from the POST before this request.
+  const axios = require("axios");
+  const url = req.getUrl();
+  const headers = { "X-Api-Key": bru.getEnvVar("Consumer_Api_Key") };
+  let body = res.getBody();
+  for (let i = 0; i < 40 && !["STARTED", "COMPLETED", "TERMINATED"].includes(body.state); i++) {
+    await bru.sleep(3000);
+    body = (await axios.get(url, { headers })).data;
+  }
+  bru.setVar("transferState", body.state);
+}
+
+tests {
+  test("transfer STARTED", function () {
+    expect(bru.getVar("transferState"), "TERMINATED cannot be resumed: start a new transfer (04) or negotiation (02)").to.equal("STARTED");
+  });
+}

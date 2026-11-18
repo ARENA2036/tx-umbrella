@@ -1,0 +1,146 @@
+# NetworkPolicies for the own identity stack in be293 (Vault, PostgreSQL, IssuerService, IdentityHub, BDRS, seed job).
+# Additive only: applied by a separately approved step BEFORE the first identity release. Nothing here changes another
+# namespace.
+#
+# Context (networkpolicies-be293-portal.alpha-release.yaml, already live): be293-portal-default-deny selects EVERY pod
+# in be293 (ingress and egress), and every pod may egress to DNS, to any be293 pod and to the shared ingress on 443.
+# So the identity pods need INGRESS rules only. The one exception is the seed job, which talks to the Kubernetes API
+# server (be293-identity-seed-apiserver-egress). NetworkPolicy ports are POD (container) ports.
+#
+# The Portal's Job/CronJob pods carry no labels (Portal chart), so the admin/management APIs admit be293 pods in general
+# (podSelector: {}); they are never reachable from outside the namespace or from the ingress controller.
+#
+# NOTE: be293-portal-release26-09-egress also selects every be293 pod, i.e. it would let these pods reach the shared
+# identity stack. None of them is configured to; the Portal switch deletes that policy (tools/switch-identity-be293.sh).
+---
+# Vault: only the three applications that hold a Vault token. The operator reaches it through `kubectl port-forward`.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: be293-identity-vault-ingress
+  namespace: be293
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: be293-identity-vault
+      app.kubernetes.io/name: vault
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {matchLabels: {app.kubernetes.io/instance: be293-issuerservice}}
+        - podSelector: {matchLabels: {app.kubernetes.io/instance: be293-identityhub}}
+        - podSelector: {matchLabels: {app.kubernetes.io/instance: be293-bdrs}}
+      ports:
+        - {protocol: TCP, port: 8200}
+---
+# PostgreSQL: only the three applications.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: be293-identity-postgresql-ingress
+  namespace: be293
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: be293-identity-postgresql
+      app.kubernetes.io/name: postgresql
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {matchLabels: {app.kubernetes.io/instance: be293-issuerservice}}
+        - podSelector: {matchLabels: {app.kubernetes.io/instance: be293-identityhub}}
+        - podSelector: {matchLabels: {app.kubernetes.io/instance: be293-bdrs}}
+      ports:
+        - {protocol: TCP, port: 5432}
+---
+# IssuerService: public endpoints only from the ingress controller; admin, identity and readiness (8081, default API
+# context /api/check/*) only from inside be293 (Portal worker/administration, seed job, which waits on readiness through
+# the Service). Kubelet probes bypass NetworkPolicy; pod-to-Service traffic does not. STS (8085) is not opened.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: be293-issuerservice-ingress
+  namespace: be293
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: be293-issuerservice
+      app.kubernetes.io/name: tractusx-issuerservice
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: ingress-nginx}}
+      ports:
+        - {protocol: TCP, port: 8082}   # issuance (DCP)
+        - {protocol: TCP, port: 8083}   # did
+        - {protocol: TCP, port: 8088}   # statuslist
+    - from:
+        - podSelector: {}
+      ports:
+        - {protocol: TCP, port: 8081}   # default API: readiness (seed job)
+        - {protocol: TCP, port: 8086}   # issueradmin
+        - {protocol: TCP, port: 8087}   # identity
+---
+# IdentityHub: public endpoints only from the ingress controller; identity API and readiness (8081) only from inside be293.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: be293-identityhub-ingress
+  namespace: be293
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: be293-identityhub
+      app.kubernetes.io/name: tractusx-identityhub
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: ingress-nginx}}
+      ports:
+        - {protocol: TCP, port: 8083}   # credentials (DCP credential service)
+        - {protocol: TCP, port: 8084}   # did
+    - from:
+        - podSelector: {}
+      ports:
+        - {protocol: TCP, port: 8081}   # default API: readiness (seed job)
+        - {protocol: TCP, port: 8082}   # identity
+---
+# BDRS: management API only from inside be293 (Portal worker TransmitDidAndBpn). No public endpoint.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: be293-bdrs-ingress
+  namespace: be293
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: be293-bdrs
+      app.kubernetes.io/name: bdrs-server
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {}
+      ports:
+        - {protocol: TCP, port: 8081}   # management
+        - {protocol: TCP, port: 8082}   # directory (in-cluster readers only)
+---
+# Seed job -> Kubernetes API server: its final step PATCHes three Secrets through https://kubernetes.default.svc.
+# NetworkPolicy matches the API server ENDPOINT (after Service DNAT), not the ClusterIP: 240.83.87.173:443 is the
+# `kubernetes` endpoint in the default namespace. If that endpoint changes, update this ipBlock. DNS is already allowed
+# for every be293 pod by be293-portal-dns-egress. Only the seed pod is selected; its RBAC limits it to patching three
+# named Secrets (identity-seed-be293.alpha.yaml).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: be293-identity-seed-apiserver-egress
+  namespace: be293
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: be293-identity-seed
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - ipBlock: {cidr: 240.83.87.173/32}
+      ports:
+        - {protocol: TCP, port: 443}

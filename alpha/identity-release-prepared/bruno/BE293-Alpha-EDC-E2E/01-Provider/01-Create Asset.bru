@@ -1,0 +1,56 @@
+meta {
+  name: 01-Create Asset
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{Provider}}/v3/assets
+  body: json
+  auth: apikey
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:apikey {
+  key: X-Api-Key
+  value: {{Provider_Api_Key}}
+  placement: header
+}
+
+body:json {
+  {
+    "@context": {
+      "@vocab": "https://w3id.org/edc/v0.0.1/ns/",
+      "edc": "https://w3id.org/edc/v0.0.1/ns/"
+    },
+    "@id": "be293-e2e-asset-1",
+    "properties": {
+      "description": "BE-293 Alpha E2E test payload",
+      "contenttype": "application/json"
+    },
+    "dataAddress": {
+      "@type": "DataAddress",
+      "type": "HttpData",
+      "baseUrl": "http://be293-edc-datasource.be293.svc.cluster.local:8080/payload.json",
+      "proxyPath": "false",
+      "proxyQueryParams": "false",
+      "proxyMethod": "false",
+      "proxyBody": "false"
+    }
+  }
+}
+
+tests {
+  // 200 + IdResponse on the first run; 409 when the object already exists (re-run): both mean "present".
+  test("created (200) or already present (409)", function () {
+    expect([200, 409]).to.include(res.getStatus());
+  });
+  test("IdResponse carries the expected @id", function () {
+    if (res.getStatus() === 200) {
+      expect(res.getBody()["@id"]).to.equal("be293-e2e-asset-1");
+    }
+  });
+}

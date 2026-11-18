@@ -1,0 +1,65 @@
+meta {
+  name: 01-Request Catalog
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{Consumer}}/v3/catalog/request
+  body: json
+  auth: apikey
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:apikey {
+  key: X-Api-Key
+  value: {{Consumer_Api_Key}}
+  placement: header
+}
+
+body:json {
+  {
+    "@context": [
+      {
+        "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+      }
+    ],
+    "@type": "CatalogRequest",
+    "counterPartyAddress": "http://be293-edc-fv1-controlplane.be293.svc.cluster.local:8084/api/v1/dsp/2025-1",
+    "counterPartyId": "did:web:identityhub-be293.test.tractus-x.com:BPNL000000000FV1",
+    "protocol": "dataspace-protocol-http:2025-1",
+    "querySpec": {
+      "filterExpression": [
+        {
+          "operandLeft": "https://w3id.org/edc/v0.0.1/ns/id",
+          "operator": "=",
+          "operandRight": "be293-e2e-asset-1"
+        }
+      ]
+    }
+  }
+}
+
+script:post-response {
+  // dataset / hasPolicy are JSON-LD: a single entry may come back as an object instead of an array, and with or
+  // without the dcat:/odrl: prefix. Normalise before indexing.
+  const arr = (x) => (x === undefined || x === null ? [] : Array.isArray(x) ? x : [x]);
+  const body = res.getBody();
+  const dataset = arr(body.dataset ?? body["dcat:dataset"])[0];
+  const offer = dataset ? arr(dataset.hasPolicy ?? dataset["odrl:hasPolicy"])[0] : undefined;
+  if (offer) {
+    bru.setVar("offerId", offer["@id"]);
+  }
+}
+
+tests {
+  test("catalog returned 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+  test("an offer for be293-e2e-asset-1 was captured as offerId", function () {
+    expect(bru.getVar("offerId"), "no dataset/offer in the catalog: check the access policy (Membership + BPN)").to.be.a("string").and.not.empty;
+  });
+}
