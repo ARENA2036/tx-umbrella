@@ -12,9 +12,9 @@
 #   S7 one replica, Recreate, mailbox database on the PVC
 #   S8 NetworkPolicy: smtp4dev pods, Ingress only, from be293 pods only, SMTP container port only
 #   S9 (--render) processes-worker Portal mail (MAILINGSERVICE__MAIL__*) goes to the sink Service; the shared-realm
-#      SMTP of processes-worker and administration keeps the approved live Alpha configuration (decision
-#      2026-11-08: smtp.office365.com:587, password only as a reference to the be293-portal-mailing Secret); the
-#      office365 host appears nowhere else
+#      SMTP of processes-worker and administration also goes to the sink (decision D5: sink Service on plaintext
+#      25, auth false, startTls false, password only as a reference to the be293-portal-mailing Secret); the
+#      office365 host appears nowhere
 #
 # Usage: ruby tools/validate_smtp4dev.rb --manifest smtp4dev-be293.alpha.yaml [--render RENDER.yaml]
 
@@ -30,11 +30,11 @@ module Smtp4devGates
   SMTP_PORT = 25
   DATA_DIR = '/smtp4dev'
   MAILING_SECRET = 'be293-portal-mailing'
-  # Approved live Alpha shared-realm SMTP (non-secret settings only; decision 2026-11-08).
-  SHARED_REALM = { 'PROVISIONING__SHAREDREALM__SMTPSERVER__HOST' => 'smtp.office365.com',
-                   'PROVISIONING__SHAREDREALM__SMTPSERVER__PORT' => '587',
-                   'PROVISIONING__SHAREDREALM__SMTPSERVER__AUTH' => 'true',
-                   'PROVISIONING__SHAREDREALM__SMTPSERVER__STARTTLS' => 'true' }.freeze
+  # D5 shared-realm SMTP: the smtp4dev sink, plaintext, no authentication (non-secret settings only).
+  SHARED_REALM = { 'PROVISIONING__SHAREDREALM__SMTPSERVER__HOST' => FQDN,
+                   'PROVISIONING__SHAREDREALM__SMTPSERVER__PORT' => SMTP_PORT.to_s,
+                   'PROVISIONING__SHAREDREALM__SMTPSERVER__AUTH' => 'false',
+                   'PROVISIONING__SHAREDREALM__SMTPSERVER__STARTTLS' => 'false' }.freeze
 
   class Validator
     attr_reader :failures
@@ -170,15 +170,15 @@ module Smtp4devGates
         e = env_of(d)
         n = d.dig('metadata', 'name')
         SHARED_REALM.each do |k, v|
-          fail('S9', "#{n} #{k} #{e[k].inspect} != approved live value #{v.inspect}") unless e[k] == v
+          fail('S9', "#{n} #{k} #{e[k].inspect} != D5 value #{v.inspect}") unless e[k] == v
         end
         ref = secret_ref(d, 'PROVISIONING__SHAREDREALM__SMTPSERVER__PASSWORD')
         fail('S9', "#{n} shared-realm SMTP password must reference Secret #{MAILING_SECRET}, got #{ref.inspect}") unless ref && ref['name'] == MAILING_SECRET
       end
       leaks = render.flat_map do |d|
-        env_of(d).select { |k, v| v.to_s.include?('office365') && k != 'PROVISIONING__SHAREDREALM__SMTPSERVER__HOST' }.keys.map { |k| "#{d['metadata']['name']}/#{k}" }
+        env_of(d).select { |_k, v| v.to_s.include?('office365') }.keys.map { |k| "#{d['metadata']['name']}/#{k}" }
       end
-      fail('S9', "real SMTP provider referenced outside the shared-realm setting: #{leaks.inspect}") unless leaks.empty?
+      fail('S9', "real SMTP provider referenced: #{leaks.inspect}") unless leaks.empty?
     end
   end
 

@@ -1,0 +1,454 @@
+###############################################################
+# Copyright (c) 2022 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License, Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0.
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+###############################################################
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "portal.fullname" . }}-{{ .Values.backend.appmarketplace.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "portal.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    {{- toYaml .Values.updateStrategy | nindent 4 }}
+  selector:
+    matchLabels:
+      app: {{ include "portal.fullname" . }}-{{ .Values.backend.appmarketplace.name }}
+      {{- include "portal.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "portal.fullname" . }}-{{ .Values.backend.appmarketplace.name }}
+        {{- include "portal.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.backend.appmarketplace.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: {{ include "portal.fullname" . }}-{{ .Values.backend.appmarketplace.name }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+        image: "{{ .Values.backend.appmarketplace.image.name }}:{{ .Values.backend.appmarketplace.image.appmarketplaceservicetag | default .Chart.AppVersion }}"
+        imagePullPolicy: "{{ .Values.backend.appmarketplace.image.pullPolicy }}"
+        env:
+        - name: DOTNET_ENVIRONMENT
+          value: "{{ .Values.backend.dotnetEnvironment }}"
+        - name: TMPDIR
+          value: "/mnt/tmp"
+        {{- if .Values.postgresql.enabled }}
+        - name: "PORTAL_PASSWORD"
+          valueFrom:
+            secretKeyRef:
+              name: "{{ .Values.postgresql.auth.existingSecret }}"
+              key: "portal-password"
+        - name: "PROVISIONING_PASSWORD"
+          valueFrom:
+            secretKeyRef:
+              name: "{{ .Values.postgresql.auth.existingSecret }}"
+              key: "provisioning-password"
+        - name: "CONNECTIONSTRINGS__PORTALDB"
+          value: "Server={{ template "portal.postgresql.primary.fullname" . }};Database={{ .Values.postgresql.auth.database }};Port={{ .Values.postgresql.auth.port }};User Id={{ .Values.postgresql.auth.portalUser }};Password=$(PORTAL_PASSWORD);Ssl Mode={{ .Values.backend.dbConnection.sslMode }};"
+        - name: "CONNECTIONSTRINGS__PROVISIONINGDB"
+          value: "Server={{ template "portal.postgresql.primary.fullname" . }};Database={{ .Values.postgresql.auth.database }};Port={{ .Values.postgresql.auth.port }};User Id={{ .Values.postgresql.auth.provisioningUser }};Password=$(PROVISIONING_PASSWORD);Ssl Mode={{ .Values.backend.dbConnection.sslMode }};"
+        {{- end }}
+        {{- if not .Values.postgresql.enabled }}
+        - name: "PORTAL_PASSWORD"
+          valueFrom:
+            secretKeyRef:
+              name: "{{ .Values.externalDatabase.secret }}"
+              key: "portal-password"
+        - name: "PROVISIONING_PASSWORD"
+          valueFrom:
+            secretKeyRef:
+              name: "{{ .Values.externalDatabase.secret }}"
+              key: "provisioning-password"
+        - name: "CONNECTIONSTRINGS__PORTALDB"
+          value: "Server={{ .Values.externalDatabase.host }};Database={{ .Values.externalDatabase.database }};Port={{ .Values.externalDatabase.port }};User Id={{ .Values.externalDatabase.portalUser }};Password=$(PORTAL_PASSWORD);Ssl Mode={{ .Values.backend.dbConnection.sslMode }};"
+        - name: "CONNECTIONSTRINGS__PROVISIONINGDB"
+          value: "Server={{ .Values.externalDatabase.host }};Database={{ .Values.externalDatabase.database }};Port={{ .Values.externalDatabase.port }};User Id={{ .Values.externalDatabase.provisioningUser }};Password=$(PROVISIONING_PASSWORD);Ssl Mode={{ .Values.backend.dbConnection.sslMode }};"
+          {{- end }}
+        - name: "APPMARKETPLACE__ACTIVEAPPCOMPANYADMINROLES__0__CLIENTID"
+          value: "{{ .Values.centralidp.clients.portal }}"
+        - name: "APPMARKETPLACE__ACTIVEAPPCOMPANYADMINROLES__0__USERROLENAMES__0"
+          value: "{{ .Values.backend.appmarketplace.activeAppCompanyAdminRoles.role0 }}"
+        - name: "APPMARKETPLACE__ACTIVEAPPCOMPANYADMINROLES__0__USERROLENAMES__1"
+          value: "{{ .Values.backend.appmarketplace.activeAppCompanyAdminRoles.role1 }}"
+        - name: "APPMARKETPLACE__ACTIVEAPPNOTIFICATIONTYPEIDS__0"
+          value: "{{ .Values.backend.appmarketplace.activeAppNotificationTypeIds.type0 }}"
+        - name: "APPMARKETPLACE__APPIMAGEDOCUMENTTYPEIDS__0"
+          value: "{{ .Values.backend.appmarketplace.appImageDocumentTypeIds.type0 }}"
+        - name: "APPMARKETPLACE__APPIMAGEDOCUMENTTYPEIDS__1"
+          value: "{{ .Values.backend.appmarketplace.appImageDocumentTypeIds.type1 }}"
+        - name: "APPMARKETPLACE__APPIMAGEDOCUMENTTYPEIDS__2"
+          value: "{{ .Values.backend.appmarketplace.appImageDocumentTypeIds.type2 }}"
+        - name: "APPMARKETPLACE__APPIMAGEDOCUMENTTYPEIDS__3"
+          value: "{{ .Values.backend.appmarketplace.appImageDocumentTypeIds.type3 }}"
+        - name: "APPMARKETPLACE__APPIMAGEDOCUMENTTYPEIDS__4"
+          value: "{{ .Values.backend.appmarketplace.appImageDocumentTypeIds.type4 }}"
+        - name: "APPMARKETPLACE__APPIMAGEDOCUMENTTYPEIDS__5"
+          value: "{{ .Values.backend.appmarketplace.appImageDocumentTypeIds.type5 }}"
+        - name: "APPMARKETPLACE__APPOVERVIEWADDRESS"
+          value: "{{ .Values.portalAddress }}{{ .Values.backend.appmarketplace.appOverviewPath }}"
+        - name: "APPMARKETPLACE__APPROVEAPPNOTIFICATIONTYPEIDS__0"
+          value: "{{ .Values.backend.appmarketplace.approveAppNotificationTypeIds.type0 }}"
+        - name: "APPMARKETPLACE__APPROVEAPPUSERROLES__0__CLIENTID"
+          value: "{{ .Values.centralidp.clients.portal }}"
+        - name: "APPMARKETPLACE__APPROVEAPPUSERROLES__0__USERROLENAMES__0"
+          value: "{{ .Values.backend.appmarketplace.approveAppUserRoles.role0 }}"
+        - name: "APPMARKETPLACE__APPROVEAPPUSERROLES__0__USERROLENAMES__1"
+          value: "{{ .Values.backend.appmarketplace.approveAppUserRoles.role1 }}"
+        - name: "APPMARKETPLACE__BASEPORTALADDRESS"
+          value: "{{ .Values.portalAddress }}{{ .Values.backend.appmarketplace.subscriptionPath }}"
+        - name: "APPMARKETPLACE__OFFERSUBSCRIPTIONADDRESS"
+          value: "{{ .Values.portalAddress }}{{ .Values.backend.appmarketplace.subscriptionPath }}"
+        - name: "APPMARKETPLACE__OFFERDETAILADDRESS"
+          value: "{{ .Values.portalAddress }}{{ .Values.backend.appmarketplace.detailPath }}"
+        - name: "APPMARKETPLACE__USERMANAGEMENTADDRESS"
+          value: "{{ .Values.portalAddress }}{{ .Values.backend.userManagementPath }}"
+        - name: "APPMARKETPLACE__CATENAADMINROLES__0__CLIENTID"
+          value: "{{ .Values.centralidp.clients.portal }}"
+        - name: "APPMARKETPLACE__CATENAADMINROLES__0__USERROLENAMES__0"
+          value: "{{ .Values.backend.appmarketplace.catenaAdminRoles.role0 }}"
+        - name: "APPMARKETPLACE__UPLOADAPPDOCUMENTTYPEIDS__0__DOCUMENTTYPEID"
+          value: "{{ .Values.backend.appmarketplace.uploadAppDocumentTypeIds.documentTypeId0 }}"
+        - name: "APPMARKETPLACE__UPLOADAPPDOCUMENTTYPEIDS__0__MEDIATYPES__0"
+          value: "{{ .Values.backend.appmarketplace.uploadAppDocumentTypeIds.mediaTypeIds0.mediaTypeId0 }}"
+        - name: "APPMARKETPLACE__UPLOADAPPDOCUMENTTYPEIDS__1__DOCUMENTTYPEID"
+          value: "{{ .Values.backend.appmarketplace.uploadAppDocumentTypeIds.documentTypeId1 }}"
+        - name: "APPMARKETPLACE__UPLOADAPPDOCUMENTTYPEIDS__1__MEDIATYPES__0"
+          value: "{{ .Values.backend.appmarketplace.uploadAppDocumentTypeIds.mediaTypeIds1.mediaTypeId0 }}"
+        - name: "APPMARKETPLACE__UPLOADAPPDOCUMENTTYPEIDS__1__MEDIATYPES__1"
+          value: "{{ .Values.backend.appmarketplace.uploadAppDocumentTypeIds.mediaTypeIds1.mediaTypeId1 }}"
+        - name: "APPMARKETPLACE__UPLOADAPPDOCUMENTTYPEIDS__1__MEDIATYPES__2"
+          value: "{{ .Values.backend.appmarketplace.uploadAppDocumentTypeIds.mediaTypeIds1.mediaTypeId2 }}"
+        - name: "APPMARKETPLACE__UPLOADAPPDOCUMENTTYPEIDS__2__DOCUMENTTYPEID"
+          value: "{{ .Values.backend.appmarketplace.uploadAppDocumentTypeIds.documentTypeId2 }}"
+        - name: "APPMARKETPLACE__UPLOADAPPDOCUMENTTYPEIDS__2__MEDIATYPES__0"
+          value: "{{ .Values.backend.appmarketplace.uploadAppDocumentTypeIds.mediaTypeIds2.mediaTypeId0 }}"
+        - name: "APPMARKETPLACE__UPLOADAPPDOCUMENTTYPEIDS__2__MEDIATYPES__1"
+          value: "{{ .Values.backend.appmarketplace.uploadAppDocumentTypeIds.mediaTypeIds2.mediaTypeId1 }}"
+        - name: "APPMARKETPLACE__UPLOADAPPDOCUMENTTYPEIDS__2__MEDIATYPES__2"
+          value: "{{ .Values.backend.appmarketplace.uploadAppDocumentTypeIds.mediaTypeIds2.mediaTypeId2 }}"
+        - name: "APPMARKETPLACE__UPLOADAPPDOCUMENTTYPEIDS__3__DOCUMENTTYPEID"
+          value: "{{ .Values.backend.appmarketplace.uploadAppDocumentTypeIds.documentTypeId3 }}"
+        - name: "APPMARKETPLACE__UPLOADAPPDOCUMENTTYPEIDS__3__MEDIATYPES__0"
+          value: "{{ .Values.backend.appmarketplace.uploadAppDocumentTypeIds.mediaTypeIds3.mediaTypeId0 }}"
+        - name: "APPMARKETPLACE__UPLOADAPPDOCUMENTTYPEIDS__4__DOCUMENTTYPEID"
+          value: "{{ .Values.backend.appmarketplace.uploadAppDocumentTypeIds.documentTypeId4 }}"
+        - name: "APPMARKETPLACE__UPLOADAPPDOCUMENTTYPEIDS__4__MEDIATYPES__0"
+          value: "{{ .Values.backend.appmarketplace.uploadAppDocumentTypeIds.mediaTypeIds4.mediaTypeId0 }}"
+        - name: "APPMARKETPLACE__UPLOADAPPDOCUMENTTYPEIDS__5__DOCUMENTTYPEID"
+          value: "{{ .Values.backend.appmarketplace.uploadAppDocumentTypeIds.documentTypeId5 }}"
+        - name: "APPMARKETPLACE__UPLOADAPPDOCUMENTTYPEIDS__5__MEDIATYPES__0"
+          value: "{{ .Values.backend.appmarketplace.uploadAppDocumentTypeIds.mediaTypeIds5.mediaTypeId0 }}"
+        - name: "APPMARKETPLACE__DELETEDOCUMENTTYPEIDS__0"
+          value: "{{ .Values.backend.appmarketplace.deleteDocumentTypeIds.type0 }}"
+        - name: "APPMARKETPLACE__DELETEDOCUMENTTYPEIDS__1"
+          value: "{{ .Values.backend.appmarketplace.deleteDocumentTypeIds.type1 }}"
+        - name: "APPMARKETPLACE__DELETEDOCUMENTTYPEIDS__2"
+          value: "{{ .Values.backend.appmarketplace.deleteDocumentTypeIds.type2 }}"
+        - name: "APPMARKETPLACE__DELETEDOCUMENTTYPEIDS__3"
+          value: "{{ .Values.backend.appmarketplace.deleteDocumentTypeIds.type3 }}"
+        - name: "APPMARKETPLACE__DELETEDOCUMENTTYPEIDS__4"
+          value: "{{ .Values.backend.appmarketplace.deleteDocumentTypeIds.type4 }}"
+        - name: "APPMARKETPLACE__DELETEDOCUMENTTYPEIDS__5"
+          value: "{{ .Values.backend.appmarketplace.deleteDocumentTypeIds.type5 }}"
+        - name: "APPMARKETPLACE__SUBMITAPPDOCUMENTTYPEIDS__0"
+          value: "{{ .Values.backend.appmarketplace.submitAppDocumentTypeIds.type0 }}"
+        - name: "APPMARKETPLACE__SUBMITAPPDOCUMENTTYPEIDS__1"
+          value: "{{ .Values.backend.appmarketplace.submitAppDocumentTypeIds.type1 }}"
+        - name: "APPMARKETPLACE__SUBMITAPPDOCUMENTTYPEIDS__2"
+          value: "{{ .Values.backend.appmarketplace.submitAppDocumentTypeIds.type2 }}"
+        - name: "APPMARKETPLACE__ACTIVEAPPDOCUMENTTYPEIDS__0"
+          value: "{{ .Values.backend.appmarketplace.activeAppDocumentTypeIds.type0 }}"
+        - name: "APPMARKETPLACE__ACTIVEAPPDOCUMENTTYPEIDS__1"
+          value: "{{ .Values.backend.appmarketplace.activeAppDocumentTypeIds.type1 }}"
+        - name: "APPMARKETPLACE__ACTIVEAPPDOCUMENTTYPEIDS__2"
+          value: "{{ .Values.backend.appmarketplace.activeAppDocumentTypeIds.type2 }}"
+        - name: "APPMARKETPLACE__ACTIVEAPPDOCUMENTTYPEIDS__3"
+          value: "{{ .Values.backend.appmarketplace.activeAppDocumentTypeIds.type3 }}"
+        - name: "APPMARKETPLACE__DELETEACTIVEAPPDOCUMENTTYPEIDS__0"
+          value: "{{ .Values.backend.appmarketplace.deleteActiveAppDocumentTypeIds.type0 }}"
+        - name: "APPMARKETPLACE__DELETEACTIVEAPPDOCUMENTTYPEIDS__1"
+          value: "{{ .Values.backend.appmarketplace.deleteActiveAppDocumentTypeIds.type1 }}"
+        - name: "APPMARKETPLACE__DELETEACTIVEAPPDOCUMENTTYPEIDS__2"
+          value: "{{ .Values.backend.appmarketplace.deleteActiveAppDocumentTypeIds.type2 }}"
+        - name: "APPMARKETPLACE__DELETEACTIVEAPPDOCUMENTTYPEIDS__3"
+          value: "{{ .Values.backend.appmarketplace.deleteActiveAppDocumentTypeIds.type3 }}"
+        - name: "APPMARKETPLACE__UPLOADACTIVEAPPDOCUMENTTYPEIDS__0__DOCUMENTTYPEID"
+          value: "{{ .Values.backend.appmarketplace.uploadActiveAppDocumentTypeIds.documentTypeId0 }}"
+        - name: "APPMARKETPLACE__UPLOADACTIVEAPPDOCUMENTTYPEIDS__0__MEDIATYPES__0"
+          value: "{{ .Values.backend.appmarketplace.uploadActiveAppDocumentTypeIds.mediaTypeIds0.mediaTypeId0 }}"
+        - name: "APPMARKETPLACE__UPLOADACTIVEAPPDOCUMENTTYPEIDS__0__MEDIATYPES__1"
+          value: "{{ .Values.backend.appmarketplace.uploadActiveAppDocumentTypeIds.mediaTypeIds0.mediaTypeId1 }}"
+        - name: "APPMARKETPLACE__UPLOADACTIVEAPPDOCUMENTTYPEIDS__1__DOCUMENTTYPEID"
+          value: "{{ .Values.backend.appmarketplace.uploadActiveAppDocumentTypeIds.documentTypeId1 }}"
+        - name: "APPMARKETPLACE__UPLOADACTIVEAPPDOCUMENTTYPEIDS__1__MEDIATYPES__0"
+          value: "{{ .Values.backend.appmarketplace.uploadActiveAppDocumentTypeIds.mediaTypeIds1.mediaTypeId0 }}"
+        - name: "APPMARKETPLACE__UPLOADACTIVEAPPDOCUMENTTYPEIDS__2__DOCUMENTTYPEID"
+          value: "{{ .Values.backend.appmarketplace.uploadActiveAppDocumentTypeIds.documentTypeId2 }}"
+        - name: "APPMARKETPLACE__UPLOADACTIVEAPPDOCUMENTTYPEIDS__2__MEDIATYPES__0"
+          value: "{{ .Values.backend.appmarketplace.uploadActiveAppDocumentTypeIds.mediaTypeIds2.mediaTypeId0 }}"
+        - name: "APPMARKETPLACE__UPLOADACTIVEAPPDOCUMENTTYPEIDS__3__DOCUMENTTYPEID"
+          value: "{{ .Values.backend.appmarketplace.uploadActiveAppDocumentTypeIds.documentTypeId3 }}"
+        - name: "APPMARKETPLACE__UPLOADACTIVEAPPDOCUMENTTYPEIDS__3__MEDIATYPES__0"
+          value: "{{ .Values.backend.appmarketplace.uploadActiveAppDocumentTypeIds.mediaTypeIds3.mediaTypeId0 }}"
+        - name: "APPMARKETPLACE__ITADMINROLES__0__CLIENTID"
+          value: "{{ .Values.centralidp.clients.portal }}"
+        - name: "APPMARKETPLACE__ITADMINROLES__0__USERROLENAMES__0"
+          value: "{{ .Values.backend.appmarketplace.ITAdminRoles.role0 }}"
+        - name: "APPMARKETPLACE__ACTIVATIONUSERROLES__0__CLIENTID"
+          value: "{{ .Values.centralidp.clients.portal }}"
+        - name: "APPMARKETPLACE__ACTIVATIONUSERROLES__0__USERROLENAMES__0"
+          value: "{{ .Values.backend.appmarketplace.activationUserRoles.role0 }}"
+        - name: "APPMARKETPLACE__ACTIVATIONUSERROLES__0__USERROLENAMES__1"
+          value: "{{ .Values.backend.appmarketplace.activationUserRoles.role1 }}"
+        - name: "APPMARKETPLACE__NOTIFICATIONTYPEIDS__0"
+          value: "{{ .Values.backend.appmarketplace.notificationTypeIds.type0 }}"
+        - name: "APPMARKETPLACE__OFFERSTATUSIDS__0"
+          value: "{{ .Values.backend.appmarketplace.offerStatusIds.status0 }}"
+        - name: "APPMARKETPLACE__OFFERSTATUSIDS__1"
+          value: "{{ .Values.backend.appmarketplace.offerStatusIds.status1 }}"
+        - name: "APPMARKETPLACE__SALESMANAGERROLES__0__CLIENTID"
+          value: "{{ .Values.centralidp.clients.portal }}"
+        - name: "APPMARKETPLACE__SALESMANAGERROLES__0__USERROLENAMES__0"
+          value: "{{ .Values.backend.appmarketplace.salesManagerRoles.role0 }}"
+        - name: "APPMARKETPLACE__SERVICEACCOUNTROLES__0__CLIENTID"
+          value: "{{ .Values.centralidp.clients.technicalRolesManagement }}"
+        - name: "APPMARKETPLACE__SERVICEACCOUNTROLES__0__USERROLENAMES__0"
+          value: "{{ .Values.backend.appmarketplace.serviceAccountRoles.role0 }}"
+        - name: "APPMARKETPLACE__SERVICEMANAGERROLES__0__CLIENTID"
+          value: "{{ .Values.centralidp.clients.portal }}"
+        - name: "APPMARKETPLACE__SERVICEMANAGERROLES__0__USERROLENAMES__0"
+          value: "{{ .Values.backend.appmarketplace.serviceManagerRoles.role0 }}"
+        - name: "APPMARKETPLACE__SUBSCRIPTIONMANAGERROLES__0__CLIENTID"
+          value: "{{ .Values.centralidp.clients.portal }}"
+        - name: "APPMARKETPLACE__SUBSCRIPTIONMANAGERROLES__0__USERROLENAMES__0"
+          value: "{{ .Values.backend.appmarketplace.subscriptionManagerRoles.role0 }}"
+        - name: "APPMARKETPLACE__SUBSCRIPTIONMANAGERROLES__0__USERROLENAMES__1"
+          value: "{{ .Values.backend.appmarketplace.subscriptionManagerRoles.role1 }}"
+        - name: "APPMARKETPLACE__SUBMITAPPNOTIFICATIONTYPEIDS__0"
+          value: "{{ .Values.backend.appmarketplace.submitAppNotificationTypeIds.type0 }}"
+        - name: "APPMARKETPLACE__TECHNICALUSERPROFILECLIENT"
+          value: "{{ .Values.backend.appmarketplace.technicalUserProfileClient }}"
+        - name: "APPMARKETPLACE__COMPANYADMINROLES__0__CLIENTID"
+          value: "{{ .Values.centralidp.clients.portal }}"
+        - name: "APPMARKETPLACE__COMPANYADMINROLES__0__USERROLENAMES__0"
+          value: "{{ .Values.backend.appmarketplace.companyAdminRoles.role0 }}"
+        - name: "APPMARKETPLACE__DECENTRALIDENTITYMANAGEMENTAUTHURL"
+          value: "{{ .Values.decentralIdentityManagementAuthAddress }}"
+        - name: "APPMARKETPLACE__ISSUERDID"
+          value: "{{ .Values.backend.administration.issuerdid }}"
+        - name: "APPMARKETPLACE__DIMUSERROLES__0__CLIENTID"
+          value: "{{ .Values.centralidp.clients.technicalRolesManagement }}"
+        - name: "APPMARKETPLACE__DIMUSERROLES__0__USERROLENAMES__0"
+          value: "{{ .Values.backend.administration.serviceAccount.dimCreationRoles.role0 }}"
+        - name: "APPMARKETPLACE__USERROLESACCESSIBLEBYPROVIDERONLY__0__CLIENTID"
+          value: "{{ .Values.centralidp.clients.technicalRolesManagement }}"
+        - name: "APPMARKETPLACE__USERROLESACCESSIBLEBYPROVIDERONLY__0__USERROLENAMES__0"
+          value: "{{ .Values.backend.administration.serviceAccount.userRolesAccessibleByProviderOnly.role0 }}"
+        - name: "APPMARKETPLACE__USERROLESACCESSIBLEBYPROVIDERONLY__0__USERROLENAMES__1"
+          value: "{{ .Values.backend.administration.serviceAccount.userRolesAccessibleByProviderOnly.role1 }}"
+        - name: "APPMARKETPLACE__USERROLESACCESSIBLEBYPROVIDERONLY__0__USERROLENAMES__2"
+          value: "{{ .Values.backend.administration.serviceAccount.userRolesAccessibleByProviderOnly.role2 }}"
+        - name: "APPMARKETPLACE__BPNDIDRESOLVERURL"
+          value: "{{ .Values.bpnDidResolver.directoryApiAddress }}"
+        - name: "HEALTHCHECKS__0__PATH"
+          value: "{{ .Values.backend.healthChecks.startup.path}}"
+        {{- if .Values.backend.appmarketplace.healthChecks.startup.tags }}
+        {{- toYaml .Values.backend.appmarketplace.healthChecks.startup.tags | nindent 8 }}
+        {{- end }}
+        - name: "HEALTHCHECKS__1__PATH"
+          value: "{{ .Values.backend.healthChecks.readyness.path}}"
+        - name: "HEALTHCHECKS__2__PATH"
+          value: "{{ .Values.backend.healthChecks.liveness.path}}"
+        - name: "JWTBEAREROPTIONS__METADATAADDRESS"
+          value: "{{ .Values.centralidp.address }}{{ .Values.backend.keycloak.central.jwtBearerOptions.metadataPath }}"
+        - name: "JWTBEAREROPTIONS__REQUIREHTTPSMETADATA"
+          value: "{{ .Values.backend.keycloak.central.jwtBearerOptions.requireHttpsMetadata }}"
+        - name: "JWTBEAREROPTIONS__TOKENVALIDATIONPARAMETERS__VALIDAUDIENCE"
+          value: "{{ .Values.backend.keycloak.central.jwtBearerOptions.tokenValidationParameters.validAudiencePortal }}"
+        - name: "JWTBEAREROPTIONS__TOKENVALIDATIONPARAMETERS__VALIDISSUER"
+          value: "{{ .Values.centralidp.address }}{{ .Values.backend.keycloak.central.jwtBearerOptions.tokenValidationParameters.validIssuerPath }}"
+        - name: "JWTBEAREROPTIONS__TOKENVALIDATIONPARAMETERS__CLOCKSKEW"
+          value: "{{ .Values.backend.keycloak.central.jwtBearerOptions.tokenValidationParameters.clockSkew }}"
+        - name: "JWTBEAREROPTIONS__REFRESHINTERVAL"
+          value: "{{ .Values.backend.keycloak.central.jwtBearerOptions.refreshInterval }}"
+        - name: "KEYCLOAK__CENTRAL__AUTHREALM"
+          value: "{{ .Values.centralidp.realm }}"
+        - name: "KEYCLOAK__CENTRAL__CLIENTID"
+          value: "{{ .Values.backend.keycloak.central.clientId }}"
+        - name: "KEYCLOAK__CENTRAL__CLIENTSECRET"
+          valueFrom:
+            secretKeyRef:
+              name: "{{ .Values.backend.keycloak.secret }}"
+              key: "central-client-secret"
+        - name: "KEYCLOAK__CENTRAL__CONNECTIONSTRING"
+          value: "{{ .Values.centralidp.address }}"
+        - name: "KEYCLOAK__CENTRAL__USEAUTHTRAIL"
+          value: "{{ .Values.backend.keycloak.central.useAuthTrail }}"
+        - name: "KEYCLOAK__SHARED__AUTHREALM"
+          value: "{{ .Values.backend.keycloak.shared.authRealm }}"
+        - name: "KEYCLOAK__SHARED__CLIENTID"
+          value: "{{ .Values.backend.keycloak.shared.clientId }}"
+        - name: "KEYCLOAK__SHARED__CLIENTSECRET"
+          valueFrom:
+            secretKeyRef:
+              name: "{{ .Values.backend.keycloak.secret }}"
+              key: "shared-client-secret"
+        - name: "KEYCLOAK__SHARED__CONNECTIONSTRING"
+          value: "{{ .Values.sharedidpAddress }}"
+        - name: "KEYCLOAK__SHARED__USEAUTHTRAIL"
+          value: "{{ .Values.backend.keycloak.shared.useAuthTrail }}"
+        - name: "MVC_ROUTING_BASEPATH"
+          value: "{{ .Values.backend.appmarketplace.basePath }}"
+        - name: "SERILOG__MINIMUMLEVEL__Default"
+          value: "{{ .Values.backend.appmarketplace.logging.default }}"
+        - name: "SERILOG__MINIMUMLEVEL__OVERRIDE__Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Service"
+          value: "{{ .Values.backend.appmarketplace.logging.offersLibrary }}"
+        - name: "PROVISIONING__CENTRALREALM"
+          value: "{{ .Values.centralidp.realm }}"
+        - name: "PROVISIONING__CENTRALREALMID"
+          value: "{{ .Values.backend.provisioning.centralRealmId }}"
+        - name: "PROVISIONING__DIMUSERROLES__0__CLIENTID"
+          value: "{{ .Values.centralidp.clients.technicalRolesManagement }}"
+        - name: "PROVISIONING__DIMUSERROLES__0__USERROLENAMES__0"
+          value: "{{ .Values.backend.administration.serviceAccount.dimCreationRoles.role0 }}"
+        - name: "PROVISIONING__USERROLESACCESSIBLEBYPROVIDERONLY__0__CLIENTID"
+          value: "{{ .Values.centralidp.clients.technicalRolesManagement }}"
+        - name: "PROVISIONING__USERROLESACCESSIBLEBYPROVIDERONLY__0__USERROLENAMES__0"
+          value: "{{ .Values.backend.administration.serviceAccount.userRolesAccessibleByProviderOnly.role0 }}"
+        - name: "PROVISIONING__USERROLESACCESSIBLEBYPROVIDERONLY__0__USERROLENAMES__1"
+          value: "{{ .Values.backend.administration.serviceAccount.userRolesAccessibleByProviderOnly.role1 }}"
+        - name: "PROVISIONING__USERROLESACCESSIBLEBYPROVIDERONLY__0__USERROLENAMES__2"
+          value: "{{ .Values.backend.administration.serviceAccount.userRolesAccessibleByProviderOnly.role2 }}"
+        - name: "MAILINGPROCESSCREATION__ENCRYPTIONCONFIGINDEX"
+          value: "{{ .Values.backend.processesworker.mailing.encryptionConfigIndex }}"
+        - name: "MAILINGPROCESSCREATION__ENCRYPTIONCONFIGS__0__INDEX"
+          value: "{{ .Values.backend.processesworker.mailing.encryptionConfigs.index0.index }}"
+        - name: "MAILINGPROCESSCREATION__ENCRYPTIONCONFIGS__0__ENCRYPTIONKEY"
+          valueFrom:
+            secretKeyRef:
+              name: "{{ .Values.backend.interfaces.secret }}"
+              key: "mailing-encryption-key0"
+        - name: "MAILINGPROCESSCREATION__ENCRYPTIONCONFIGS__0__CIPHERMODE"
+          value: "{{ .Values.backend.processesworker.mailing.encryptionConfigs.index0.cipherMode }}"
+        - name: "MAILINGPROCESSCREATION__ENCRYPTIONCONFIGS__0__PADDINGMODE"
+          value: "{{ .Values.backend.processesworker.mailing.encryptionConfigs.index0.paddingMode }}"
+        - name: "SWAGGERENABLED"
+          value: "{{ .Values.backend.appmarketplace.swaggerEnabled }}"
+        - name: "DIM__USERNAME"
+          value: "{{ .Values.backend.placeholder }}"
+        - name: "DIM__PASSWORD"
+          value: "{{ .Values.backend.placeholder }}"
+        - name: "DIM__CLIENTID"
+          value: "{{ .Values.backend.processesworker.dim.clientId }}"
+        - name: "DIM__GRANTTYPE"
+          value: "{{ .Values.backend.processesworker.dim.grantType }}"
+        - name: "DIM__CLIENTSECRET"
+          valueFrom:
+            secretKeyRef:
+              name: "{{ .Values.backend.interfaces.secret }}"
+              key: "dim-client-secret"
+        - name: "DIM__SCOPE"
+          value: "{{ .Values.backend.processesworker.dim.scope }}"
+        - name: "DIM__TOKENADDRESS"
+          value: "{{ .Values.centralidp.address }}{{ .Values.backend.keycloak.central.tokenPath }}"
+        - name: "DIM__BASEADDRESS"
+          value: "{{ .Values.dimWrapper.baseAddress }}{{ .Values.dimWrapper.apiPath }}"
+        - name: "DIM__UNIVERSALRESOLVERADDRESS"
+          value: "{{ .Values.backend.processesworker.dim.universalResolverAddress }}"
+        - name: "DIM__DIDDOCUMENTBASELOCATION"
+          value: "{{ .Values.portalBackendAddress }}{{ .Values.backend.processesworker.dim.didDocumentPath }}"
+        - name: "DIM__MAXVALIDATIONTIMEINDAYS"
+          value: "{{ .Values.backend.processesworker.dim.maxValidationTimeInDays }}"
+        - name: "DIM__ENCRYPTIONCONFIGINDEX"
+          value: "{{ .Values.backend.processesworker.dim.encryptionConfigIndex }}"
+        - name: "DIM__ENCRYPTIONCONFIGS__0__INDEX"
+          value: "{{ .Values.backend.processesworker.dim.encryptionConfigs.index0.index }}"
+        - name: "DIM__ENCRYPTIONCONFIGS__0__ENCRYPTIONKEY"
+          valueFrom:
+            secretKeyRef:
+              name: "{{ .Values.backend.interfaces.secret }}"
+              key: "dim-encryption-key0"
+        - name: "DIM__ENCRYPTIONCONFIGS__0__CIPHERMODE"
+          value: "{{ .Values.backend.processesworker.dim.encryptionConfigs.index0.cipherMode }}"
+        - name: "DIM__ENCRYPTIONCONFIGS__0__PADDINGMODE"
+          value: "{{ .Values.backend.processesworker.dim.encryptionConfigs.index0.paddingMode }}"
+        ports:
+        - name: http
+          containerPort: {{ .Values.portContainer }}
+          protocol: TCP
+        startupProbe:
+          httpGet:
+            path: {{ .Values.backend.healthChecks.startup.path }}
+            port: {{ .Values.portContainer }}
+            scheme: HTTP
+          initialDelaySeconds: {{ .Values.startupProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.startupProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.startupProbe.timeoutSeconds }}
+          successThreshold: {{ .Values.startupProbe.successThreshold }}
+          failureThreshold: {{ .Values.startupProbe.failureThreshold }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.backend.healthChecks.liveness.path }}
+            port: {{ .Values.portContainer }}
+            scheme: HTTP
+          initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+          successThreshold: {{ .Values.livenessProbe.successThreshold }}
+          failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.backend.healthChecks.readyness.path }}
+            port: {{ .Values.portContainer }}
+            scheme: HTTP
+          initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+          successThreshold: {{ .Values.readinessProbe.successThreshold }}
+          failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+        resources:
+          {{- toYaml .Values.backend.appmarketplace.resources | nindent 10 }}
+        volumeMounts:
+        - mountPath: /mnt/tmp
+          name: tmp
+      volumes:
+      - emptyDir: {}
+        name: tmp
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

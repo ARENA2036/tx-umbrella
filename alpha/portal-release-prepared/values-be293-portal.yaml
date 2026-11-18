@@ -17,8 +17,8 @@ portalBackendAddress: "https://<<ALPHA:PORTAL_BACKEND_HOST>>"
 # Keycloak MUST be addressed through its public HTTPS host: the token issuer (iss) and browser redirects
 # must match. Hosts taken from the 2026-11-04 Alpha snapshot; re-verify in G4.
 centralidp:
-  address: "https://centralidp.test.tractus-x.com"
-sharedidpAddress: "https://sharedidp.test.tractus-x.com"
+  address: "https://centralidp-be293.test.tractus-x.com"
+sharedidpAddress: "https://sharedidp-be293.test.tractus-x.com"
 
 semanticsAddress: "https://semantics.test.tractus-x.com"
 
@@ -110,12 +110,15 @@ backend:
   provisioning:
     sharedRealm:
       smtpServer:
-        host: "smtp.office365.com"
-        port: "587"
-        user: "it@arena2036.de"
-        from: "it@arena2036.de"
-        replyTo: "it@arena2036.de"
+        host: "be293-smtp4dev.be293.svc.cluster.local"
+        port: "25"
+        user: ""
         password: ""
+        from: "noreply@be293.test"
+        replyTo: "noreply@be293.test"
+        # smtp4dev listens on plaintext 25 without authentication (D5).
+        auth: "false"
+        startTls: "false"
 
   administration:
     image:
@@ -196,6 +199,10 @@ backend:
     bpdm:
       clientId: "sa-cl7-cx-5"
       clientSecret: ""
+      # BPDM stays on the SHARED CentralIDP (decision G1-1): BPDM validates tokens from that realm, while the
+      # Portal itself uses centralidp-be293. Without this override the patched chart (alpha/portal-chart-2.6.0-patched)
+      # would derive the token endpoint from centralidp.address. Not honoured by the unpatched portal-2.6.0 chart.
+      tokenAddress: "https://centralidp.test.tractus-x.com/auth/realms/CX-Central/protocol/openid-connect/token"
     sdfactory:
       clientId: "sa-cl8-cx-1"
       clientSecret: ""

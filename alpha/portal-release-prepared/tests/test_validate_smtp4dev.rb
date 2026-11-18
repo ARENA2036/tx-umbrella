@@ -118,19 +118,22 @@ class ValidateSmtp4devTest < Minitest::Test
     assert_empty failures_of(docs, render: rendered)
     msg = failures_of(docs, render: render(BASE_VALUES))
     assert_match(/\[S9\] MAILINGSERVICE__MAIL__SMTPHOST "smtp.office365.com"/, msg)
-    assert_match(%r{\[S9\] real SMTP provider referenced outside the shared-realm setting: \["be293-portal-processes-worker/MAILINGSERVICE__MAIL__SMTPHOST"\]}, msg)
+    assert_match(%r{\[S9\] real SMTP provider referenced: \["be293-portal-processes-worker/MAILINGSERVICE__MAIL__SMTPHOST"\]}, msg)
   end
 
-  # Decision 2026-11-08: new shared-IdP realms keep the live Alpha SMTP (office365:587, Secret reference).
-  def test_s9_shared_realm_keeps_the_approved_live_configuration
+  # Decision D5: new shared-IdP realms send to the smtp4dev sink (plaintext 25, no auth, Secret reference only).
+  def test_s9_shared_realm_uses_the_d5_sink
     skip 'helm not installed' unless system('command -v helm >/dev/null 2>&1')
     rendered = render(BASE_VALUES + ['values-be293-portal.alpha-smtp4dev.yaml'])
     admin = rendered.find { |d| d['kind'] == 'Deployment' && d.dig('metadata', 'name') == 'be293-portal-administration-service' }
     env = admin['spec']['template']['spec']['containers'][0]['env']
-    env.find { |e| e['name'] == 'PROVISIONING__SHAREDREALM__SMTPSERVER__HOST' }['value'] = 'be293-smtp4dev.be293.svc.cluster.local'
+    env.find { |e| e['name'] == 'PROVISIONING__SHAREDREALM__SMTPSERVER__HOST' }['value'] = 'smtp.office365.com'
+    env.find { |e| e['name'] == 'PROVISIONING__SHAREDREALM__SMTPSERVER__AUTH' }['value'] = 'true'
     env.find { |e| e['name'] == 'PROVISIONING__SHAREDREALM__SMTPSERVER__PASSWORD' }.replace('name' => 'PROVISIONING__SHAREDREALM__SMTPSERVER__PASSWORD', 'value' => 'x')
     msg = failures_of(docs, render: rendered)
-    assert_match(/\[S9\] be293-portal-administration-service PROVISIONING__SHAREDREALM__SMTPSERVER__HOST "be293-smtp4dev.be293.svc.cluster.local" != approved live value "smtp.office365.com"/, msg)
+    assert_match(/\[S9\] be293-portal-administration-service PROVISIONING__SHAREDREALM__SMTPSERVER__HOST "smtp.office365.com" != D5 value "be293-smtp4dev.be293.svc.cluster.local"/, msg)
+    assert_match(/\[S9\] be293-portal-administration-service PROVISIONING__SHAREDREALM__SMTPSERVER__AUTH "true" != D5 value "false"/, msg)
+    assert_match(%r{\[S9\] real SMTP provider referenced: \["be293-portal-administration-service/PROVISIONING__SHAREDREALM__SMTPSERVER__HOST"\]}, msg)
     assert_match(/\[S9\] be293-portal-administration-service shared-realm SMTP password must reference Secret be293-portal-mailing, got nil/, msg)
     refute_match(/"x"/, msg)
   end

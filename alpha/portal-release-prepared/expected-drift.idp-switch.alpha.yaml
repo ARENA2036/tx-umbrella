@@ -1,0 +1,74 @@
+# Reviewed drift for the be293-portal IdP switch (tools/switch-idp-be293.sh): the Portal moves from the shared
+# centralidp/sharedidp to centralidp-be293/sharedidp-be293, BPDM keeps the SHARED CentralIDP token endpoint
+# (backend.processesworker.bpdm.tokenAddress, patched chart), and new shared-IdP realms send mail to the smtp4dev
+# sink (D5). Generated from an offline diff of the patched chart (four values files, post-renderer) before and
+# after the change, 2026-11-17. Only environment variables change; images, Secrets, Services, ConfigMaps,
+# StatefulSets and Ingresses do not.
+#
+# Format as expected-drift.alpha.yaml: "Kind/name" => items, each exact or a prefix ending in "*". Each item ends
+# in "*" only so the ownership note ([owner: helm]) matches; an SSA CONFLICT is a FAIL and is never excused here.
+# Review every change to this file; never add an item only to make a run pass.
+
+CronJob/be293-portal-processes-worker:
+  - "container be293-portal-processes-worker env APPLICATIONCHECKLIST__CUSTODIAN__TOKENADDRESS: value differs (live=https://centralidp.test.tractus-x.com/auth/realms/CX-Central/protocol/openid-connect/token rendered=https://centralidp-be293.test.tractus-x.com/auth/realms/CX-Central/protocol/openid-connect/token)*"
+  - "container be293-portal-processes-worker env APPLICATIONCHECKLIST__ISSUERCOMPONENT__TOKENADDRESS: value differs (live=https://centralidp.test.tractus-x.com/auth/realms/CX-Central/protocol/openid-connect/token rendered=https://centralidp-be293.test.tractus-x.com/auth/realms/CX-Central/protocol/openid-connect/token)*"
+  - "container be293-portal-processes-worker env APPLICATIONCHECKLIST__SDFACTORY__TOKENADDRESS: value differs (live=https://centralidp.test.tractus-x.com/auth/realms/CX-Central/protocol/openid-connect/token rendered=https://centralidp-be293.test.tractus-x.com/auth/realms/CX-Central/protocol/openid-connect/token)*"
+  - "container be293-portal-processes-worker env KEYCLOAK__CENTRAL__CONNECTIONSTRING: value differs (live=https://centralidp.test.tractus-x.com rendered=https://centralidp-be293.test.tractus-x.com)*"
+  - "container be293-portal-processes-worker env KEYCLOAK__SHARED__CONNECTIONSTRING: value differs (live=https://sharedidp.test.tractus-x.com rendered=https://sharedidp-be293.test.tractus-x.com)*"
+  - "container be293-portal-processes-worker env OFFERPROVIDER__TOKENADDRESS: value differs (live=https://centralidp.test.tractus-x.com/auth/realms/CX-Central/protocol/openid-connect/token rendered=https://centralidp-be293.test.tractus-x.com/auth/realms/CX-Central/protocol/openid-connect/token)*"
+  - "container be293-portal-processes-worker env PROVISIONING__SHAREDREALM__SMTPSERVER__AUTH: value differs (live=true rendered=false)*"
+  - "container be293-portal-processes-worker env PROVISIONING__SHAREDREALM__SMTPSERVER__FROM: value differs*"
+  - "container be293-portal-processes-worker env PROVISIONING__SHAREDREALM__SMTPSERVER__HOST: value differs (live=smtp.office365.com rendered=be293-smtp4dev.be293.svc.cluster.local)*"
+  - "container be293-portal-processes-worker env PROVISIONING__SHAREDREALM__SMTPSERVER__PORT: value differs (live=587 rendered=25)*"
+  - "container be293-portal-processes-worker env PROVISIONING__SHAREDREALM__SMTPSERVER__REPLYTO: value differs*"
+  - "container be293-portal-processes-worker env PROVISIONING__SHAREDREALM__SMTPSERVER__STARTTLS: value differs (live=true rendered=false)*"
+  - "container be293-portal-processes-worker env PROVISIONING__SHAREDREALM__SMTPSERVER__USER: value differs*"
+Deployment/be293-portal-administration-service:
+  - "container be293-portal-administration-service env APPLICATIONCHECKLIST__CUSTODIAN__TOKENADDRESS: value differs (live=https://centralidp.test.tractus-x.com/auth/realms/CX-Central/protocol/openid-connect/token rendered=https://centralidp-be293.test.tractus-x.com/auth/realms/CX-Central/protocol/openid-connect/token)*"
+  - "container be293-portal-administration-service env APPLICATIONCHECKLIST__DIM__TOKENADDRESS: value differs (live=https://centralidp.test.tractus-x.com/auth/realms/CX-Central/protocol/openid-connect/token rendered=https://centralidp-be293.test.tractus-x.com/auth/realms/CX-Central/protocol/openid-connect/token)*"
+  - "container be293-portal-administration-service env APPLICATIONCHECKLIST__ISSUERCOMPONENT__TOKENADDRESS: value differs (live=https://centralidp.test.tractus-x.com/auth/realms/CX-Central/protocol/openid-connect/token rendered=https://centralidp-be293.test.tractus-x.com/auth/realms/CX-Central/protocol/openid-connect/token)*"
+  - "container be293-portal-administration-service env APPLICATIONCHECKLIST__SDFACTORY__TOKENADDRESS: value differs (live=https://centralidp.test.tractus-x.com/auth/realms/CX-Central/protocol/openid-connect/token rendered=https://centralidp-be293.test.tractus-x.com/auth/realms/CX-Central/protocol/openid-connect/token)*"
+  - "container be293-portal-administration-service env JWTBEAREROPTIONS__METADATAADDRESS: value differs (live=https://centralidp.test.tractus-x.com/auth/realms/CX-Central/.well-known/openid-configuration rendered=https://centralidp-be293.test.tractus-x.com/auth/realms/CX-Central/.well-known/openid-configuration)*"
+  - "container be293-portal-administration-service env JWTBEAREROPTIONS__TOKENVALIDATIONPARAMETERS__VALIDISSUER: value differs*"
+  - "container be293-portal-administration-service env KEYCLOAK__CENTRAL__CONNECTIONSTRING: value differs (live=https://centralidp.test.tractus-x.com rendered=https://centralidp-be293.test.tractus-x.com)*"
+  - "container be293-portal-administration-service env KEYCLOAK__SHARED__CONNECTIONSTRING: value differs (live=https://sharedidp.test.tractus-x.com rendered=https://sharedidp-be293.test.tractus-x.com)*"
+  - "container be293-portal-administration-service env PROVISIONING__SHAREDREALM__SMTPSERVER__AUTH: value differs (live=true rendered=false)*"
+  - "container be293-portal-administration-service env PROVISIONING__SHAREDREALM__SMTPSERVER__FROM: value differs*"
+  - "container be293-portal-administration-service env PROVISIONING__SHAREDREALM__SMTPSERVER__HOST: value differs (live=smtp.office365.com rendered=be293-smtp4dev.be293.svc.cluster.local)*"
+  - "container be293-portal-administration-service env PROVISIONING__SHAREDREALM__SMTPSERVER__PORT: value differs (live=587 rendered=25)*"
+  - "container be293-portal-administration-service env PROVISIONING__SHAREDREALM__SMTPSERVER__REPLYTO: value differs*"
+  - "container be293-portal-administration-service env PROVISIONING__SHAREDREALM__SMTPSERVER__STARTTLS: value differs (live=true rendered=false)*"
+  - "container be293-portal-administration-service env PROVISIONING__SHAREDREALM__SMTPSERVER__USER: value differs*"
+  - "container be293-portal-administration-service env SERVICEACCOUNT__AUTHSERVICEURL: value differs (live=https://centralidp.test.tractus-x.com/auth/realms/CX-Central/protocol/openid-connect/token rendered=https://centralidp-be293.test.tractus-x.com/auth/realms/CX-Central/protocol/openid-connect/token)*"
+Deployment/be293-portal-marketplace-app-service:
+  - "container be293-portal-marketplace-app-service env DIM__TOKENADDRESS: value differs (live=https://centralidp.test.tractus-x.com/auth/realms/CX-Central/protocol/openid-connect/token rendered=https://centralidp-be293.test.tractus-x.com/auth/realms/CX-Central/protocol/openid-connect/token)*"
+  - "container be293-portal-marketplace-app-service env JWTBEAREROPTIONS__METADATAADDRESS: value differs (live=https://centralidp.test.tractus-x.com/auth/realms/CX-Central/.well-known/openid-configuration rendered=https://centralidp-be293.test.tractus-x.com/auth/realms/CX-Central/.well-known/openid-configuration)*"
+  - "container be293-portal-marketplace-app-service env JWTBEAREROPTIONS__TOKENVALIDATIONPARAMETERS__VALIDISSUER: value differs*"
+  - "container be293-portal-marketplace-app-service env KEYCLOAK__CENTRAL__CONNECTIONSTRING: value differs (live=https://centralidp.test.tractus-x.com rendered=https://centralidp-be293.test.tractus-x.com)*"
+  - "container be293-portal-marketplace-app-service env KEYCLOAK__SHARED__CONNECTIONSTRING: value differs (live=https://sharedidp.test.tractus-x.com rendered=https://sharedidp-be293.test.tractus-x.com)*"
+Deployment/be293-portal-notification-service:
+  - "container be293-portal-notification-service env JWTBEAREROPTIONS__METADATAADDRESS: value differs (live=https://centralidp.test.tractus-x.com/auth/realms/CX-Central/.well-known/openid-configuration rendered=https://centralidp-be293.test.tractus-x.com/auth/realms/CX-Central/.well-known/openid-configuration)*"
+  - "container be293-portal-notification-service env JWTBEAREROPTIONS__TOKENVALIDATIONPARAMETERS__VALIDISSUER: value differs*"
+  - "container be293-portal-notification-service env KEYCLOAK__CENTRAL__CONNECTIONSTRING: value differs (live=https://centralidp.test.tractus-x.com rendered=https://centralidp-be293.test.tractus-x.com)*"
+  - "container be293-portal-notification-service env KEYCLOAK__SHARED__CONNECTIONSTRING: value differs (live=https://sharedidp.test.tractus-x.com rendered=https://sharedidp-be293.test.tractus-x.com)*"
+Deployment/be293-portal-portal:
+  - "container be293-portal-portal env CENTRALIDP_URL: value differs (live=https://centralidp.test.tractus-x.com/auth rendered=https://centralidp-be293.test.tractus-x.com/auth)*"
+Deployment/be293-portal-registration:
+  - "container be293-portal-registration env CENTRALIDP_URL: value differs (live=https://centralidp.test.tractus-x.com/auth rendered=https://centralidp-be293.test.tractus-x.com/auth)*"
+Deployment/be293-portal-registration-service:
+  - "container be293-portal-registration-service env JWTBEAREROPTIONS__METADATAADDRESS: value differs (live=https://centralidp.test.tractus-x.com/auth/realms/CX-Central/.well-known/openid-configuration rendered=https://centralidp-be293.test.tractus-x.com/auth/realms/CX-Central/.well-known/openid-configuration)*"
+  - "container be293-portal-registration-service env JWTBEAREROPTIONS__TOKENVALIDATIONPARAMETERS__VALIDISSUER: value differs*"
+  - "container be293-portal-registration-service env KEYCLOAK__CENTRAL__CONNECTIONSTRING: value differs (live=https://centralidp.test.tractus-x.com rendered=https://centralidp-be293.test.tractus-x.com)*"
+  - "container be293-portal-registration-service env KEYCLOAK__SHARED__CONNECTIONSTRING: value differs (live=https://sharedidp.test.tractus-x.com rendered=https://sharedidp-be293.test.tractus-x.com)*"
+Deployment/be293-portal-services-service:
+  - "container be293-portal-services-service env DIM__TOKENADDRESS: value differs (live=https://centralidp.test.tractus-x.com/auth/realms/CX-Central/protocol/openid-connect/token rendered=https://centralidp-be293.test.tractus-x.com/auth/realms/CX-Central/protocol/openid-connect/token)*"
+  - "container be293-portal-services-service env JWTBEAREROPTIONS__METADATAADDRESS: value differs (live=https://centralidp.test.tractus-x.com/auth/realms/CX-Central/.well-known/openid-configuration rendered=https://centralidp-be293.test.tractus-x.com/auth/realms/CX-Central/.well-known/openid-configuration)*"
+  - "container be293-portal-services-service env JWTBEAREROPTIONS__TOKENVALIDATIONPARAMETERS__VALIDISSUER: value differs*"
+  - "container be293-portal-services-service env KEYCLOAK__CENTRAL__CONNECTIONSTRING: value differs (live=https://centralidp.test.tractus-x.com rendered=https://centralidp-be293.test.tractus-x.com)*"
+  - "container be293-portal-services-service env KEYCLOAK__SHARED__CONNECTIONSTRING: value differs (live=https://sharedidp.test.tractus-x.com rendered=https://sharedidp-be293.test.tractus-x.com)*"
+
+# Rancher writes field.cattle.io/publicEndpoints; not in the template, not Helm-owned, kept by server-side apply.
+Ingress/be293-portal-backend:
+  - "annotation field.cattle.io/publicEndpoints: only live (upgrade keeps it unless Helm owned it)*"
+Ingress/be293-portal-frontend:
+  - "annotation field.cattle.io/publicEndpoints: only live (upgrade keeps it unless Helm owned it)*"

@@ -1,0 +1,11 @@
+# Helm 4 post-renderer plugin used ONLY by tools/switch-idp-be293.sh. Not installed globally: select it per command with
+#   HELM_PLUGINS="$PWD/helm-plugins" helm ... --post-renderer be293-idp-switch
+# It applies be293-retention unchanged and additionally suspends the processes-worker CronJob (see post-render.rb).
+apiVersion: v1
+type: postrenderer/v1
+name: be293-idp-switch
+version: 1.0.0
+runtime: subprocess
+runtimeConfig:
+  platformCommand:
+    - command: ${HELM_PLUGIN_DIR}/post-render.rb
