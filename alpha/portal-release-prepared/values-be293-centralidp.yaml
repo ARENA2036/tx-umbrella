@@ -1,0 +1,65 @@
+# BE-293 Alpha: own CentralIDP (chart centralidp-4.2.1 from the pinned Umbrella 3.17.0 handoff).
+# Overrides only; everything else is the shipped chart default.
+# Assumed release name: be293-centralidp, namespace be293. Keycloak fullname is then
+# "be293-centralidp-keycloak" (Release.Name does not contain "keycloak").
+# No secret values belong in this file: every credential comes from an existing Secret.
+
+keycloak:
+  auth:
+    # The seeding Job reads the admin password from Secret "<centralidp.fullname>" key "admin-password"
+    # (job-seeding.yaml, hard-coded), not from this value. The name therefore MUST equal the Keycloak
+    # fullname, and passwordSecretKey stays unset so Keycloak also reads key "admin-password".
+    existingSecret: "be293-centralidp-keycloak"
+  production: true
+  # Keycloak 25 runs behind ingress-nginx (TLS terminated at the Ingress). `proxy` is deprecated in this
+  # chart; a non-empty proxyHeaders is rendered verbatim to KEYCLOAK_PROXY_HEADERS.
+  proxyHeaders: "xforwarded"
+  ingress:
+    enabled: true
+    ingressClassName: "nginx"
+    hostname: "centralidp-be293.test.tractus-x.com"
+    hostnameStrict: true
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      external-dns.alpha.kubernetes.io/hostname: "centralidp-be293.test.tractus-x.com"
+      # Keycloak login pages exceed nginx default proxy buffers (502 on /auth without these).
+      nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+      nginx.ingress.kubernetes.io/proxy-buffering: "on"
+      nginx.ingress.kubernetes.io/proxy-buffers-number: "20"
+    # With the cert-manager annotation the chart renders TLS Secret "<hostname>-tls", issued by cert-manager.
+    tls: true
+  postgresql:
+    auth:
+      # Keys: postgres-password, password (chart secretKeys defaults).
+      existingSecret: "be293-centralidp-postgres"
+    primary:
+      persistence:
+        enabled: true
+        # Same StorageClass as the live Alpha PVC data-be293-portal-postgresql-0 (confirmed on the cluster).
+        # It is set explicitly: it is not the Alpha cluster default.
+        storageClass: "premium-perf1-stackit"
+
+realmSeeding:
+  # Recovery-only fork fields: explicitly disabled for ordinary releases.
+  recoveryExistingRevision: ""
+  recoveryExistingRevisions: []
+  recoveryPreserveExistingJobs: false
+  recoveryImageByRevision: {}
+  clients:
+    registration:
+      redirects:
+        - "https://portal-be293.test.tractus-x.com/*"
+    portal:
+      rootUrl: "https://portal-be293.test.tractus-x.com/home"
+      redirects:
+        - "https://portal-be293.test.tractus-x.com/*"
+    semantics:
+      redirects:
+        - "https://portal-be293.test.tractus-x.com/*"
+    # Keys: miw, bpdm, bpdm-gate, bpdm-orchestrator.
+    existingSecret: "be293-centralidp-seeding-clients"
+  serviceAccounts:
+    # Keys: one per serviceAccounts.clientSecrets[].clientId (chart default list).
+    existingSecret: "be293-centralidp-seeding-service-accounts"
+  # CX-Operator identity provider of the CX-Central realm: our own sharedidp.
+  sharedidp: "https://sharedidp-be293.test.tractus-x.com"
