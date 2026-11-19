@@ -1,0 +1,31 @@
+# PREPARED, NOT APPLIED. Fifth overlay (after values-be293-portal.alpha-smtp4dev.yaml) that repoints the Portal's
+# IdentityHub, IssuerService and BDRS management settings from the shared release26-09 identity stack to the own stack in
+# be293 (alpha/identity/). No existing tool loads this file: install-be293.sh, upgrade-be293.sh and
+# switch-idp-be293.sh render exactly the four files they always did, so the live Portal configuration is unchanged until
+# a separately approved switch applies it together with the deletion of be293-portal-release26-09-egress.
+#
+# Rendered effect (gate I11): APPLICATIONCHECKLIST__IDENTITYHUB__* and BPNDIDRESOLVER__* point only at be293 Services and
+# be293 public hosts; their keys come from the NEW Secrets be293-portal-identityhub-be293 / be293-portal-bdrs-be293
+# (the live Secrets be293-portal-identityhub / be293-portal-bdrs stay untouched). BPDM keeps the shared CentralIDP token
+# endpoint. The four BDRS directory readers (bpnDidResolver.directoryApiAddress) stay on the shared public directory: reads
+# only, not decided yet.
+
+bpnDidResolver:
+  managementApiAddress: "http://be293-bdrs.be293.svc.cluster.local:8081"
+  existingSecret: be293-portal-bdrs-be293
+  existingSecretKey: management-api-key
+
+backend:
+  administration:
+    issuerdid: "did:web:issuer-be293.test.tractus-x.com:BPNL00000003CRHK"
+  processesworker:
+    identityHub:
+      baseAddress: "http://be293-identityhub.be293.svc.cluster.local:8082/api/identity"
+      credentialServiceBaseAddress: "https://identityhub-be293.test.tractus-x.com/api/credentials"
+      didDocumentBaseLocation: "identityhub-be293.test.tractus-x.com"
+      issuerDid: "did:web:issuer-be293.test.tractus-x.com:BPNL00000003CRHK"
+      issuerParticipantId: "issuer"
+      issuerAdminBaseAddress: "http://be293-issuerservice.be293.svc.cluster.local:8086/api/admin"
+      bpnCredentialDefinitionId: "BpnCredential-id"
+      membershipCredentialDefinitionId: "membershipCredential-id"
+      existingSecret: be293-portal-identityhub-be293

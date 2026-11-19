@@ -1,0 +1,54 @@
+# BE-293 Alpha: own BDRS (BPN -> DID directory) in be293. Release: be293-bdrs, namespace be293.
+#
+# DEPLOYMENT BLOCKED until approved: the pinned chart alpha/charts/identity/bdrs-server-0.6.0.tgz (sha256 f7fe905a…) is
+# NOT the published eclipse-tractusx/bpn-did-resolution-service 0.6.0 chart. Compared file by file against tag 0.6.0
+# (fee8860b, git blob SHAs): values.yaml and every template except deployment.yaml are identical; Chart.yaml differs
+# only by `helm package` normalisation. deployment.yaml has three functional, opt-in local changes:
+#   1. image by digest when server.image.digest is set (not used here; the tag below carries the digest)
+#   2. the literal EDC_VAULT_HASHICORP_TOKEN env entry is skipped when server.envValueFrom sets it  <- used here
+#   3. extra pod volumes from server.volumes (not used here)
+# Without change 2 the chart always renders vault.hashicorp.token as a literal env value: the published chart cannot keep
+# the Vault token out of the manifest. See charts.lock.yaml.
+#
+# Database credentials and the management API key are read from Vault aliases (edc.datasource.didentry.user|password,
+# mgmt-api-key) written by tools/identity-vault-be293.sh --configure into the bdrs KV mount.
+# The management API (8081) is ClusterIP-only and the directory (8082) is not exposed: the Portal's directory readers
+# stay on the shared public directory until that is decided separately.
+fullnameOverride: be293-bdrs
+
+install:
+  postgresql: false
+  vault: false
+
+server:
+  image:
+    repository: "tractusx/bdrs-server"
+    tag: "0.6.0@sha256:e73c566f3b20f9e0f3db21d6e49911d01fe22fd4c01f463e2a52e26914cfd206"
+    pullPolicy: IfNotPresent
+  trustedIssuers:
+    - "did:web:issuer-be293.test.tractus-x.com:BPNL00000003CRHK"
+  envValueFrom:
+    EDC_VAULT_HASHICORP_TOKEN: {secretKeyRef: {name: be293-bdrs-vault-token, key: token}}
+  ingresses:
+    - enabled: false
+      hostname: "bdrs-server.directory.local"
+      endpoints:
+        - directory
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+postgresql:
+  jdbcUrl: "jdbc:postgresql://be293-identity-postgresql.be293.svc.cluster.local:5432/bdrs"
+
+vault:
+  hashicorp:
+    url: "http://be293-identity-vault.be293.svc.cluster.local:8200"
+    token: "from-secret-ref"          # not rendered: server.envValueFrom sets EDC_VAULT_HASHICORP_TOKEN (local change 2)
+    paths:
+      secret: /v1/bdrs                # KV v2 mount owned by this release only (policy be293-bdrs)
+      health: /v1/sys/health

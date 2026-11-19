@@ -1,0 +1,51 @@
+# Chart pins and provenance for the own identity stack (alpha/charts/identity/). tools/render-identity.sh refuses to render
+# a package whose sha256 differs from this file. Verification method: every file compared as a git blob SHA against the
+# upstream tag through the GitHub API (the sandbox cannot reach the Helm repositories), 2026-11-17.
+charts:
+  - package: vault-0.29.1.tgz
+    sha256: b7ca1df56b5da3e9d3066566e8d329a45c1c4ace6b6746afc5987148359a2032
+    release: be293-identity-vault
+    source: {repo: hashicorp/vault-helm, tag: v0.29.1, commit: 272d04ee17098aae908364d331bd8c99118e0c5e}
+    verified: "55/55 files identical to the tag (Chart.yaml written verbatim from the tag)"
+  - package: postgresql-16.0.0.tgz
+    sha256: d056f4eac070d2f5400057940afaee003925ec5beb35caacf47f3b8408136e8d
+    release: be293-identity-postgresql
+    source: {vendored: "centralidp 4.2.1 -> keycloak 23.0.0 -> postgresql 16.0.0 (bitnami)"}
+    verified: "NOT compared with bitnami/charts; the same vendored chart already runs in be293 for both Keycloak releases"
+  - package: tractusx-issuerservice-v0.4.1.tgz
+    sha256: dcecdb8dc13d58df9f4901873726fc1850dd00e003fb163c1fdbf170cb50c337
+    release: be293-issuerservice
+    source: {repo: eclipse-tractusx/tractusx-identityhub, tag: tractusx-issuerservice-v0.4.1, commit: 64d415b704fab7525a9dec64c4cfb314743432ae}
+    verified: "19/19 chart files identical to the tag; image tractusx/issuerservice:0.4.1 (appVersion 0.4.1, EDC 0.17.0)"
+    subcharts: "postgres 0.11.0, vault 0.29.1, pgadmin4 1.25.3 vendored from identity-and-trust-bundle 1.2.0 to satisfy the
+      declared dependencies offline; all three are disabled (install.postgresql/install.vault/pgadmin4.enabled = false) and
+      render nothing (gate I1). vault 0.29.1 is identical to the hashicorp tag; postgres/pgadmin4 not compared."
+  - package: tractusx-identityhub-v0.4.1.tgz
+    sha256: ffb87308ed9119f9d5389657fcbd8fbf0dddfb911f3709eb63fe40f25b94279d
+    release: be293-identityhub
+    source: {repo: eclipse-tractusx/tractusx-identityhub, tag: tractusx-identityhub-v0.4.1, commit: 64d415b704fab7525a9dec64c4cfb314743432ae}
+    verified: "19/19 chart files identical to the tag; image tractusx/identityhub:0.4.1 (appVersion 0.4.1, EDC 0.17.0)"
+    subcharts: "postgres 0.11.0, vault 0.29.1 vendored, disabled (see issuerservice)"
+  - package: bdrs-server-0.6.0.tgz
+    sha256: f7fe905a7d6eddebb3a04b8a4f3fd23777a4514cdba13577300d5836e5cec140
+    release: be293-bdrs
+    source: {repo: eclipse-tractusx/bpn-did-resolution-service, tag: "0.6.0", commit: fee8860b0404a85dba06a7380847dc2298b0e5a6}
+    verified: "NOT identical. Same: values.yaml, LICENSE, README*, every template except deployment.yaml, tests. Chart.yaml:
+      helm-package normalisation only (same fields). Chart.lock: only in the package (normal). deployment.yaml: three
+      functional opt-in local changes (image by digest; skip literal EDC_VAULT_HASHICORP_TOKEN when envValueFrom sets it;
+      server.volumes). Diff recorded against the published file (transcribed copy hashed to 9d0516d1, the tag's blob)."
+    deployment: BLOCKED pending approval of the three local changes (change 2 is what keeps the Vault token out of the manifest)
+  - package: tractusx-connector-0.13.0.tgz
+    sha256: 96209c7aac035aa2c7780f33ab8b7aaa897117775cf7c8cff807415e4eaa593f
+    release: [be293-edc-fv1, be293-edc-guc]
+    source: {repo: eclipse-tractusx/tractusx-edc, tag: "0.13.0", commit: 964d33d7ed942369f624aacbc45037a1f79fc7be}
+    verified: "pristine = this package with the patch reversed: every template (incl. tests/), values.yaml, LICENSE, README*
+      identical to the tag as git blob SHAs; Chart.yaml: helm-package normalisation only (same name, version 0.13.0,
+      appVersion 0.13.0, dependencies). Image tractusx/edc-*:0.13.0, EDC 0.17.0 (gradle/libs.versions.toml at the tag)."
+    patch: "patches/tractusx-connector-0.13.0-secret-refs.patch (sha256 9a7c876f…5d, 96 lines; from tx-umbrella-0.13 commit
+      5084a38, the DEV SecretRef patch for 0.13.0). Adds templates/_secret-env.tpl and replaces the six literal env values
+      WEB_HTTP_MANAGEMENT_AUTH_KEY, TX_EDC_DPF_CONSUMER_PROXY_AUTH_APIKEY, EDC_VAULT_HASHICORP_TOKEN (x2) and
+      EDC_DATASOURCE_DEFAULT_PASSWORD (x2) with secretKeyRefs from *SecretRef values (fail closed when unset); the
+      token-auth test hook reads the key from the same Secret. pristine + patch reproduces this package's tree exactly."
+    subcharts: "vault 0.28.0 and postgres 0.18.3 (cloudpirates) as packaged by tx-umbrella-0.13, NOT compared upstream;
+      disabled (install.vault/install.postgresql = false) and render nothing (gate E2)."
