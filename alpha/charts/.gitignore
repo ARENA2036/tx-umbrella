@@ -1,0 +1,5 @@
+# The vendored chart packages and their lock files ARE the pinned artifacts (sha256 in identity/charts.lock.yaml and
+# in the Portal tools). The repository-wide ignore rules for *.tgz and Chart.lock must not apply here, or a fresh
+# checkout (and the standalone export) would lack exactly the files the render gates verify.
+!*.tgz
+!Chart.lock

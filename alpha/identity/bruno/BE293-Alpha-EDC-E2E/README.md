@@ -13,7 +13,7 @@ The v1 contract objects in that file are rollback-only and are not used here.
 ## Before a run: three port-forwards (loopback only)
 
 ```sh
-source alpha/env.sh    # once per shell: provides K()
+source ~/alpha/env.sh  # once per shell: provides K(); in the repository: source alpha/env.sh
 K -n be293 port-forward --address 127.0.0.1 svc/be293-edc-fv1-controlplane 18181:8081 &   # {{Provider}}  management API
 K -n be293 port-forward --address 127.0.0.1 svc/be293-edc-guc-controlplane 18182:8081 &   # {{Consumer}}  management API
 K -n be293 port-forward --address 127.0.0.1 svc/be293-edc-fv1-dataplane    18183:8081 &   # {{DataPlane}} public API

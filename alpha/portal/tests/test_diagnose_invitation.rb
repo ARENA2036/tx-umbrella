@@ -10,11 +10,23 @@
 require 'minitest/autorun'
 require 'fileutils'
 require 'open3'
+require 'rbconfig'
 require 'tmpdir'
 
 class DiagnoseInvitationTest < Minitest::Test
   HERE = File.expand_path('..', __dir__)
   SCRIPT = File.join(HERE, 'tools/diagnose-invitation-be293.sh')
+
+  # Every script under test runs in a NEW SESSION without a controlling terminal (setsid before exec), so its
+  # `exec 3<>/dev/tty` fails exactly as in an unattended run, whatever shell or terminal invokes the test. Redirecting
+  # stdin is not enough: the scripts open /dev/tty directly. No test here may read the invoking terminal.
+  NO_TTY = [RbConfig.ruby, '-e', 'Process.setsid; exec(*ARGV)'].freeze
+
+  def test_scripts_run_without_a_controlling_terminal
+    out, st = Open3.capture2e(*NO_TTY, '/bin/bash', '-c', '{ exec 3<>/dev/tty; } 2>/dev/null && echo TTY-OPENED || echo NO-TTY', stdin_data: '')
+    assert st.success?, out
+    assert_equal "NO-TTY\n", out, 'the test harness must not give the script a terminal'
+  end
 
   def setup
     @dir = Dir.mktmpdir('be293-diag-test')
@@ -49,7 +61,7 @@ class DiagnoseInvitationTest < Minitest::Test
   end
 
   def run_script(bash: 'bash')
-    Open3.capture2e({ 'PATH' => "#{@bin}:#{ENV['PATH']}", 'ALPHA_KUBECONFIG' => @kc }, bash, SCRIPT, stdin_data: '')
+    Open3.capture2e({ 'PATH' => "#{@bin}:#{ENV['PATH']}", 'ALPHA_KUBECONFIG' => @kc }, *NO_TTY, bash, SCRIPT, stdin_data: '')
   end
 
   def log

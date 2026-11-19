@@ -1,6 +1,6 @@
 # BE-293 Portal on Alpha: Helm values for a STANDALONE release of the Portal chart in namespace be293.
 #
-# Chart: handoff/BE-293-umbrella-3.17.0/chart/umbrella/charts/portal-2.6.0.tgz (vendored BE-293 variant,
+# Chart: charts/umbrella-3.17.0/charts/portal-2.6.0.tgz (vendored BE-293 variant,
 #        sha256 a17ab65070eeea3e719ed1e09... see alpha/portal/README.md). NOT the umbrella chart.
 # Scope: everything renders into be293. Central services are REUSED from release26-09; the old Portal
 #        and its database are never referenced.

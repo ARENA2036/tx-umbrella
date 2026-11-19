@@ -14,6 +14,7 @@ require 'base64'
 require 'fileutils'
 require 'json'
 require 'open3'
+require 'rbconfig'
 require 'securerandom'
 require 'tmpdir'
 require 'yaml'
@@ -22,7 +23,18 @@ require_relative '../tools/compare_release_live'
 class RecoverWrapperTest < Minitest::Test
   HERE = File.expand_path('..', __dir__)
   SCRIPT = File.join(HERE, 'tools/recover-be293.sh')
-  CHART = File.expand_path('../../handoff/BE-293-umbrella-3.17.0/chart/umbrella/charts/portal-2.6.0.tgz', HERE)
+
+  # Every script under test runs in a NEW SESSION without a controlling terminal (setsid before exec), so its
+  # `exec 3<>/dev/tty` fails exactly as in an unattended run, whatever shell or terminal invokes the test. Redirecting
+  # stdin is not enough: the scripts open /dev/tty directly. No test here may read the invoking terminal.
+  NO_TTY = [RbConfig.ruby, '-e', 'Process.setsid; exec(*ARGV)'].freeze
+
+  def test_scripts_run_without_a_controlling_terminal
+    out, st = Open3.capture2e(*NO_TTY, '/bin/bash', '-c', '{ exec 3<>/dev/tty; } 2>/dev/null && echo TTY-OPENED || echo NO-TTY', stdin_data: '')
+    assert st.success?, out
+    assert_equal "NO-TTY\n", out, 'the test harness must not give the script a terminal'
+  end
+  CHART = File.expand_path('../charts/umbrella-3.17.0/charts/portal-2.6.0.tgz', HERE)
   REAL_HELM = `command -v helm`.strip
   VALUES = %w[values-be293-portal.yaml values-be293-portal.alpha-release.yaml values-be293-portal.alpha-retention.yaml
               values-be293-portal.alpha-smtp4dev.yaml].freeze
@@ -132,7 +144,7 @@ class RecoverWrapperTest < Minitest::Test
 
   def run_wrapper(*args, env: {})
     full = @env.reject { |k, _| k == 'KUBECONFIG' }.merge('PATH' => "#{@bin}:#{ENV['PATH']}", 'ALPHA_KUBECONFIG' => @kc, 'SMTP4DEV_MANIFEST' => PinnedSmtp4dev.manifest(@dir), 'DID_RESOLVER_MANIFEST' => PinnedDidResolver.manifest(@dir)).merge(env)
-    Open3.capture2e(full, 'bash', SCRIPT, *args, stdin_data: '')
+    Open3.capture2e(full, *NO_TTY, 'bash', SCRIPT, *args, stdin_data: '')
   end
 
   def helm_log

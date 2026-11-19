@@ -13,7 +13,7 @@ require_relative '../tools/validate_smtp4dev'
 
 class ValidateSmtp4devTest < Minitest::Test
   HERE = File.expand_path('..', __dir__)
-  CHART = File.expand_path('../../handoff/BE-293-umbrella-3.17.0/chart/umbrella/charts/portal-2.6.0.tgz', HERE)
+  CHART = File.expand_path('../charts/umbrella-3.17.0/charts/portal-2.6.0.tgz', HERE)
   BASE_VALUES = %w[values-be293-portal.yaml values-be293-portal.alpha-release.yaml values-be293-portal.alpha-retention.yaml].freeze
   PINNED = "docker.io/rnwood/smtp4dev:3.15.0@sha256:#{'a' * 64}"
 

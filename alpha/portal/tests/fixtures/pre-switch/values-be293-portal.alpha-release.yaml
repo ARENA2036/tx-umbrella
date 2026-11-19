@@ -1,0 +1,114 @@
+# BE-293 Portal on Alpha: RELEASE OVERLAY. Layered on top of values-be293-portal.yaml (never replaces it):
+#
+#   helm ... -f values-be293-portal.yaml -f values-be293-portal.alpha-release.yaml
+#
+# Only the release-time differences live here; tools/render-release.sh renders and gates both files together.
+#
+# Hosts are dedicated to this release. portal.test.tractus-x.com / portal-backend.test.tractus-x.com belong to
+# the existing Portal in release26-09 and must never be used here (validator FORBIDDEN_HOSTS).
+#
+# Ingress follows the vendored portal-2.6.0 chart structure (frontend.ingress / backend.ingress: name,
+# className, annotations, tls[], hosts[].paths[]) and the ARENA2036 umbrella convention (charts/umbrella/
+# values-staging.yaml): class nginx, cert-manager ClusterIssuer letsencrypt-prod, regex frontend paths with
+# pathType ImplementationSpecific. A Helm list override replaces the whole list, so all paths are restated.
+#
+# NOT verified from this workstation (Alpha kubeconfig blocked by the sandbox); see README-ALPHA-RELEASE.md:
+#   - ClusterIssuer letsencrypt-prod is Ready and its solver can issue for *.test.tractus-x.com
+#   - ExternalDNS runs on Alpha, watches Ingress objects in be293 and owns the test.tractus-x.com zone
+#   - IngressClass nginx exists and is served by the controller in namespace ingress-nginx
+
+portalAddress: "https://portal-be293.test.tractus-x.com"
+portalBackendAddress: "https://portal-backend-be293.test.tractus-x.com"
+
+frontend:
+  ingress:
+    enabled: true
+    name: "frontend"
+    className: "nginx"
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      external-dns.alpha.kubernetes.io/hostname: "portal-be293.test.tractus-x.com"
+      nginx.ingress.kubernetes.io/rewrite-target: "/$1"
+      nginx.ingress.kubernetes.io/use-regex: "true"
+    tls:
+      # Dedicated Secret, created by cert-manager in be293. Never shared with another Ingress.
+      - secretName: "be293-portal-frontend-tls"
+        hosts:
+          - "portal-be293.test.tractus-x.com"
+    hosts:
+      - host: "portal-be293.test.tractus-x.com"
+        paths:
+          - path: "/(.*)"
+            pathType: "ImplementationSpecific"
+            backend:
+              service: "portal"
+              port: 8080
+          - path: "/registration/(.*)"
+            pathType: "ImplementationSpecific"
+            backend:
+              service: "registration"
+              port: 8080
+          - path: "/((assets|documentation)/.*)"
+            pathType: "ImplementationSpecific"
+            backend:
+              service: "assets"
+              port: 8080
+
+backend:
+  ingress:
+    enabled: true
+    name: "backend"
+    className: "nginx"
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      external-dns.alpha.kubernetes.io/hostname: "portal-backend-be293.test.tractus-x.com"
+      nginx.ingress.kubernetes.io/use-regex: "true"
+      nginx.ingress.kubernetes.io/enable-cors: "true"
+      nginx.ingress.kubernetes.io/proxy-body-size: "8m"
+      # Exact origin of this release's frontend only (no wildcard, no localhost).
+      nginx.ingress.kubernetes.io/cors-allow-origin: "https://portal-be293.test.tractus-x.com"
+    tls:
+      - secretName: "be293-portal-backend-tls"
+        hosts:
+          - "portal-backend-be293.test.tractus-x.com"
+    hosts:
+      # Chart default paths minus /api/provisioning: this chart version renders no provisioning-service
+      # (see expected-inventory), so that route would only point at a non-existent Service.
+      - host: "portal-backend-be293.test.tractus-x.com"
+        paths:
+          - path: "/api/registration"
+            pathType: "Prefix"
+            backend:
+              service: "registration-service"
+              port: 8080
+          - path: "/api/administration"
+            pathType: "Prefix"
+            backend:
+              service: "administration-service"
+              port: 8080
+          - path: "/api/notification"
+            pathType: "Prefix"
+            backend:
+              service: "notification-service"
+              port: 8080
+          - path: "/api/apps"
+            pathType: "Prefix"
+            backend:
+              service: "marketplace-app-service"
+              port: 8080
+          - path: "/api/services"
+            pathType: "Prefix"
+            backend:
+              service: "services-service"
+              port: 8080
+
+  processesworker:
+    # Universal DID Resolver (blocker R1): the self-hosted did:web resolver in be293 (did-resolver-be293.alpha.yaml,
+    # created by tools/did-resolver-be293.sh, not part of this Helm release). In-cluster ClusterIP, so no public
+    # resolver, no egress for the worker beyond be293, and no third-party rate limit (the free public
+    # dev.uniresolver.io answers HTTP 403 after 10 requests per 30 minutes). Plain HTTP stays inside the
+    # namespace; the resolver itself fetches the DID documents over HTTPS. Gate DR9 pins both settings.
+    dim:
+      universalResolverAddress: "http://be293-did-resolver.be293.svc.cluster.local:8080/"
+    identityHub:
+      universalResolverAddress: "http://be293-did-resolver.be293.svc.cluster.local:8080/"

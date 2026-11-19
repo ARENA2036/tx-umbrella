@@ -9,7 +9,7 @@ database are never referenced, and the EDC connectors in `connector` are untouch
 
 | File | Purpose |
 |---|---|
-| `values-be293-portal.yaml` | Alpha values for the vendored chart `handoff/BE-293-umbrella-3.17.0/chart/umbrella/charts/portal-2.6.0.tgz` (sha256 `a17ab650…5ad1e09`) |
+| `values-be293-portal.yaml` | Alpha values for the vendored chart `../charts/umbrella-3.17.0/charts/portal-2.6.0.tgz` (Umbrella 3.17.0 Portal chart) (sha256 `a17ab650…5ad1e09`) |
 | `networkpolicies-be293-portal.yaml` | Default-deny plus explicit allows. The database port is reachable only inside `be293`, and egress rules use pod (container) ports |
 | `alpha-service-map.yaml` | Confirmed `release26-09` Services: Service port, resolved container port, pod selector, evidence |
 | `secrets-contract.yaml` | Secret names, keys, client IDs, reuse options and owners (no values) |

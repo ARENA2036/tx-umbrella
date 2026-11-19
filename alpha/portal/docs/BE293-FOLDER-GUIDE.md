@@ -10,7 +10,7 @@ tests, documentation and CI material. Next steps and procedures: [BE293-RUNBOOK-
 
 | Path | Why |
 |---|---|
-| `../../handoff/BE-293-umbrella-3.17.0/chart/umbrella/charts/portal-2.6.0.tgz` | The Portal Helm chart. Render, diff, install, recovery and upgrade all use it (checksum-pinned). It is tracked in Git in `BE293_ALPHA/tx-umbrella`. |
+| `../charts/umbrella-3.17.0/charts/portal-2.6.0.tgz` | The Portal Helm chart. Render, diff, install, recovery and upgrade all use it (checksum-pinned). It is a copy of the Umbrella 3.17.0 Portal chart; every tool checks its sha256 before use. |
 
 Operator machine also needs: `~/.kube/alpha.yaml`, `helm`, `kubectl`, `ruby`, `jq`.
 

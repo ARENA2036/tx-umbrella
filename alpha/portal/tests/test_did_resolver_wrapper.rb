@@ -14,11 +14,23 @@ require 'digest'
 require 'fileutils'
 require 'json'
 require 'open3'
+require 'rbconfig'
 require 'tmpdir'
 
 class DidResolverWrapperTest < Minitest::Test
   HERE = File.expand_path('..', __dir__)
   SCRIPT = File.join(HERE, 'tools/did-resolver-be293.sh')
+
+  # Every script under test runs in a NEW SESSION without a controlling terminal (setsid before exec), so its
+  # `exec 3<>/dev/tty` fails exactly as in an unattended run, whatever shell or terminal invokes the test. Redirecting
+  # stdin is not enough: the scripts open /dev/tty directly. No test here may read the invoking terminal.
+  NO_TTY = [RbConfig.ruby, '-e', 'Process.setsid; exec(*ARGV)'].freeze
+
+  def test_scripts_run_without_a_controlling_terminal
+    out, st = Open3.capture2e(*NO_TTY, '/bin/bash', '-c', '{ exec 3<>/dev/tty; } 2>/dev/null && echo TTY-OPENED || echo NO-TTY', stdin_data: '')
+    assert st.success?, out
+    assert_equal "NO-TTY\n", out, 'the test harness must not give the script a terminal'
+  end
   DOCKER_V2 = 'application/vnd.docker.distribution.manifest.v2+json'
   OCI_MANIFEST = 'application/vnd.oci.image.manifest.v1+json'
   OCI_INDEX = 'application/vnd.oci.image.index.v1+json'
@@ -113,7 +125,7 @@ class DidResolverWrapperTest < Minitest::Test
 
   def pin
     Open3.capture2e({ 'PATH' => "#{@bin}:#{ENV['PATH']}", 'DID_RESOLVER_MANIFEST' => @manifest, 'ALPHA_KUBECONFIG' => '/nonexistent' },
-                    'bash', SCRIPT, '--pin', stdin_data: '')
+                    *NO_TTY, 'bash', SCRIPT, '--pin', stdin_data: '')
   end
 
   def pinned?(repo)
@@ -201,7 +213,7 @@ class DidResolverWrapperTest < Minitest::Test
 
   def diff_mode
     Open3.capture2e({ 'PATH' => "#{@bin}:#{ENV['PATH']}", 'DID_RESOLVER_MANIFEST' => @manifest, 'ALPHA_KUBECONFIG' => File.join(@dir, 'alpha.yaml') },
-                    'bash', SCRIPT, '--diff', stdin_data: '')
+                    *NO_TTY, 'bash', SCRIPT, '--diff', stdin_data: '')
   end
 
   def test_diff_reports_no_drift_and_only_reads

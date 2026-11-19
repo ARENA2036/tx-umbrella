@@ -34,14 +34,14 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-REPO="$(cd "$HERE/../.." && pwd)"
+ALPHA_DIR="$(cd "$HERE/.." && pwd)"
 KC="${ALPHA_KUBECONFIG:-$HOME/.kube/alpha.yaml}"
 CTX="alpha"
 NS="be293"
 RELEASE="be293-portal"
 FROM_REVISION=5
 TO_REVISION=6
-CHART="$REPO/alpha/charts/portal-2.6.0-patched/portal-2.6.0.tgz"
+CHART="$ALPHA_DIR/charts/portal-2.6.0-patched/portal-2.6.0.tgz"
 CHART_SHA256="b16d0d951adfc98f2014daec80c799b04e59fec38e4c5454e99228212ed7f760"
 POST_RENDERER="be293-idp-switch"
 RETENTION_RENDERER="be293-retention"

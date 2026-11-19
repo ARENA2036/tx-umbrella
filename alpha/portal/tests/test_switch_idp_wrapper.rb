@@ -13,6 +13,7 @@ require 'base64'
 require 'fileutils'
 require 'json'
 require 'open3'
+require 'rbconfig'
 require 'securerandom'
 require 'tmpdir'
 require 'yaml'
@@ -20,6 +21,17 @@ require 'yaml'
 class SwitchIdpWrapperTest < Minitest::Test
   HERE = File.expand_path('..', __dir__)
   SCRIPT = File.join(HERE, 'tools/switch-idp-be293.sh')
+
+  # Every script under test runs in a NEW SESSION without a controlling terminal (setsid before exec), so its
+  # `exec 3<>/dev/tty` fails exactly as in an unattended run, whatever shell or terminal invokes the test. Redirecting
+  # stdin is not enough: the scripts open /dev/tty directly. No test here may read the invoking terminal.
+  NO_TTY = [RbConfig.ruby, '-e', 'Process.setsid; exec(*ARGV)'].freeze
+
+  def test_scripts_run_without_a_controlling_terminal
+    out, st = Open3.capture2e(*NO_TTY, '/bin/bash', '-c', '{ exec 3<>/dev/tty; } 2>/dev/null && echo TTY-OPENED || echo NO-TTY', stdin_data: '')
+    assert st.success?, out
+    assert_equal "NO-TTY\n", out, 'the test harness must not give the script a terminal'
+  end
   CHART = File.expand_path('../charts/portal-2.6.0-patched/portal-2.6.0.tgz', HERE)
   REAL_HELM = `command -v helm`.strip
   VALUES = %w[values-be293-portal.yaml values-be293-portal.alpha-release.yaml values-be293-portal.alpha-retention.yaml
@@ -65,22 +77,17 @@ class SwitchIdpWrapperTest < Minitest::Test
     doc
   end
 
-  # The live release still runs the values from before the IdP switch: the parent of commit 5d548d7 ("switch Portal to
-  # the own IdPs and local mail sink"). Reading HEAD stopped working once the switch itself was committed (live would
-  # equal the target). Each file's path at that commit is looked up with ls-tree, so a later folder rename does not
-  # break the lookup.
-  PRE_SWITCH = '5d548d7^'
+  # The live release still runs the values from before the IdP switch: the four files as they were at the parent of
+  # commit 5d548d7 ("switch Portal to the own IdPs and local mail sink") in the tx-umbrella repository. This standalone
+  # folder has no Git history, so they are kept byte-for-byte (same git blob ids) in tests/fixtures/pre-switch/.
+  PRE_SWITCH = File.join(HERE, 'tests', 'fixtures', 'pre-switch')
 
   def head_values
-    listing, st = Open3.capture2('git', '-C', HERE, 'ls-tree', '-r', '--full-tree', '--name-only', PRE_SWITCH, '--', 'alpha')
-    assert st.success?, "git ls-tree #{PRE_SWITCH}"
     VALUES.map do |v|
-      found = listing.lines.map(&:chomp).select { |p| p.end_with?("/#{v}") }
-      assert_equal 1, found.size, "#{v} at #{PRE_SWITCH}: #{found.inspect}"
+      src = File.join(PRE_SWITCH, v)
+      assert File.file?(src), "missing fixture #{src}"
       path = File.join(@dir, "head-#{v}")
-      out, st = Open3.capture2('git', '-C', HERE, 'show', "#{PRE_SWITCH}:#{found.first}")
-      assert st.success?, "git show #{v}"
-      File.write(path, out)
+      FileUtils.cp(src, path)
       path
     end
   end
@@ -182,7 +189,7 @@ class SwitchIdpWrapperTest < Minitest::Test
 
   def run_wrapper(*args, env: {})
     full = @env.reject { |k, _| k == 'KUBECONFIG' }.merge('PATH' => "#{@bin}:#{ENV['PATH']}", 'ALPHA_KUBECONFIG' => @kc).merge(env)
-    Open3.capture2e(full, 'bash', SCRIPT, *args, stdin_data: '')
+    Open3.capture2e(full, *NO_TTY, 'bash', SCRIPT, *args, stdin_data: '')
   end
 
   def helm_log

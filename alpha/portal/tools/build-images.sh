@@ -17,7 +17,7 @@ COMMIT="f5badda90030531434c9445e5bb4b70382bea6eb"
 SHORT="${COMMIT:0:9}"
 LOCAL_TAG="be293-${SHORT}-LOCAL-NOT-FOR-DEPLOY"
 PLATFORM="linux/amd64"
-SOURCE="${PORTAL_BACKEND_SOURCE:-$HOME/Projects/ARENA2036/portal-backend}"
+SOURCE="${PORTAL_BACKEND_SOURCE:?set PORTAL_BACKEND_SOURCE to a portal-backend Git checkout (image builds need the backend source)}"
 EXECUTE=0
 
 while [[ $# -gt 0 ]]; do

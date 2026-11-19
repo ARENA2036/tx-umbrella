@@ -1,0 +1,16 @@
+# Overlay (applied after values-be293-portal.alpha-retention.yaml): Portal mail goes to the in-namespace TEST
+# sink smtp4dev (smtp4dev-be293.alpha.yaml) instead of smtp.office365.com, until a real SMTP provider exists (M1).
+# No credentials here. `password: ""` keeps the existing be293-portal-mailing Secret data (chart lookup):
+# its chart-random values are sent to smtp4dev, which accepts any credentials and stores none.
+backend:
+  mailing:
+    # Processes worker (MAILINGSERVICE__MAIL__*): invitation, registration and password mails.
+    # Mailing.SendMail always connects and authenticates (SmtpUser/SmtpPassword are [Required]).
+    host: "be293-smtp4dev.be293.svc.cluster.local"
+    port: "25"
+    user: "be293-portal"
+    password: ""
+  # Shared-realm SMTP (PROVISIONING__SHAREDREALM__SMTPSERVER__*, written into each NEW shared-IdP realm) is
+  # deliberately NOT overridden here: decision 2026-11-08, keep the live Alpha configuration from
+  # values-be293-portal.yaml (smtp.office365.com:587, existing be293-portal-mailing Secret reference).
+  # Gate S9 pins it.

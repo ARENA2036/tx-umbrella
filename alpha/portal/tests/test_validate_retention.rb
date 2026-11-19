@@ -18,7 +18,7 @@ require_relative '../helm-plugins/be293-retention/post-render'
 
 class ValidateRetentionTest < Minitest::Test
   HERE = File.expand_path('..', __dir__)
-  CHART = File.expand_path('../../handoff/BE-293-umbrella-3.17.0/chart/umbrella/charts/portal-2.6.0.tgz', HERE)
+  CHART = File.expand_path('../charts/umbrella-3.17.0/charts/portal-2.6.0.tgz', HERE)
   SEED = {
     'addresses.json' => JSON.generate([{ 'id' => 'b4db3945-19a7-4a50-97d6-e66e8dfd04fb', 'city' => 'Munich' }]),
     'companies.json' => JSON.generate([{ 'id' => '2dc4249f-b5ca-4d42-bef1-7a7a950a4f87', 'name' => 'Catena-X' }])

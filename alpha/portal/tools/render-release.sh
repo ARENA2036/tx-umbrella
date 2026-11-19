@@ -13,9 +13,9 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-REPO="$(cd "$HERE/../.." && pwd)"
-CHART="${PORTAL_CHART:-$REPO/handoff/BE-293-umbrella-3.17.0/chart/umbrella/charts/portal-2.6.0.tgz}"
-# Matches handoff/BE-293-umbrella-3.17.0/ARTIFACT-MANIFEST.md.
+ALPHA_DIR="$(cd "$HERE/.." && pwd)"
+CHART="${PORTAL_CHART:-$ALPHA_DIR/charts/umbrella-3.17.0/charts/portal-2.6.0.tgz}"
+# Matches the ARTIFACT-MANIFEST.md of the Umbrella 3.17.0 handoff (sha256 pinned below).
 EXPECTED_CHART_SHA256="${PORTAL_CHART_SHA256:-a17ab65070eeea3e719e2187213db23fc9226f6a8b2fc94ed771ec6835ad1e09}"
 BASE_VALUES="$HERE/values-be293-portal.yaml"
 RELEASE_VALUES="$HERE/values-be293-portal.alpha-release.yaml"

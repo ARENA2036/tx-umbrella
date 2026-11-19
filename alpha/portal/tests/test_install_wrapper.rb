@@ -13,12 +13,24 @@ require_relative 'support/pinned_did_resolver'
 require 'fileutils'
 require 'json'
 require 'open3'
+require 'rbconfig'
 require 'tmpdir'
 require_relative '../tools/build_secret_manifest'
 
 class InstallWrapperTest < Minitest::Test
   HERE = File.expand_path('..', __dir__)
   SCRIPT = File.join(HERE, 'tools/install-be293.sh')
+
+  # Every script under test runs in a NEW SESSION without a controlling terminal (setsid before exec), so its
+  # `exec 3<>/dev/tty` fails exactly as in an unattended run, whatever shell or terminal invokes the test. Redirecting
+  # stdin is not enough: the scripts open /dev/tty directly. No test here may read the invoking terminal.
+  NO_TTY = [RbConfig.ruby, '-e', 'Process.setsid; exec(*ARGV)'].freeze
+
+  def test_scripts_run_without_a_controlling_terminal
+    out, st = Open3.capture2e(*NO_TTY, '/bin/bash', '-c', '{ exec 3<>/dev/tty; } 2>/dev/null && echo TTY-OPENED || echo NO-TTY', stdin_data: '')
+    assert st.success?, out
+    assert_equal "NO-TTY\n", out, 'the test harness must not give the script a terminal'
+  end
   REAL_HELM = `command -v helm`.strip
   CONTRACT = YAML.safe_load(File.read(File.join(HERE, 'secrets-contract.yaml')))
   NETPOLS = YAML.load_stream(File.read(File.join(HERE, 'networkpolicies-be293-portal.alpha-release.yaml'))).compact.map { |d| d['metadata']['name'] }
@@ -105,7 +117,7 @@ class InstallWrapperTest < Minitest::Test
     full_env = { 'PATH' => "#{@bin}:#{ENV['PATH']}", 'ALPHA_KUBECONFIG' => @kc, 'HELM_CACHE_HOME' => "#{@dir}/hc",
                  'HELM_CONFIG_HOME' => "#{@dir}/hcfg", 'HELM_DATA_HOME' => "#{@dir}/hd",
                  'SMTP4DEV_MANIFEST' => PinnedSmtp4dev.manifest(@dir), 'DID_RESOLVER_MANIFEST' => PinnedDidResolver.manifest(@dir) }.merge(env)
-    Open3.capture2e(full_env, 'bash', SCRIPT, *args, stdin_data: '')
+    Open3.capture2e(full_env, *NO_TTY, 'bash', SCRIPT, *args, stdin_data: '')
   end
 
   def helm_log
