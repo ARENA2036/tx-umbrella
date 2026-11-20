@@ -1,0 +1,258 @@
+# #############################################################################
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License, Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0.
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+# #############################################################################
+---
+# Alpha environment on *.test.tractus-x.com (STACKIT, ingress-nginx, cert-manager letsencrypt-prod, external-dns).
+# BPDM, Semantic Hub and SD-Factory are the shared services of that environment.
+#   helm upgrade --install alpha charts/alpha -n <namespace> -f charts/alpha/values-test-tractus-x.yaml
+
+# The cluster addresses networkPolicy.publicIngressCidrs and networkPolicy.apiServerCidr are set in the git-ignored
+# values-local.yaml (see README.md).
+networkPolicy:
+  dnsPorts: [53, 8053]
+  extraEgress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: release26-09
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: sdfactory
+      ports:
+        - {protocol: TCP, port: 8080}
+
+didResolver:
+  didWebDomain: test.tractus-x.com
+
+portal:
+  portalAddress: "https://portal-be293.test.tractus-x.com"
+  portalBackendAddress: "https://portal-backend-be293.test.tractus-x.com"
+  centralidp:
+    address: "https://centralidp-be293.test.tractus-x.com"
+  sharedidpAddress: "https://sharedidp-be293.test.tractus-x.com"
+  semanticsAddress: "https://semantics.test.tractus-x.com"
+  bpdm:
+    poolAddress: "https://business-partners.test.tractus-x.com"
+    portalGateAddress: "https://business-partners.test.tractus-x.com"
+  sdfactoryAddress: "http://sdfactory.release26-09.svc.cluster.local"
+  bpnDidResolver:
+    directoryApiAddress: "https://bdrs-server.test.tractus-x.com/api/directory"
+  frontend:
+    ingress:
+      annotations:
+        cert-manager.io/cluster-issuer: "letsencrypt-prod"
+        external-dns.alpha.kubernetes.io/hostname: "portal-be293.test.tractus-x.com"
+      tls:
+        - secretName: "portal-frontend-tls"
+          hosts:
+            - "portal-be293.test.tractus-x.com"
+      hosts:
+        - host: "portal-be293.test.tractus-x.com"
+          paths:
+            - path: "/(.*)"
+              pathType: "ImplementationSpecific"
+              backend:
+                service: "portal"
+                port: 8080
+            - path: "/registration/(.*)"
+              pathType: "ImplementationSpecific"
+              backend:
+                service: "registration"
+                port: 8080
+            - path: "/((assets|documentation)/.*)"
+              pathType: "ImplementationSpecific"
+              backend:
+                service: "assets"
+                port: 8080
+  backend:
+    ingress:
+      annotations:
+        cert-manager.io/cluster-issuer: "letsencrypt-prod"
+        external-dns.alpha.kubernetes.io/hostname: "portal-backend-be293.test.tractus-x.com"
+        nginx.ingress.kubernetes.io/cors-allow-origin: "https://portal-be293.test.tractus-x.com"
+      tls:
+        - secretName: "portal-backend-tls"
+          hosts:
+            - "portal-backend-be293.test.tractus-x.com"
+      hosts:
+        - host: "portal-backend-be293.test.tractus-x.com"
+          paths:
+            - path: "/api/registration"
+              pathType: "Prefix"
+              backend:
+                service: "registration-service"
+                port: 8080
+            - path: "/api/administration"
+              pathType: "Prefix"
+              backend:
+                service: "administration-service"
+                port: 8080
+            - path: "/api/notification"
+              pathType: "Prefix"
+              backend:
+                service: "notification-service"
+                port: 8080
+            - path: "/api/apps"
+              pathType: "Prefix"
+              backend:
+                service: "marketplace-app-service"
+                port: 8080
+            - path: "/api/services"
+              pathType: "Prefix"
+              backend:
+                service: "services-service"
+                port: 8080
+    mailing:
+      senderEmail: "it@arena2036.de"
+    provisioning:
+      # Keycloak identity-provider aliases of this environment start with this prefix: never change it.
+      idpPrefix: "be293-alpha-idp-"
+      sharedRealm:
+        smtpServer:
+          from: "noreply@be293.test"
+          replyTo: "noreply@be293.test"
+    administration:
+      issuerdid: "did:web:issuer-be293.test.tractus-x.com:BPNL00000003CRHK"
+    processesworker:
+      bpdm:
+        tokenAddress: "https://centralidp.test.tractus-x.com/auth/realms/CX-Central/protocol/openid-connect/token"
+      identityHub:
+        credentialServiceBaseAddress: "https://identityhub-be293.test.tractus-x.com/api/credentials"
+        didDocumentBaseLocation: "identityhub-be293.test.tractus-x.com"
+        issuerDid: "did:web:issuer-be293.test.tractus-x.com:BPNL00000003CRHK"
+
+centralidp:
+  keycloak:
+    ingress:
+      hostname: "centralidp-be293.test.tractus-x.com"
+      annotations:
+        cert-manager.io/cluster-issuer: "letsencrypt-prod"
+        external-dns.alpha.kubernetes.io/hostname: "centralidp-be293.test.tractus-x.com"
+    postgresql:
+      primary:
+        persistence:
+          storageClass: "premium-perf1-stackit"
+  realmSeeding:
+    clients:
+      registration:
+        redirects:
+          - "https://portal-be293.test.tractus-x.com/*"
+      portal:
+        rootUrl: "https://portal-be293.test.tractus-x.com/home"
+        redirects:
+          - "https://portal-be293.test.tractus-x.com/*"
+      semantics:
+        redirects:
+          - "https://portal-be293.test.tractus-x.com/*"
+    sharedidp: "https://sharedidp-be293.test.tractus-x.com"
+
+sharedidp:
+  keycloak:
+    ingress:
+      hostname: "sharedidp-be293.test.tractus-x.com"
+      annotations:
+        cert-manager.io/cluster-issuer: "letsencrypt-prod"
+        external-dns.alpha.kubernetes.io/hostname: "sharedidp-be293.test.tractus-x.com"
+    postgresql:
+      primary:
+        persistence:
+          storageClass: "premium-perf1-stackit"
+  realmSeeding:
+    realms:
+      cxOperator:
+        centralidp: "https://centralidp-be293.test.tractus-x.com"
+
+identity-postgresql:
+  primary:
+    persistence:
+      storageClass: premium-perf1-stackit
+
+edc-postgresql:
+  primary:
+    persistence:
+      storageClass: premium-perf1-stackit
+
+vault:
+  server:
+    dataStorage:
+      storageClass: premium-perf1-stackit
+
+issuerservice:
+  issuerservice:
+    ingresses:
+      - enabled: true
+        hostname: "issuer-be293.test.tractus-x.com"
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: "issuer-be293.test.tractus-x.com"
+        endpoints:
+          - did
+          - issuance
+          - statuslist
+        className: "nginx"
+        tls:
+          enabled: true
+          secretName: "issuerservice-tls"
+        certManager:
+          clusterIssuer: "letsencrypt-prod"
+  statuslist:
+    callback:
+      address: "https://issuer-be293.test.tractus-x.com/statuslist"
+
+identityhub:
+  identityhub:
+    ingresses:
+      - enabled: true
+        hostname: "identityhub-be293.test.tractus-x.com"
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: "identityhub-be293.test.tractus-x.com"
+        endpoints:
+          - credentials
+          - did
+        className: "nginx"
+        tls:
+          enabled: true
+          secretName: "identityhub-tls"
+        certManager:
+          clusterIssuer: "letsencrypt-prod"
+
+bdrs:
+  server:
+    trustedIssuers:
+      - "did:web:issuer-be293.test.tractus-x.com:BPNL00000003CRHK"
+
+edc-provider:
+  participant:
+    id: "did:web:identityhub-be293.test.tractus-x.com:BPNL000000000FV1"
+  dcp:
+    trustedIssuers:
+      - "did:web:issuer-be293.test.tractus-x.com:BPNL00000003CRHK"
+    sts:
+      oauth:
+        client:
+          id: "did:web:identityhub-be293.test.tractus-x.com:BPNL000000000FV1"
+
+edc-consumer:
+  participant:
+    id: "did:web:identityhub-be293.test.tractus-x.com:BPNL000000000GUC"
+  dcp:
+    trustedIssuers:
+      - "did:web:issuer-be293.test.tractus-x.com:BPNL00000003CRHK"
+    sts:
+      oauth:
+        client:
+          id: "did:web:identityhub-be293.test.tractus-x.com:BPNL000000000GUC"

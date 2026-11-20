@@ -1,0 +1,87 @@
+# #############################################################################
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License, Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0.
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+# #############################################################################
+---
+apiVersion: v2
+name: alpha
+description: |
+  Tractus-X Portal with IdentityHub-based onboarding: Portal, CentralIdP and SharedIdP, IssuerService,
+  IdentityHub, BDRS, Vault and PostgreSQL, plus two Tractus-X EDC connectors for end-to-end tests.
+
+sources:
+  - https://github.com/ARENA2036/tx-umbrella
+
+type: application
+
+version: 0.1.0
+
+# Charts without a repository are vendored in charts/ because they carry changes that are not published upstream:
+#   portal       Portal 2.6.0 with the IdentityHub wallet provider, plus the options bpdm.tokenAddress,
+#                provisioning.idpPrefix, CronJob suspend flags, processes-worker pod labels and keepSecretsOnUninstall
+#   bdrs-server  BDRS 0.6.0 with server.envValueFrom (Vault token from a Secret), server.volumes and image digests
+# tractusx-connector is patched after download by hack/helm-dependencies.bash.
+dependencies:
+  - name: portal
+    version: 2.6.0
+    condition: portal.enabled
+  - name: centralidp
+    version: 4.2.1
+    repository: https://eclipse-tractusx.github.io/charts/dev
+    condition: centralidp.enabled
+  - name: sharedidp
+    version: 4.2.1
+    repository: https://eclipse-tractusx.github.io/charts/dev
+    condition: sharedidp.enabled
+  - name: postgresql
+    alias: identity-postgresql
+    version: 16.0.0
+    repository: https://charts.bitnami.com/bitnami
+    condition: identity-postgresql.enabled
+  - name: vault
+    version: 0.29.1
+    repository: https://helm.releases.hashicorp.com
+    condition: vault.enabled
+  - name: tractusx-issuerservice
+    alias: issuerservice
+    version: v0.4.1
+    repository: https://eclipse-tractusx.github.io/charts/dev
+    condition: issuerservice.enabled
+  - name: tractusx-identityhub
+    alias: identityhub
+    version: v0.4.1
+    repository: https://eclipse-tractusx.github.io/charts/dev
+    condition: identityhub.enabled
+  - name: bdrs-server
+    alias: bdrs
+    version: 0.6.0
+    condition: bdrs.enabled
+  - name: postgresql
+    alias: edc-postgresql
+    version: 16.0.0
+    repository: https://charts.bitnami.com/bitnami
+    condition: edc-postgresql.enabled
+  - name: tractusx-connector
+    alias: edc-provider
+    version: 0.13.0
+    repository: https://eclipse-tractusx.github.io/charts/dev
+    condition: edc-provider.enabled
+  - name: tractusx-connector
+    alias: edc-consumer
+    version: 0.13.0
+    repository: https://eclipse-tractusx.github.io/charts/dev
+    condition: edc-consumer.enabled

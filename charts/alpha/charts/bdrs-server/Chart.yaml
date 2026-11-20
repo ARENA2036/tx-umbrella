@@ -1,0 +1,20 @@
+apiVersion: v2
+appVersion: 0.6.0
+dependencies:
+- alias: postgresql
+  condition: install.postgresql
+  name: postgres
+  repository: oci://registry-1.docker.io/cloudpirates
+  version: 0.18.3
+- alias: vault
+  condition: install.vault
+  name: vault
+  repository: https://helm.releases.hashicorp.com
+  version: 0.28.0
+description: A Helm chart for the Tractus-X BPN-DID Resolution Service
+home: https://github.com/eclipse-tractusx/bpn-did-resolution-service/tree/main/charts/bdrs-server
+name: bdrs-server
+sources:
+- https://github.com/eclipse-tractusx/bpn-did-resolution-service/tree/main/charts/bdrs-server
+type: application
+version: 0.6.0

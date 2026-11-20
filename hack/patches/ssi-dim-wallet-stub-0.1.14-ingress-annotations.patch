@@ -1,0 +1,7 @@
+--- a/templates/ingress.yaml
++++ b/templates/ingress.yaml
+@@ -27,3 +27,3 @@
+   annotations:
+-  {{.Values.wallet.ingress.annotations | toYaml | indent 4}}
++    {{- toYaml .Values.wallet.ingress.annotations | nindent 4 }}
+ spec:

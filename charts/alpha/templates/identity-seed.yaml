@@ -1,0 +1,120 @@
+{{- if .Values.identitySeed.enabled }}
+{{- $ctx := dict "root" $ "name" "identity-seed" }}
+{{- $ih := .Values.portal.backend.processesworker.identityHub }}
+{{- $issuerHost := index (splitList ":" $ih.issuerDid) 2 }}
+{{- $portalSecret := required "portal.backend.processesworker.identityHub.existingSecret is required" $ih.existingSecret }}
+{{- $isSuperuser := (index .Values.issuerservice.issuerservice.envValueFrom "edc.ih.api.superuser.key").secretKeyRef.name }}
+{{- $ihSuperuser := (index .Values.identityhub.identityhub.envValueFrom "edc.ih.api.superuser.key").secretKeyRef.name }}
+# The Job may patch exactly these three Secrets and nothing else.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: identity-seed
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: identity-seed
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+rules:
+  - apiGroups: [""]
+    resources: [secrets]
+    resourceNames:
+      - {{ $isSuperuser | quote }}
+      - {{ $ihSuperuser | quote }}
+      - {{ $portalSecret | quote }}
+    verbs: [patch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: identity-seed
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: identity-seed
+subjects:
+  - kind: ServiceAccount
+    name: identity-seed
+    namespace: {{ .Release.Namespace }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: identity-seed
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+data:
+  seed.sh: |
+    {{- .Files.Get "files/identity-seed.sh" | nindent 4 }}
+---
+# Not a hook and without TTL: Helm keeps the completed Job, so upgrades never run it again. A new runId runs it again.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: identity-seed-{{ .Values.identitySeed.runId }}
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 900
+  template:
+    metadata:
+      labels:
+        {{- include "alpha.labels" $ctx | nindent 8 }}
+    spec:
+      serviceAccountName: identity-seed
+      automountServiceAccountToken: true
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: seed
+          image: {{ .Values.identitySeed.image | quote }}
+          command: ["/bin/sh", "/seed/seed.sh"]
+          env:
+            - name: NS
+              valueFrom: {fieldRef: {fieldPath: metadata.namespace}}
+            - {name: IS_URL, value: {{ printf "http://%s" .Values.issuerservice.fullnameOverride | quote }}}
+            - {name: IH_URL, value: {{ printf "http://%s" .Values.identityhub.fullnameOverride | quote }}}
+            - {name: ISSUER_ID, value: {{ $ih.issuerParticipantId | quote }}}
+            - {name: ISSUER_DID, value: {{ $ih.issuerDid | quote }}}
+            - {name: ISSUANCE_URL, value: {{ printf "https://%s/api/issuance/v1alpha/participants/%s" $issuerHost $ih.issuerParticipantId | quote }}}
+            - {name: PORTAL_ID, value: {{ .Values.identitySeed.portalParticipantId | quote }}}
+            - {name: PORTAL_DID, value: {{ printf "did:web:%s:%s" $ih.didDocumentBaseLocation .Values.identitySeed.portalParticipantId | quote }}}
+            - {name: SCHEMA_BASE, value: {{ .Values.identitySeed.credentialSchemaBaseUrl | quote }}}
+            - {name: BPN_DEFINITION_ID, value: {{ $ih.bpnCredentialDefinitionId | quote }}}
+            - {name: MEMBERSHIP_DEFINITION_ID, value: {{ $ih.membershipCredentialDefinitionId | quote }}}
+            - {name: PORTAL_SECRET, value: {{ $portalSecret | quote }}}
+            - {name: IS_SUPERUSER_SECRET, value: {{ $isSuperuser | quote }}}
+            - {name: IH_SUPERUSER_SECRET, value: {{ $ihSuperuser | quote }}}
+          securityContext:
+            {{- include "alpha.containerSecurityContext" . | nindent 12 }}
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {cpu: 250m, memory: 128Mi}
+          volumeMounts:
+            - {name: script, mountPath: /seed, readOnly: true}
+            - {name: work, mountPath: /work}
+            - {name: issuerservice-key, mountPath: /keys/issuerservice, readOnly: true}
+            - {name: identityhub-key, mountPath: /keys/identityhub, readOnly: true}
+      volumes:
+        - name: script
+          configMap: {name: identity-seed, defaultMode: 0444}
+        - name: work
+          emptyDir: {medium: Memory, sizeLimit: 1Mi}
+        - name: issuerservice-key
+          secret: {secretName: {{ $isSuperuser | quote }}, defaultMode: 0440, items: [{key: api-key, path: api-key}]}
+        - name: identityhub-key
+          secret: {secretName: {{ $ihSuperuser | quote }}, defaultMode: 0440, items: [{key: api-key, path: api-key}]}
+{{- end }}

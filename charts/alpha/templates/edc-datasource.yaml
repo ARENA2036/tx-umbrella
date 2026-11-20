@@ -1,0 +1,76 @@
+{{- if .Values.edcDatasource.enabled }}
+{{- $ctx := dict "root" $ "name" "edc-datasource" }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: edc-datasource
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+data:
+  payload.json: |
+    {"source":"edc-datasource","provider":{{ (index .Values "edc-provider").participant.bpnl | quote }},"test":"EDC end-to-end transfer"}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: edc-datasource
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "alpha.selectorLabels" $ctx | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "alpha.labels" $ctx | nindent 8 }}
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: nginx
+          image: {{ .Values.edcDatasource.image | quote }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - {name: http, containerPort: 8080, protocol: TCP}
+          securityContext:
+            {{- include "alpha.containerSecurityContext" . | nindent 12 }}
+          readinessProbe:
+            httpGet: {path: /payload.json, port: http}
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /payload.json, port: http}
+            periodSeconds: 30
+          resources:
+            requests: {cpu: 10m, memory: 16Mi}
+            limits: {cpu: 100m, memory: 64Mi}
+          volumeMounts:
+            - {name: payload, mountPath: /usr/share/nginx/html, readOnly: true}
+            # pid file and temp paths of the unprivileged image
+            - {name: tmp, mountPath: /tmp}
+      volumes:
+        - name: payload
+          configMap:
+            name: edc-datasource
+            items: [{key: payload.json, path: payload.json}]
+        - name: tmp
+          emptyDir: {sizeLimit: 16Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: edc-datasource
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "alpha.selectorLabels" $ctx | nindent 4 }}
+  ports:
+    - {name: http, port: 8080, targetPort: http, protocol: TCP}
+{{- end }}

@@ -1,0 +1,142 @@
+{{- if .Values.didResolver.enabled }}
+{{- $ctx := dict "root" $ "name" "did-resolver" }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: did-resolver-gateway
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+data:
+  # Only GET /1.0/identifiers/did:web:<host under didWebDomain>[:path] and /healthz reach the driver.
+  nginx.conf: |
+    worker_processes 1;
+    pid /tmp/nginx.pid;
+    error_log /dev/stderr warn;
+    events { worker_connections 64; }
+    http {
+      server_tokens off;
+      access_log /dev/stdout;
+      client_body_temp_path /tmp/client_temp;
+      proxy_temp_path /tmp/proxy_temp;
+      fastcgi_temp_path /tmp/fastcgi_temp;
+      uwsgi_temp_path /tmp/uwsgi_temp;
+      scgi_temp_path /tmp/scgi_temp;
+      client_max_body_size 1k;
+      server {
+        listen 8080;
+        location ~ "^/1\.0/identifiers/(?<did>did:web:[a-z0-9-]+(\.[a-z0-9-]+)*\.{{ .Values.didResolver.didWebDomain | replace "." "\\." }}(:[A-Za-z0-9._-]+)*)$" {
+          limit_except GET { deny all; }
+          proxy_pass http://127.0.0.1:8081/1.0/identifiers/$did;
+          proxy_set_header Host 127.0.0.1;
+          proxy_connect_timeout 2s;
+          proxy_read_timeout 20s;
+          proxy_send_timeout 5s;
+        }
+        location = /healthz {
+          access_log off;
+          limit_except GET { deny all; }
+          proxy_pass http://127.0.0.1:8081/health;
+          proxy_connect_timeout 1s;
+          proxy_read_timeout 2s;
+        }
+        location / { return 404; }
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: did-resolver
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      {{- include "alpha.selectorLabels" $ctx | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "alpha.labels" $ctx | nindent 8 }}
+      annotations:
+        checksum/gateway-config: {{ .Values.didResolver.didWebDomain | sha256sum }}
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: gateway
+          image: {{ .Values.didResolver.gatewayImage | quote }}
+          imagePullPolicy: IfNotPresent
+          command: ["nginx", "-g", "daemon off;"]
+          ports:
+            - {name: http, containerPort: 8080, protocol: TCP}
+          readinessProbe:
+            httpGet: {path: /healthz, port: http}
+            periodSeconds: 10
+            timeoutSeconds: 3
+          livenessProbe:
+            tcpSocket: {port: http}
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            requests: {cpu: 10m, memory: 16Mi}
+            limits: {memory: 64Mi}
+          securityContext:
+            # nginx user of the unprivileged image
+            runAsUser: 101
+            runAsGroup: 101
+            {{- include "alpha.containerSecurityContext" . | nindent 12 }}
+          volumeMounts:
+            - {name: gateway-config, mountPath: /etc/nginx/nginx.conf, subPath: nginx.conf, readOnly: true}
+            - {name: gateway-tmp, mountPath: /tmp}
+        - name: driver
+          image: {{ .Values.didResolver.driverImage | quote }}
+          imagePullPolicy: IfNotPresent
+          env:
+            - {name: NODE_ENV, value: "production"}
+          ports:
+            - {name: driver, containerPort: 8081, protocol: TCP}
+          readinessProbe:
+            httpGet: {path: /health, port: driver}
+            periodSeconds: 10
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet: {path: /health, port: driver}
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            timeoutSeconds: 3
+          resources:
+            requests: {cpu: 20m, memory: 96Mi}
+            limits: {memory: 384Mi}
+          securityContext:
+            # node user of the base image (the image itself declares USER root)
+            runAsUser: 1000
+            runAsGroup: 1000
+            {{- include "alpha.containerSecurityContext" . | nindent 12 }}
+          volumeMounts:
+            - {name: driver-tmp, mountPath: /tmp}
+      volumes:
+        - name: gateway-config
+          configMap: {name: did-resolver-gateway}
+        - name: gateway-tmp
+          emptyDir: {sizeLimit: 16Mi}
+        - name: driver-tmp
+          emptyDir: {sizeLimit: 16Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: did-resolver
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "alpha.selectorLabels" $ctx | nindent 4 }}
+  ports:
+    - {name: http, port: 8080, targetPort: http, protocol: TCP}
+{{- end }}

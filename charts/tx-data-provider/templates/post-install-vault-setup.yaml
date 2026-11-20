@@ -18,9 +18,13 @@
 # #############################################################################
 ---
 {{ if index .Values  "dataspace-connector-bundle" "vault" "enabled" }}
-{{- $vaultToken := index .Values  "dataspace-connector-bundle" "tractusx-connector" "vault" "hashicorp" "token" -}}
 {{- $vaultUrl := tpl (index .Values  "dataspace-connector-bundle" "tractusx-connector" "vault" "hashicorp" "url") . -}}
 {{- $fullName := include "dataprovider.fullname" . -}}
+{{- $vaultSetup := .Values.vaultSetup | default dict -}}
+{{- $tokenSecretRef := $vaultSetup.tokenSecretRef | default dict -}}
+{{- $keyMaterialSecretRef := $vaultSetup.keyMaterialSecretRef | default dict -}}
+{{- $seedPayloadSecretRefs := $vaultSetup.seedPayloadSecretRefs | default dict -}}
+{{- $seedAliases := keys (.Values.secrets | default dict) | sortAlpha -}}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -50,30 +54,64 @@ spec:
         - name: post-install-job
           image: {{ .Values.vaultSetup.image | quote }}
           imagePullPolicy: "IfNotPresent"
+          env:
+            - name: VAULT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $tokenSecretRef.name | required "vaultSetup.tokenSecretRef.name is required when Vault key seeding is enabled" | quote }}
+                  key: {{ $tokenSecretRef.key | required "vaultSetup.tokenSecretRef.key is required when Vault key seeding is enabled" | quote }}
           command:
             - "/bin/sh"
             - "-c"
             - |
               sleep 10
-              {{- range $key, $value := .Values.secrets }}
-              wget --header 'Content-Type: application/json' --header 'X-Vault-Token: {{ $vaultToken }}' \
-              --post-data '{"data": {"content": "{{ $value }}"}}' "{{ $vaultUrl }}/v1/secret/data/{{ $key }}"
+              {{- range $index, $alias := $seedAliases }}
+              wget --header 'Content-Type: application/json' --header "X-Vault-Token: ${VAULT_TOKEN}" \
+              --post-file=/opt/secret-seeds/{{ $index }}/payload.json "{{ $vaultUrl }}/v1/secret/data/{{ $alias }}"
               {{- end }}
 
-              wget --header 'Content-Type: application/json' --header 'X-Vault-Token: {{ $vaultToken }}' \
+              wget --header 'Content-Type: application/json' --header "X-Vault-Token: ${VAULT_TOKEN}" \
               --post-file=/opt/config/cert.json "{{ $vaultUrl }}/v1/secret/data/tokenSignerPublicKey"
 
-              wget --header 'Content-Type: application/json' --header 'X-Vault-Token: {{ $vaultToken }}' \
-              --post-file=/opt/config/key.json "{{ $vaultUrl }}/v1/secret/data/tokenSignerPrivateKey"
+              wget --header 'Content-Type: application/json' --header "X-Vault-Token: ${VAULT_TOKEN}" \
+              --post-file=/opt/key-material/key.json "{{ $vaultUrl }}/v1/secret/data/tokenSignerPrivateKey"
 
-              wget --header 'Content-Type: application/json' --header 'X-Vault-Token: {{ $vaultToken }}' \
-              --post-file=/opt/config/aes-secret.json "{{ $vaultUrl }}/v1/secret/data/tokenEncryptionAesKey"
+              wget --header 'Content-Type: application/json' --header "X-Vault-Token: ${VAULT_TOKEN}" \
+              --post-file=/opt/key-material/aes-secret.json "{{ $vaultUrl }}/v1/secret/data/tokenEncryptionAesKey"
           volumeMounts:
             - name: config-volume
               mountPath: /opt/config
+              readOnly: true
+            - name: key-material
+              mountPath: /opt/key-material
+              readOnly: true
+            {{- range $index, $alias := $seedAliases }}
+            - name: seed-payload-{{ $index }}
+              mountPath: /opt/secret-seeds/{{ $index }}
+              readOnly: true
+            {{- end }}
       volumes:
         - name: config-volume
           configMap:
             name: {{ $fullName }}-vault-edc-configmap
-            defaultMode: 0777
+            defaultMode: 0444
+        - name: key-material
+          secret:
+            defaultMode: 0400
+            secretName: {{ $keyMaterialSecretRef.name | required "vaultSetup.keyMaterialSecretRef.name is required when Vault key seeding is enabled" | quote }}
+            items:
+              - key: {{ $keyMaterialSecretRef.privateKeyKey | required "vaultSetup.keyMaterialSecretRef.privateKeyKey is required when Vault key seeding is enabled" | quote }}
+                path: key.json
+              - key: {{ $keyMaterialSecretRef.aesSecretKey | required "vaultSetup.keyMaterialSecretRef.aesSecretKey is required when Vault key seeding is enabled" | quote }}
+                path: aes-secret.json
+        {{- range $index, $alias := $seedAliases }}
+        {{- $ref := index $seedPayloadSecretRefs $alias | default dict }}
+        - name: seed-payload-{{ $index }}
+          secret:
+            defaultMode: 0400
+            secretName: {{ $ref.name | required (printf "vaultSetup.seedPayloadSecretRefs.%s.name is required" $alias) | quote }}
+            items:
+              - key: {{ $ref.key | required (printf "vaultSetup.seedPayloadSecretRefs.%s.key is required" $alias) | quote }}
+                path: payload.json
+        {{- end }}
 {{ end }}

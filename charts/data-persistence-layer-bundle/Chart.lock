@@ -1,0 +1,6 @@
+dependencies:
+- name: simple-data-backend
+  repository: https://eclipse-tractusx.github.io/charts/dev
+  version: 0.1.0
+digest: sha256:fb4088501ca67289e49cfdfef8e3d1b36f71b660d9facde5671484ab9a8118dd
+generated: "2026-10-29T17:49:05.373607+01:00"

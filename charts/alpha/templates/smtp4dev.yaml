@@ -1,0 +1,107 @@
+{{- if .Values.smtp4dev.enabled }}
+{{- $ctx := dict "root" $ "name" "smtp4dev" }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: smtp4dev-data
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+spec:
+  accessModes: [ReadWriteOnce]
+  {{- with .Values.smtp4dev.storage.storageClassName }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.smtp4dev.storage.size }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smtp4dev
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+spec:
+  replicas: 1
+  strategy:
+    # ReadWriteOnce volume: never two pods on the SQLite mailbox.
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "alpha.selectorLabels" $ctx | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "alpha.labels" $ctx | nindent 8 }}
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1654
+        runAsGroup: 1654
+        fsGroup: 1654
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: smtp4dev
+          image: {{ .Values.smtp4dev.image | quote }}
+          imagePullPolicy: IfNotPresent
+          env:
+            - {name: ASPNETCORE_HTTP_PORTS, value: "8080"}
+            - {name: SERVEROPTIONS__URLS, value: "http://*:8080"}
+            - {name: ServerOptions__Port, value: "2525"}
+            # Empty disables IMAP and POP3.
+            - {name: ServerOptions__ImapPort, value: ""}
+            - {name: ServerOptions__Pop3Port, value: ""}
+            - {name: ServerOptions__LockSettings, value: "true"}
+            - {name: ServerOptions__Database, value: "/smtp4dev/database.db"}
+            - {name: ServerOptions__NumberOfMessagesToKeep, value: "1000"}
+            - {name: ServerOptions__NumberOfSessionsToKeep, value: "200"}
+            - {name: ServerOptions__TlsMode, value: "None"}
+            - {name: ServerOptions__AuthenticationRequired, value: "false"}
+            - {name: ServerOptions__SmtpAllowAnyCredentials, value: "true"}
+            # No relay: mail never leaves the cluster.
+            - {name: RelayOptions__SmtpServer, value: ""}
+            - {name: RelayOptions__AutomaticRelayExpression, value: ""}
+            - {name: DOTNET_EnableDiagnostics, value: "0"}
+          ports:
+            - {name: smtp, containerPort: 2525, protocol: TCP}
+            - {name: http, containerPort: 8080, protocol: TCP}
+          readinessProbe:
+            tcpSocket: {port: smtp}
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /, port: http}
+            initialDelaySeconds: 20
+            periodSeconds: 30
+          resources:
+            requests: {cpu: 50m, memory: 128Mi}
+            limits: {memory: 512Mi}
+          securityContext:
+            {{- include "alpha.containerSecurityContext" . | nindent 12 }}
+          volumeMounts:
+            - {name: data, mountPath: /smtp4dev}
+            - {name: tmp, mountPath: /tmp}
+            - {name: home, mountPath: /home/app}
+      volumes:
+        - name: data
+          persistentVolumeClaim: {claimName: smtp4dev-data}
+        - name: tmp
+          emptyDir: {sizeLimit: 64Mi}
+        - name: home
+          emptyDir: {sizeLimit: 16Mi}
+---
+# SMTP only; the web UI (port 8080) is reached with kubectl port-forward.
+apiVersion: v1
+kind: Service
+metadata:
+  name: smtp4dev
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "alpha.selectorLabels" $ctx | nindent 4 }}
+  ports:
+    - {name: smtp, port: 25, targetPort: smtp, protocol: TCP}
+{{- end }}

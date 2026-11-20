@@ -1,0 +1,363 @@
+{{- if .Values.networkPolicy.enabled }}
+{{- $np := .Values.networkPolicy }}
+{{- $ctx := dict "root" $ "name" "network-policy" }}
+{{- $ingressController := dict "namespaceSelector" (dict "matchLabels" (dict "kubernetes.io/metadata.name" $np.ingressControllerNamespace)) }}
+{{- $edcPods := list }}
+{{- range $c := list "edc-provider" "edc-consumer" }}
+{{- range $plane := list "controlplane" "dataplane" }}
+{{- $edcPods = append $edcPods (dict "podSelector" (dict "matchLabels" (dict "app.kubernetes.io/name" (printf "%s-%s" $c $plane)))) }}
+{{- end }}
+{{- end }}
+{{- $identityApps := list }}
+{{- range $c := list "issuerservice" "identityhub" "bdrs" }}
+{{- $identityApps = append $identityApps (dict "podSelector" (dict "matchLabels" (dict "app.kubernetes.io/name" $c))) }}
+{{- end }}
+# Namespace baseline: deny everything, then allow DNS, traffic between the pods of this namespace and HTTPS to the
+# public ingress (the release's own public hosts). Each component below gets only the ingress it needs.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: baseline-egress
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        {{- range $np.dnsPorts }}
+        - {protocol: UDP, port: {{ . }}}
+        - {protocol: TCP, port: {{ . }}}
+        {{- end }}
+    - to:
+        - podSelector: {}
+    - to:
+        {{- range $np.publicIngressCidrs }}
+        - ipBlock: {cidr: {{ . | quote }}}
+        {{- end }}
+        - {{ toYaml $ingressController | nindent 10 | trim }}
+      ports:
+        - {protocol: TCP, port: 443}
+    {{- with $np.extraEgress }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+---
+# cert-manager HTTP-01 solver pods
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: acme-http01-ingress
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      acme.cert-manager.io/http01-solver: "true"
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - {{ toYaml $ingressController | nindent 10 | trim }}
+      ports:
+        - {protocol: TCP, port: 8089}
+{{- if .Values.portal.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: portal-ingress
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: portal
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {}
+        - {{ toYaml $ingressController | nindent 10 | trim }}
+      ports:
+        - {protocol: TCP, port: 8080}
+---
+# Portal database; also matches the IdP databases, whose own chart policies already allow port 5432.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: portal-postgresql-ingress
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: postgresql
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {}
+      ports:
+        - {protocol: TCP, port: 5432}
+{{- end }}
+{{- if .Values.smtp4dev.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: smtp4dev-ingress
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "alpha.selectorLabels" (dict "root" $ "name" "smtp4dev") | nindent 6 }}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {}
+      ports:
+        - {protocol: TCP, port: 2525}
+{{- end }}
+{{- if .Values.didResolver.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: did-resolver-ingress
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "alpha.selectorLabels" (dict "root" $ "name" "did-resolver") | nindent 6 }}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {}
+      ports:
+        - {protocol: TCP, port: 8080}
+{{- end }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: vault-ingress
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: vault
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        {{- toYaml (concat $identityApps $edcPods) | nindent 8 }}
+      ports:
+        - {protocol: TCP, port: 8200}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: identity-postgresql-ingress
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: identity-postgresql
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        {{- toYaml $identityApps | nindent 8 }}
+      ports:
+        - {protocol: TCP, port: 5432}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: issuerservice-ingress
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: issuerservice
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - {{ toYaml $ingressController | nindent 10 | trim }}
+      ports:
+        - {protocol: TCP, port: 8082}   # issuance (DCP)
+        - {protocol: TCP, port: 8083}   # did
+        - {protocol: TCP, port: 8088}   # statuslist
+    - from:
+        - podSelector: {}
+      ports:
+        - {protocol: TCP, port: 8081}   # default API (readiness)
+        - {protocol: TCP, port: 8086}   # issuer admin
+        - {protocol: TCP, port: 8087}   # identity
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: identityhub-ingress
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: identityhub
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - {{ toYaml $ingressController | nindent 10 | trim }}
+      ports:
+        - {protocol: TCP, port: 8083}   # credentials (DCP credential service)
+        - {protocol: TCP, port: 8084}   # did
+    - from:
+        - podSelector: {}
+      ports:
+        - {protocol: TCP, port: 8081}   # default API (readiness)
+        - {protocol: TCP, port: 8082}   # identity
+    - from:
+        {{- toYaml $edcPods | nindent 8 }}
+      ports:
+        - {protocol: TCP, port: 8083}   # credentials
+        - {protocol: TCP, port: 8087}   # sts
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: bdrs-ingress
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: bdrs
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {}
+      ports:
+        - {protocol: TCP, port: 8081}   # management
+        - {protocol: TCP, port: 8082}   # directory (in-cluster readers only)
+{{- if and .Values.identitySeed.enabled $np.apiServerCidr }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: identity-seed-apiserver-egress
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "alpha.selectorLabels" (dict "root" $ "name" "identity-seed") | nindent 6 }}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - ipBlock: {cidr: {{ $np.apiServerCidr | quote }}}
+      ports:
+        - {protocol: TCP, port: 443}
+{{- end }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: edc-postgresql-ingress
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: edc-postgresql
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        {{- toYaml $edcPods | nindent 8 }}
+      ports:
+        - {protocol: TCP, port: 5432}
+{{- range $self, $peer := dict "edc-provider" "edc-consumer" "edc-consumer" "edc-provider" }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $self }}-controlplane-ingress
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ $self }}-controlplane
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {matchLabels: {app.kubernetes.io/name: {{ $peer }}-controlplane}}
+      ports:
+        - {protocol: TCP, port: 8084}   # protocol (DSP)
+    - from:
+        - podSelector: {matchLabels: {app.kubernetes.io/name: {{ $self }}-dataplane}}
+      ports:
+        - {protocol: TCP, port: 8083}   # control
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $self }}-dataplane-ingress
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ $self }}-dataplane
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {matchLabels: {app.kubernetes.io/name: {{ $self }}-controlplane}}
+      ports:
+        - {protocol: TCP, port: 8084}   # control (data-plane signalling)
+    - from:
+        - podSelector: {matchLabels: {app.kubernetes.io/name: {{ $peer }}-controlplane}}
+        - podSelector: {matchLabels: {app.kubernetes.io/name: {{ $peer }}-dataplane}}
+      ports:
+        - {protocol: TCP, port: 8081}   # public
+{{- end }}
+{{- if .Values.edcDatasource.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: edc-datasource-ingress
+  labels:
+    {{- include "alpha.labels" $ctx | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "alpha.selectorLabels" (dict "root" $ "name" "edc-datasource") | nindent 6 }}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {matchLabels: {app.kubernetes.io/name: edc-provider-dataplane}}
+      ports:
+        - {protocol: TCP, port: 8080}
+{{- end }}
+{{- end }}

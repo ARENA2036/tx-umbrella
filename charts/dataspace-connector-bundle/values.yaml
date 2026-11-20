@@ -29,16 +29,15 @@ tractusx-connector:
     vault: false
 
   # === Bring Your Own ===
-  iatp:
+  dcp:
     # -- Decentralized IDentifier (DID) of the connector
     # @section -- Decentralized Claims Protocol (DCP, formerly IATP) Settings (Bring Your Own)
-    id: did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003AZQP
     # -- Configures the trusted issuers for this runtime
     # @section -- Decentralized Claims Protocol (DCP, formerly IATP) Settings (Bring Your Own)
     trustedIssuers:
       - did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003CRHK
     sts:
-      dim:
+      div:
         # -- URL where connectors can request SI tokens
         # @section -- Decentralized Claims Protocol (DCP, formerly IATP) Settings (Bring Your Own)
         url: http://ssi-dim-wallet-stub.tx.test/api/sts
@@ -55,15 +54,18 @@ tractusx-connector:
           secret_alias: client-secret
 
   participant:
-    # -- Business Partner Number (BPN) of the connector (required in 0.11.0+ via tractusx.edc.participant.bpn)
+    # -- Connector DID used as the participant identifier in Connector 0.13.0
     # @section -- Decentralized Claims Protocol (DCP, formerly IATP) Settings (Bring Your Own)
-    id: BPNL00000003AZQP
+    id: did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003AZQP
+    contextId: "00000000-0000-0000-0000-000000000001"
+    # -- Business Partner Number (BPN) associated with the participant
+    bpnl: BPNL00000003AZQP
 
   controlplane:
     # -- (map) Extra environment variables that will be pass onto deployment pods
     # @section -- Decentralized Claims Protocol (DCP, formerly IATP) Settings (Bring Your Own)
     env:
-      TX_IAM_IATP_CREDENTIALSERVICE_URL: http://ssi-dim-wallet-stub.tx.test/api
+      TX_EDC_IAM_DCP_CREDENTIALSERVICE_URL: http://ssi-dim-wallet-stub.tx.test/api
       # @ignore
       EDC_IAM_DID_WEB_USE_HTTPS: false
     bdrs:
@@ -107,7 +109,7 @@ tractusx-connector:
     # -- (map) Extra environment variables that will be pass onto deployment pods
     # @section -- Decentralized Claims Protocol (DCP, formerly IATP) Settings (Bring Your Own)
     env:
-      TX_IAM_IATP_CREDENTIALSERVICE_URL: http://ssi-dim-wallet-stub.tx.test/api
+      TX_EDC_IAM_DCP_CREDENTIALSERVICE_URL: http://ssi-dim-wallet-stub.tx.test/api
       # @ignore
       EDC_IAM_DID_WEB_USE_HTTPS: false
     ingresses:
