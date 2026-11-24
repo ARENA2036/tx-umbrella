@@ -34,3 +34,4 @@ spec:
   {{- $podLabels := include "common.tplvalues.merge" ( dict "values" ( list .Values.primary.podLabels .Values.commonLabels ) "context" . ) }}
   selector: {{- include "common.labels.matchLabels" ( dict "customLabels" $podLabels "context" $ ) | nindent 4 }}
     app.kubernetes.io/component: primary
+    statefulset.kubernetes.io/pod-name: {{ printf "%s-0" (include "postgresql.v1.primary.fullname" .) | quote }}

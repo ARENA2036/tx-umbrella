@@ -141,5 +141,10 @@ echo -e "\n📦 Updating dependencies for chart: $ALPHA_DIR"
 helm dependency update "$ALPHA_DIR" --skip-refresh
 patch_package "$ALPHA_DIR/charts/tractusx-connector-0.13.0.tgz" \
   tractusx-connector 0.13.0 "$PATCHES_DIR/tractusx-connector-0.13.0-secret-refs.patch"
+  
+patch_package "$ALPHA_DIR/charts/centralidp-4.2.1.tgz" \
+  centralidp 4.2.1 "$PATCHES_DIR/idp-4.2.1-postgresql-selector.patch"
 
+patch_package "$ALPHA_DIR/charts/sharedidp-4.2.1.tgz" \
+  sharedidp 4.2.1 "$PATCHES_DIR/idp-4.2.1-postgresql-selector.patch"
 echo -e "\n✅ All charts up to date!"
