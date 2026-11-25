@@ -12,3 +12,15 @@
    selector: {{- include "common.labels.matchLabels" ( dict "customLabels" $podLabels "context" $ ) | nindent 4 }}
      app.kubernetes.io/component: primary
 +    statefulset.kubernetes.io/pod-name: {{ printf "%s-0" (include "postgresql.v1.primary.fullname" .) | quote }}
+--- a/charts/keycloak/templates/service.yaml
++++ b/charts/keycloak/templates/service.yaml
+@@ -1,2 +1,3 @@
+   selector: {{- include "common.labels.matchLabels" ( dict "customLabels" $podLabels "context" $ ) | nindent 4 }}
+     app.kubernetes.io/component: keycloak
++    statefulset.kubernetes.io/pod-name: {{ printf "%s-0" .Values.fullnameOverride | quote }}
+--- a/charts/keycloak/templates/headless-service.yaml
++++ b/charts/keycloak/templates/headless-service.yaml
+@@ -1,2 +1,3 @@
+   selector: {{- include "common.labels.matchLabels" ( dict "customLabels" $podLabels "context" $ ) | nindent 4 }}
+     app.kubernetes.io/component: keycloak
++    statefulset.kubernetes.io/pod-name: {{ printf "%s-0" .Values.fullnameOverride | quote }}
