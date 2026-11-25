@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import re
 import subprocess
+import tarfile
+import tempfile
 import unittest
 import uuid
 from pathlib import Path
@@ -151,6 +153,38 @@ class Connector013MigrationTests(unittest.TestCase):
                 self.fail(f"render omitted expected 0.13 mapping/reference marker: {expected}")
         if "TX_IAM_IATP_CREDENTIALSERVICE_URL" in rendered:
             self.fail("render contains the removed IATP credential-service variable")
+        if ".yaml.orig" in rendered or rendered.count("enableServiceLinks: false") != 2:
+            self.fail("render must hold one control-plane and one data-plane Deployment, both without service links")
+
+    def test_connector_patch_hunks_apply_exactly_without_backup_files(self) -> None:
+        """Offset hunks make patch(1) leave *.orig files; helm package then renders duplicate Deployments."""
+        patch_text = current_text("hack/patches/tractusx-connector-0.13.0-secret-refs.patch")
+        for package in (
+            "charts/alpha/charts/tractusx-connector-0.13.0.tgz",
+            "charts/dataspace-connector-bundle/charts/tractusx-connector-0.13.0.tgz",
+        ):
+            with self.subTest(package=package), tempfile.TemporaryDirectory(prefix="connector-patch-test-") as temp:
+                with tarfile.open(ROOT / package, "r:gz") as archive:
+                    archive.extractall(temp, filter="data")
+                chart = Path(temp) / "tractusx-connector"
+                # The patch touches the deployment templates in two sections: undo them last-first to get the
+                # pristine chart, then apply the whole patch the way hack/helm-dependencies.bash does.
+                sections = [s for s in re.split(r"(?m)^(?=--- (?:a/|/dev/null))", patch_text) if s]
+                steps = [("packaged", None)]
+                steps += [(f"--reverse section {i}", ("--reverse", s)) for i, s in reversed(list(enumerate(sections)))]
+                steps += [("--forward", ("--forward", patch_text))]
+                for step, action in steps:
+                    if action:
+                        result = subprocess.run(
+                            ["patch", "-F", "0", "--batch", action[0], "-p1", "-d", str(chart)],
+                            input=action[1], text=True, capture_output=True, check=False,
+                        )
+                        self.assertEqual(result.returncode, 0, f"patch {step} failed")
+                    leftovers = [p.name for p in chart.rglob("*") if p.suffix in (".orig", ".rej")]
+                    self.assertEqual(leftovers, [], f"backup files after {step}")
+                for plane in ("controlplane", "dataplane"):
+                    template = (chart / "templates" / f"deployment-{plane}.yaml").read_text()
+                    self.assertIn("    spec:\n      enableServiceLinks: false\n", template)
 
     def test_connector_013_helm_render_fails_closed_without_secretrefs(self) -> None:
         result = subprocess.run(
