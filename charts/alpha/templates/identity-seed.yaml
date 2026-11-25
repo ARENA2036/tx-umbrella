@@ -95,6 +95,8 @@ spec:
             - {name: SCHEMA_BASE, value: {{ .Values.identitySeed.credentialSchemaBaseUrl | quote }}}
             - {name: BPN_DEFINITION_ID, value: {{ $ih.bpnCredentialDefinitionId | quote }}}
             - {name: MEMBERSHIP_DEFINITION_ID, value: {{ $ih.membershipCredentialDefinitionId | quote }}}
+            - {name: DEG_DEFINITION_ID, value: {{ .Values.identitySeed.governanceCredentialDefinitionId | quote }}}
+            - {name: DEG_SCHEMA_URL, value: {{ .Values.identitySeed.governanceCredentialSchemaUrl | quote }}}
             - {name: PORTAL_SECRET, value: {{ $portalSecret | quote }}}
             - {name: IS_SUPERUSER_SECRET, value: {{ $isSuperuser | quote }}}
             - {name: IH_SUPERUSER_SECRET, value: {{ $ihSuperuser | quote }}}

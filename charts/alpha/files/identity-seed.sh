@@ -12,7 +12,7 @@ umask 077
 # Settings come from the Job environment (templates/identity-seed.yaml).
 : "${NS:?}" "${IS_URL:?}" "${IH_URL:?}" "${ISSUER_ID:?}" "${ISSUER_DID:?}" "${ISSUANCE_URL:?}" "${PORTAL_ID:?}"
 : "${PORTAL_DID:?}" "${SCHEMA_BASE:?}" "${BPN_DEFINITION_ID:?}" "${MEMBERSHIP_DEFINITION_ID:?}" "${PORTAL_SECRET:?}"
-: "${IS_SUPERUSER_SECRET:?}" "${IH_SUPERUSER_SECRET:?}"
+: "${IS_SUPERUSER_SECRET:?}" "${IH_SUPERUSER_SECRET:?}" "${DEG_DEFINITION_ID:?}" "${DEG_SCHEMA_URL:?}"
 IS_IDENTITY="$IS_URL:8087/api/identity"
 IS_ADMIN="$IS_URL:8086/api/admin"
 IS_READY="$IS_URL:8081/api/check/readiness"
@@ -116,6 +116,17 @@ definition_body "$BPN_DEFINITION_ID" BpnCredential "$SCHEMA_BASE/bpn.credential.
 ensure "$IS_ADMIN/v1alpha/participants/$ISSUER_ID/credentialdefinitions" "$W/is-super.hdr" "$W/body.json" "BpnCredential definition"
 definition_body "$MEMBERSHIP_DEFINITION_ID" MembershipCredential "$SCHEMA_BASE/membership.credential.schema.json" false > "$W/body.json"
 ensure "$IS_ADMIN/v1alpha/participants/$ISSUER_ID/credentialdefinitions" "$W/is-super.hdr" "$W/body.json" "MembershipCredential definition"
+# Definition only: the Portal never requests DataExchangeGovernanceCredential; issuance stays an operator action after
+# the governance agreement is validated (the Portal sets contractVersion on every holder at onboarding, so the
+# attestation is no proof of acceptance). Known Alpha limitation: no contractTemplate claim.
+jq -n --arg id "$DEG_DEFINITION_ID" --arg schema "$DEG_SCHEMA_URL" '{
+  id: $id, credentialType: "DataExchangeGovernanceCredential", format: "VC1_0_JWT",
+  attestations: ["holders-database-attestation", "holder-properties-attestation"], jsonSchema: "{}", jsonSchemaUrl: $schema,
+  mappings: [{input: "did", output: "credentialSubject.id", required: true},
+             {input: "holder_id", output: "credentialSubject.holderIdentifier", required: true},
+             {input: "contractVersion", output: "credentialSubject.contractVersion", required: true}],
+  validity: 31536000}' > "$W/body.json"
+ensure "$IS_ADMIN/v1alpha/participants/$ISSUER_ID/credentialdefinitions" "$W/is-super.hdr" "$W/body.json" "DataExchangeGovernanceCredential definition"
 
 # 4. Portal participant on IdentityHub: role "admin" (ParticipantPrincipal.ROLE_ADMIN, EDC 0.17.0). Never rename it
 #    once it exists: that would orphan the participant and its DID.

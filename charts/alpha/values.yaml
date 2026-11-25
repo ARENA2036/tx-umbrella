@@ -73,6 +73,11 @@ identitySeed:
   # -- IdentityHub participant used by the Portal (role admin, needed to read holder credentials).
   portalParticipantId: portal-provisioner
   credentialSchemaBaseUrl: "https://raw.githubusercontent.com/eclipse-tractusx/tractusx-profiles/main/cx/credentials"
+  # -- DataExchangeGovernanceCredential definition only. The Portal never requests this credential: issuance is an
+  # operator action after the participant's governance agreement is validated. Known Alpha limitation: no attestation
+  # provides contractTemplate, so issued credentials lack that Catena-X required claim.
+  governanceCredentialDefinitionId: "dataExchangeGovernanceCredential-id"
+  governanceCredentialSchemaUrl: "https://raw.githubusercontent.com/eclipse-tractusx/tractusx-profiles/1fec333861e64cd05d77d0fa3011f7f4ea1edf36/cx/credentials/schema/credentials/dataexchange.governance.credential.schema.json"
 
 portal:
   enabled: true
