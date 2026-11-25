@@ -1,0 +1,86 @@
+{{- /*
+DataExchangeGovernanceCredential for one Portal-onboarded participant: step D of the former post-install-identityhub-seed
+(request over DCP, then poll the wallet until ISSUED), without wallet creation, holder registration, Vault writes or key
+rotation. Renders nothing unless degIssuance.bpn is set; it is applied by hand, never by install or upgrade:
+  helm template alpha charts/alpha -n <ns> -f <env values> --show-only templates/deg-issuance.yaml \
+    --set-string degIssuance.bpn=<BPN> --set-string degIssuance.approvalReference=<evidence> | kubectl -n <ns> apply -f -
+approvalReference is the operator's attestation that the participant's governance agreement was validated; nothing here
+verifies consent. Known limitation: the credential has no contractTemplate claim (see the identity seed definition).
+*/ -}}
+{{- with .Values.degIssuance }}{{- if .bpn }}
+{{- if not (regexMatch "^BPNL[0-9A-Z]{12}$" .bpn) }}{{- fail "degIssuance.bpn must be a BPNL" }}{{- end }}
+{{- $ih := $.Values.portal.backend.processesworker.identityHub }}
+{{- $ctx := lower .bpn }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: deg-issuance-{{ $ctx }}
+  labels:
+    {{- include "alpha.labels" (dict "root" $ "name" "deg-issuance") | nindent 4 }}
+  annotations:
+    alpha/governance-approval: {{ required "degIssuance.approvalReference is required" .approvalReference | quote }}
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 600
+  template:
+    metadata:
+      labels:
+        {{- include "alpha.labels" (dict "root" $ "name" "deg-issuance") | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext: {runAsNonRoot: true, runAsUser: 65534, runAsGroup: 65534, fsGroup: 65534, seccompProfile: {type: RuntimeDefault}}
+      containers:
+        - name: issue
+          image: {{ $.Values.identitySeed.image | quote }}
+          env:
+            - {name: BPN_CTX, value: {{ $ctx | quote }}}
+            - {name: IH, value: {{ printf "http://%s:8082/api/identity" $.Values.identityhub.fullnameOverride | quote }}}
+            - {name: ISSUER_DID, value: {{ $ih.issuerDid | quote }}}
+            - {name: DEF_ID, value: {{ $.Values.identitySeed.governanceCredentialDefinitionId | quote }}}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -eu
+              T=DataExchangeGovernanceCredential; PID="$BPN_CTX-$(echo "$T" | tr A-Z a-z)"
+              printf 'x-api-key: %s\n' "$(cat /keys/identityhub-api-key)" > /work/h
+              # Usable DEG: this participant, state ISSUED (500), our issuer, expirationDate (ISO-8601) not passed; the
+              # IdentityHub watchdog moves expired credentials to EXPIRED (800) only periodically. Unknown shapes are errors.
+              Q='if type != "array" then error("not a list") else . end | map(select(.participantContextId == $c))
+                | map(if (.state | type) == "number" and (.issuerId | type) == "string" and (.verifiableCredential.credential.type | type) == "array"
+                      and (.verifiableCredential.credential.expirationDate | type) == "string" then . else error("unexpected credential") end)
+                | any(.[]; .state == 500 and .issuerId == $i and (.verifiableCredential.credential.type | index($t) != null)
+                      and (.verifiableCredential.credential.expirationDate | sub("\\.[0-9]+"; "") | fromdateiso8601) > now)'
+              # Returns 0 when a usable DEG exists, 1 when none; a failed call or an unexpected response stops the Job.
+              issued() { curl -sSf --max-time 30 -H @/work/h -o /work/c "$IH/v1alpha/participants/$BPN_CTX/credentials?type=$T" \
+                  || { echo "credential lookup failed"; exit 1; }
+                rc=0; jq -e --arg c "$BPN_CTX" --arg i "$ISSUER_DID" --arg t "$T" "$Q" /work/c >/dev/null 2>&1 || rc=$?
+                case "$rc" in 0) return 0;; 1) return 1;; *) echo "unexpected credential lookup response"; exit 1;; esac; }
+              status() { curl -sSf --max-time 30 -H @/work/h -o /work/s "$IH/v1alpha/participants/$BPN_CTX/credentials/request/$PID" \
+                  || { echo "request status lookup failed" >&2; exit 1; }
+                jq -er 'if type == "object" and (.status | type) == "string" then .status else error("unexpected") end' /work/s 2>/dev/null \
+                  || { echo "unexpected request status response" >&2; exit 1; }; }
+              if issued; then echo "already issued: nothing requested"; exit 0; fi
+              jq -n --arg i "$ISSUER_DID" --arg p "$PID" --arg d "$DEF_ID" --arg t "$T" \
+                '{issuerDid: $i, holderPid: $p, credentials: [{id: $d, type: $t, format: "VC1_0_JWT"}]}' > /work/b
+              code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 -X POST -H @/work/h \
+                -H 'Content-Type: application/json' --data-binary @/work/b "$IH/v1alpha/participants/$BPN_CTX/credentials/request") || true
+              case "$code" in 2??|409) ;; *) echo "request failed (${code:-no response})"; exit 1;; esac
+              i=0; until issued; do
+                s=$(status) || exit 1
+                [ "$s" != ERROR ] || { echo "request $PID is ERROR"; exit 1; }
+                i=$((i + 1)); [ "$i" -le 60 ] || { echo "not issued after 5 minutes (request $s)"; exit 1; }; sleep 5
+              done
+              echo "issued: $T present in the wallet in state ISSUED"
+          securityContext:
+            {{- include "alpha.containerSecurityContext" $ | nindent 12 }}
+          resources: {requests: {cpu: 20m, memory: 32Mi}, limits: {cpu: 100m, memory: 64Mi}}
+          volumeMounts:
+            - {name: key, mountPath: /keys, readOnly: true}
+            - {name: work, mountPath: /work}
+      volumes:
+        - name: key
+          secret: {secretName: {{ required "identityHub.existingSecret is required" $ih.existingSecret | quote }}, defaultMode: 0440, items: [{key: identityhub-api-key, path: identityhub-api-key}]}
+        - name: work
+          emptyDir: {medium: Memory, sizeLimit: 1Mi}
+{{- end }}{{- end }}
