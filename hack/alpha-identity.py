@@ -93,7 +93,7 @@ class Kube:
             self.run("create", "secret", "generic", name, *args)
         finally:
             for a in args:
-                os.remove(a.split("=", 1)[1])
+                os.remove(a.split("=", 2)[2])
 
 
 def confirm(phrase):
